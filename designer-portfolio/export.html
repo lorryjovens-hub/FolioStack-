@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导出模板 - FolioStack</title>
+    <meta name="description" content="FolioStack 自定义导出模板管理">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --amber: #d4a574;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; cursor: none; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+            --amber: #d4a574;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+
+        .cursor-dot { position: fixed; width: 8px; height: 8px; background: var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.3s, height 0.3s; }
+        .cursor-ring { position: fixed; width: 40px; height: 40px; border: 1.5px solid var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); opacity: 0.5; }
+        .cursor-dot.hovering { width: 16px; height: 16px; }
+        .cursor-ring.hovering { width: 60px; height: 60px; opacity: 0.3; }
+
+        .settings-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; cursor: none; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; }
+
+        .page-header { margin-bottom: 40px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); margin-bottom: 8px; }
+        .page-title em { font-style: italic; color: var(--champagne); }
+        .page-desc { font-size: 15px; color: var(--ash); }
+
+        .export-section { margin-bottom: 48px; }
+        .section-title { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ivory); margin-bottom: 24px; }
+        .section-title em { font-style: italic; color: var(--champagne); }
+
+        .export-formats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px; }
+        .format-card { padding: 28px 20px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; text-align: center; cursor: none; transition: all 0.4s var(--ease-out-expo); }
+        .format-card:hover { border-color: var(--champagne); transform: translateY(-4px); }
+        .format-card.selected { border-color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .format-icon { width: 56px; height: 56px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.08); border-radius: 12px; }
+        .format-icon svg { width: 28px; height: 28px; stroke: var(--champagne); }
+        .format-name { font-size: 15px; font-weight: 500; color: var(--ivory); margin-bottom: 6px; }
+        .format-desc { font-family: var(--font-mono); font-size: 9px; color: var(--mist); letter-spacing: 0.1em; text-transform: uppercase; }
+        .format-check { position: absolute; top: 12px; right: 12px; width: 20px; height: 20px; background: var(--champagne); border-radius: 50%; display: none; align-items: center; justify-content: center; }
+        .format-card.selected .format-check { display: flex; }
+        .format-card { position: relative; }
+
+        .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-bottom: 32px; }
+        .template-card { background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; overflow: hidden; cursor: none; transition: all 0.4s var(--ease-out-expo); }
+        .template-card:hover { border-color: var(--champagne); transform: translateY(-4px); }
+        .template-card.selected { border-color: var(--champagne); }
+        .template-preview { height: 160px; background: var(--graphite); position: relative; overflow: hidden; }
+        .template-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .template-overlay { position: absolute; inset: 0; background: rgba(10, 10, 10, 0.7); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s; }
+        .template-card:hover .template-overlay { opacity: 1; }
+        .template-radio { width: 24px; height: 24px; border: 2px solid var(--champagne); border-radius: 50%; background: var(--charcoal); display: flex; align-items: center; justify-content: center; }
+        .template-card.selected .template-radio { background: var(--champagne); }
+        .template-card.selected .template-radio::after { content: ''; width: 10px; height: 10px; background: var(--obsidian); border-radius: 50%; }
+        .template-info { padding: 20px; }
+        .template-name { font-size: 15px; font-weight: 500; color: var(--ivory); margin-bottom: 4px; }
+        .template-desc { font-size: 12px; color: var(--ash); margin-bottom: 12px; }
+        .template-meta { display: flex; gap: 16px; }
+        .template-meta span { font-family: var(--font-mono); font-size: 9px; color: var(--mist); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        .customize-panel { background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; padding: 28px; margin-bottom: 32px; }
+        .customize-title { font-family: var(--font-display); font-size: 18px; font-weight: 400; color: var(--ivory); margin-bottom: 24px; }
+        .customize-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        .customize-group { }
+        .customize-label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 10px; }
+        .customize-input { width: 100%; padding: 14px 16px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 4px; font-family: var(--font-body); font-size: 14px; color: var(--ivory); transition: all 0.3s; }
+        .customize-input:focus { outline: none; border-color: var(--champagne); }
+
+        .quality-options { display: flex; gap: 12px; }
+        .quality-option { flex: 1; padding: 14px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 4px; text-align: center; cursor: none; transition: all 0.3s; }
+        .quality-option:hover { border-color: var(--champagne); }
+        .quality-option.selected { border-color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .quality-option span { font-size: 14px; color: var(--ivory); }
+        .quality-option.selected span { color: var(--champagne); }
+
+        .watermark-section { margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .watermark-toggle { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        .toggle-switch { width: 48px; height: 26px; background: var(--silver); border-radius: 13px; position: relative; cursor: none; transition: background 0.3s; }
+        .toggle-switch.active { background: var(--champagne); }
+        .toggle-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: var(--ivory); border-radius: 50%; transition: transform 0.3s; }
+        .toggle-switch.active::after { transform: translateX(22px); }
+        .watermark-toggle span { font-size: 14px; color: var(--ivory); }
+        .watermark-options { display: none; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .watermark-options.active { display: grid; }
+        .watermark-option { padding: 16px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 4px; }
+        .watermark-option label { display: block; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); margin-bottom: 8px; }
+        .watermark-option input, .watermark-option select { width: 100%; padding: 10px 12px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; font-family: var(--font-body); font-size: 13px; color: var(--ivory); }
+
+        .export-actions { display: flex; justify-content: flex-end; gap: 16px; padding-top: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .btn { padding: 14px 28px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: none; transition: all 0.3s; border-radius: 4px; display: inline-flex; align-items: center; gap: 10px; }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; }
+        .btn-primary { background: var(--champagne); border: 1px solid var(--champagne); color: var(--obsidian); }
+        .btn-primary:hover { background: var(--champagne-light); border-color: var(--champagne-light); }
+        .btn-secondary { background: transparent; border: 1px solid var(--silver); color: var(--smoke); }
+        .btn-secondary:hover { border-color: var(--champagne); color: var(--champagne); }
+
+        .works-selection { margin-bottom: 32px; }
+        .works-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+        .works-header h3 { font-family: var(--font-display); font-size: 20px; font-weight: 400; color: var(--ivory); }
+        .works-count { font-family: var(--font-mono); font-size: 10px; color: var(--mist); letter-spacing: 0.1em; text-transform: uppercase; }
+        .works-list { display: flex; flex-direction: column; gap: 8px; }
+        .work-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; cursor: none; transition: all 0.3s; }
+        .work-item:hover { border-color: var(--champagne); }
+        .work-item.selected { border-color: var(--champagne); background: rgba(201, 169, 110, 0.05); }
+        .work-checkbox { width: 20px; height: 20px; border: 2px solid var(--silver); border-radius: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .work-item.selected .work-checkbox { border-color: var(--champagne); background: var(--champagne); }
+        .work-item.selected .work-checkbox svg { display: block; }
+        .work-checkbox svg { width: 12px; height: 12px; stroke: var(--obsidian); display: none; }
+        .work-thumb { width: 64px; height: 48px; background: var(--graphite); border-radius: 4px; overflow: hidden; }
+        .work-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .work-info { flex: 1; }
+        .work-info h4 { font-size: 14px; color: var(--ivory); margin-bottom: 4px; }
+        .work-info p { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .work-actions { display: flex; gap: 8px; }
+
+        .toast { position: fixed; bottom: 32px; right: 32px; padding: 16px 24px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; display: flex; align-items: center; gap: 12px; transform: translateY(100px); opacity: 0; transition: all 0.4s var(--ease-out-expo); z-index: 2000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--emerald); }
+        .toast svg { width: 20px; height: 20px; flex-shrink: 0; stroke: var(--emerald); }
+
+        @media (max-width: 1400px) {
+            .template-grid { grid-template-columns: repeat(2, 1fr); }
+            .export-formats { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-content { margin-left: 0; padding: 24px; }
+            .customize-grid { grid-template-columns: 1fr; }
+            .watermark-options { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <div class="settings-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="landing.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        作品编辑器
+                    </a>
+                    <a href="export.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        导出作品
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">系统</p>
+                    <a href="#" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="#" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">导出 <em>设置</em></h1>
+                <p class="page-desc">选择导出格式、自定义模板和品质设置，生成专属的作品集文件</p>
+            </header>
+
+            <section class="works-selection">
+                <div class="works-header">
+                    <h3>选择要导出的作品</h3>
+                    <span class="works-count">已选择 3 / 25 个作品</span>
+                </div>
+                <div class="works-list">
+                    <div class="work-item selected">
+                        <div class="work-checkbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="work-thumb"><img src="https://picsum.photos/128/96?random=1" alt=""></div>
+                        <div class="work-info">
+                            <h4>Camera WebGI</h4>
+                            <p>3D / WebGL · 最后更新 3天前</p>
+                        </div>
+                    </div>
+                    <div class="work-item selected">
+                        <div class="work-checkbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="work-thumb"><img src="https://picsum.photos/128/96?random=2" alt=""></div>
+                        <div class="work-info">
+                            <h4>VR Experience</h4>
+                            <p>3D / WebGL · 最后更新 1周前</p>
+                        </div>
+                    </div>
+                    <div class="work-item">
+                        <div class="work-checkbox">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="work-thumb"><img src="https://picsum.photos/128/96?random=3" alt=""></div>
+                        <div class="work-info">
+                            <h4>Git World</h4>
+                            <p>Developer Tools · 最后更新 2周前</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="export-section">
+                <h2 class="section-title">导出 <em>格式</em></h2>
+                <div class="export-formats">
+                    <div class="format-card selected">
+                        <div class="format-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="format-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                        </div>
+                        <p class="format-name">PDF</p>
+                        <p class="format-desc">便携文档</p>
+                    </div>
+                    <div class="format-card">
+                        <div class="format-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="format-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                        </div>
+                        <p class="format-name">HTML</p>
+                        <p class="format-desc">独立网页</p>
+                    </div>
+                    <div class="format-card">
+                        <div class="format-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="format-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                        </div>
+                        <p class="format-name">ZIP</p>
+                        <p class="format-desc">压缩包</p>
+                    </div>
+                    <div class="format-card">
+                        <div class="format-check">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#0a0a0a" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                        </div>
+                        <div class="format-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        </div>
+                        <p class="format-name">Markdown</p>
+                        <p class="format-desc">纯文本</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="export-section">
+                <h2 class="section-title">选择 <em>模板</em></h2>
+                <div class="template-grid">
+                    <div class="template-card selected">
+                        <div class="template-preview">
+                            <img src="https://picsum.photos/400/200?random=10" alt="Template Preview">
+                            <div class="template-overlay">
+                                <div class="template-radio"></div>
+                            </div>
+                        </div>
+                        <div class="template-info">
+                            <p class="template-name">极简画廊</p>
+                            <p class="template-desc">以作品为中心的极简展示，突出视觉内容</p>
+                            <div class="template-meta">
+                                <span>现代风格</span>
+                                <span>响应式</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-preview">
+                            <img src="https://picsum.photos/400/200?random=11" alt="Template Preview">
+                            <div class="template-overlay">
+                                <div class="template-radio"></div>
+                            </div>
+                        </div>
+                        <div class="template-info">
+                            <p class="template-name">品牌画册</p>
+                            <p class="template-desc">专业画册排版，适合品牌展示和客户提案</p>
+                            <div class="template-meta">
+                                <span>印刷级别</span>
+                                <span>A4竖版</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-card">
+                        <div class="template-preview">
+                            <img src="https://picsum.photos/400/200?random=12" alt="Template Preview">
+                            <div class="template-overlay">
+                                <div class="template-radio"></div>
+                            </div>
+                        </div>
+                        <div class="template-info">
+                            <p class="template-name">经典网格</p>
+                            <p class="template-desc">规整的网格布局，适合作品集目录展示</p>
+                            <div class="template-meta">
+                                <span>传统风格</span>
+                                <span>高密度</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="export-section">
+                <div class="customize-panel">
+                    <h3 class="customize-title">自定义 <em>设置</em></h3>
+                    <div class="customize-grid">
+                        <div class="customize-group">
+                            <label class="customize-label">作品集标题</label>
+                            <input type="text" class="customize-input" value="Lorry Huang 作品集 2024" placeholder="输入作品集标题...">
+                        </div>
+                        <div class="customize-group">
+                            <label class="customize-label">作者名称</label>
+                            <input type="text" class="customize-input" value="黄俊华 (Lorry)" placeholder="输入作者名称...">
+                        </div>
+                        <div class="customize-group">
+                            <label class="customize-label">图片质量</label>
+                            <div class="quality-options">
+                                <div class="quality-option">
+                                    <span>低</span>
+                                </div>
+                                <div class="quality-option selected">
+                                    <span>中</span>
+                                </div>
+                                <div class="quality-option">
+                                    <span>高</span>
+                                </div>
+                                <div class="quality-option">
+                                    <span>原始</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="customize-group">
+                            <label class="customize-label">页面布局</label>
+                            <select class="customize-input">
+                                <option value="single">单列布局</option>
+                                <option value="grid" selected>网格布局</option>
+                                <option value="masonry">瀑布流布局</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="watermark-section">
+                        <div class="watermark-toggle">
+                            <div class="toggle-switch active" id="watermarkToggle"></div>
+                            <span>添加水印保护</span>
+                        </div>
+                        <div class="watermark-options active" id="watermarkOptions">
+                            <div class="watermark-option">
+                                <label>水印文字</label>
+                                <input type="text" value="© Lorry Huang" placeholder="输入水印文字...">
+                            </div>
+                            <div class="watermark-option">
+                                <label>位置</label>
+                                <select>
+                                    <option value="center">居中</option>
+                                    <option value="corner">角落</option>
+                                    <option value="diagonal">对角线</option>
+                                </select>
+                            </div>
+                            <div class="watermark-option">
+                                <label>透明度</label>
+                                <select>
+                                    <option value="0.3">30%</option>
+                                    <option value="0.5" selected>50%</option>
+                                    <option value="0.7">70%</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="export-actions">
+                <button class="btn btn-secondary">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    保存设置
+                </button>
+                <button class="btn btn-primary" id="exportBtn">
+                    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    开始导出
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast success" id="toast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        <p>导出任务已创建</p>
+    </div>
+
+    <script>
+    (function() {
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        function animateCursor() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            cursorRing.style.left = ringX + 'px';
+            cursorRing.style.top = ringY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        document.querySelectorAll('a, button, .format-card, .template-card, .work-item, .quality-option').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorDot.classList.add('hovering');
+                cursorRing.classList.add('hovering');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorDot.classList.remove('hovering');
+                cursorRing.classList.remove('hovering');
+            });
+        });
+
+        document.querySelectorAll('.format-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.format-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.template-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('.template-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+            });
+        });
+
+        document.querySelectorAll('.work-item').forEach(item => {
+            item.addEventListener('click', () => {
+                item.classList.toggle('selected');
+                updateWorksCount();
+            });
+        });
+
+        function updateWorksCount() {
+            const count = document.querySelectorAll('.work-item.selected').length;
+            document.querySelector('.works-count').textContent = `已选择 ${count} / 25 个作品`;
+        }
+
+        document.querySelectorAll('.quality-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.quality-option').forEach(o => o.classList.remove('selected'));
+                option.classList.add('selected');
+            });
+        });
+
+        const watermarkToggle = document.getElementById('watermarkToggle');
+        const watermarkOptions = document.getElementById('watermarkOptions');
+        watermarkToggle.addEventListener('click', () => {
+            watermarkToggle.classList.toggle('active');
+            watermarkOptions.classList.toggle('active');
+        });
+
+        const exportBtn = document.getElementById('exportBtn');
+        const toast = document.getElementById('toast');
+        exportBtn.addEventListener('click', () => {
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        });
+
+        gsap.from('.page-title', { opacity: 0, y: 30, duration: 0.8, delay: 0.2 });
+        gsap.from('.works-selection', { opacity: 0, y: 30, duration: 0.8, delay: 0.3 });
+        gsap.from('.export-section', { opacity: 0, y: 30, duration: 0.8, stagger: 0.15, delay: 0.5 });
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        // 页面加载时加载主题
+        loadTheme();
+
+        gsap.from('.export-actions', { opacity: 0, y: 20, duration: 0.8, delay: 0.8 });
+    })();
+    </script>
+</body>
+</html>

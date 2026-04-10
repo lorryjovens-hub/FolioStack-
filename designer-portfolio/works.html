@@ -1,0 +1,1793 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品管理 - FolioStack</title>
+    <meta name="description" content="FolioStack 作品集管理后台">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; cursor: none; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--champagne); }
+
+        /* Custom Cursor */
+        .cursor-dot { position: fixed; width: 8px; height: 8px; background: var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.3s var(--ease-out-expo), height 0.3s var(--ease-out-expo), background 0.3s; }
+        .cursor-ring { position: fixed; width: 40px; height: 40px; border: 1.5px solid var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.4s var(--ease-out-expo), height 0.4s var(--ease-out-expo), border-color 0.3s, opacity 0.3s; opacity: 0.5; }
+        .cursor-dot.hovering { width: 16px; height: 16px; background: var(--champagne-light); }
+        .cursor-ring.hovering { width: 60px; height: 60px; border-color: var(--champagne-light); opacity: 0.3; }
+
+        /* Loader */
+        #loader { position: fixed; inset: 0; background: var(--obsidian); z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 32px; }
+        .loader-text { font-family: var(--font-display); font-size: clamp(24px, 4vw, 48px); font-weight: 300; letter-spacing: 0.3em; color: var(--champagne); text-transform: uppercase; }
+        .loader-bar-track { width: 200px; height: 1px; background: var(--silver); position: relative; overflow: hidden; }
+        .loader-bar-fill { position: absolute; top: 0; left: 0; height: 100%; width: 0%; background: var(--champagne); transition: width 0.3s var(--ease-out-expo); }
+        .loader-percent { font-family: var(--font-mono); font-size: 12px; color: var(--ash); letter-spacing: 0.2em; }
+
+        .dashboard-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; overflow-y: auto; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+        .nav-item .nav-badge { margin-left: auto; background: var(--champagne); color: var(--obsidian); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .sidebar-footer { padding: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .user-card { display: flex; align-items: center; gap: 14px; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--obsidian); overflow: hidden; }
+        .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 2px; }
+        .user-email { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .logout-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .logout-btn svg { width: 18px; height: 18px; stroke: var(--smoke); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; position: relative; }
+        
+        /* Header Animation */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); overflow: hidden; }
+        .page-title em { font-style: italic; color: var(--champagne); }
+        .page-title .line { display: block; overflow: hidden; }
+        .page-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; transition: all 0.4s var(--ease-out-expo); }
+        .btn-primary { background: var(--champagne); color: var(--obsidian); }
+        .btn-primary:hover { background: var(--champagne-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201, 169, 110, 0.2); }
+        .btn-secondary { background: var(--graphite); color: var(--smoke); border: 1px solid var(--silver); }
+        .btn-secondary:hover { border-color: var(--champagne); color: var(--champagne); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+        /* Filters */
+        .filters { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; align-items: center; }
+        .filter-group { display: flex; align-items: center; gap: 8px; }
+        .filter-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); }
+        .filter-select { padding: 8px 16px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 2px; color: var(--ivory); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.3s; cursor: pointer; }
+        .filter-select:focus { border-color: var(--champagne); }
+        
+        /* Search Bar */
+        .search-bar { display: flex; align-items: center; gap: 12px; padding: 10px 20px; border: 1px solid var(--silver); transition: border-color 0.3s, box-shadow 0.3s; background: var(--graphite); }
+        .search-bar:focus-within { border-color: var(--champagne); box-shadow: 0 0 20px rgba(201, 169, 110, 0.1); }
+        .search-bar input { background: none; border: none; outline: none; color: var(--ivory); font-family: var(--font-body); font-size: 13px; width: 200px; }
+        .search-bar input::placeholder { color: var(--mist); }
+        .search-bar svg { width: 16px; height: 16px; stroke: var(--ash); flex-shrink: 0; }
+
+        /* View Toggle */
+        .view-toggle { display: flex; gap: 4px; margin-left: auto; }
+        .view-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: var(--graphite); border: 1px solid var(--silver); cursor: pointer; transition: all 0.3s; }
+        .view-btn:first-child { border-radius: 2px 0 0 2px; }
+        .view-btn:last-child { border-radius: 0 2px 2px 0; }
+        .view-btn svg { width: 16px; height: 16px; stroke: var(--ash); }
+        .view-btn.active { background: var(--champagne); border-color: var(--champagne); }
+        .view-btn.active svg { stroke: var(--obsidian); }
+
+        /* Works Grid */
+        .works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; perspective: 1200px; }
+        .works-grid.list-view { grid-template-columns: 1fr; gap: 16px; }
+        .works-grid.list-view .work-card { display: flex; flex-direction: row; }
+        .works-grid.list-view .work-card .work-card-header { width: 200px; height: auto; min-height: 140px; }
+        .works-grid.list-view .work-card .work-card-body { flex: 1; display: flex; align-items: center; justify-content: space-between; }
+
+        .work-card { position: relative; background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 2px; overflow: hidden; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s var(--ease-out-expo), border-color 0.4s, box-shadow 0.4s; will-change: transform; }
+        .work-card:hover { border-color: rgba(201, 169, 110, 0.3); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 40px rgba(201, 169, 110, 0.05); transform: translateY(-8px) rotateX(2deg) rotateY(-2deg); }
+        
+        /* Card Glow Effect */
+        .work-card .card-glow { position: absolute; inset: 0; opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 1; background: radial-gradient(circle at 50% 0%, rgba(201, 169, 110, 0.1) 0%, transparent 60%); }
+        .work-card:hover .card-glow { opacity: 1; }
+
+        .work-card-header-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 30%, rgba(10, 10, 10, 0.95) 100%);
+            z-index: 4;
+            pointer-events: none;
+        }
+        
+        .work-card-number { position: absolute; top: 10px; left: 12px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; color: var(--champagne); z-index: 3; }
+        
+        /* Category Badge */
+        .work-card-category { position: absolute; top: 10px; right: 12px; padding: 2px 8px; background: rgba(201, 169, 110, 0.12); border: 1px solid rgba(201, 169, 110, 0.2); font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--champagne); z-index: 3; backdrop-filter: blur(4px); }
+        
+        /* Status Badge */
+        .work-card-status { position: absolute; bottom: 10px; left: 12px; padding: 2px 8px; font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; z-index: 4; backdrop-filter: blur(4px); }
+        .work-card-status.published { background: rgba(42, 107, 90, 0.2); border: 1px solid var(--emerald); color: var(--emerald); }
+        .work-card-status.draft { background: rgba(201, 169, 110, 0.1); border: 1px solid var(--champagne-dark); color: var(--champagne); }
+        
+        /* Card Actions */
+        .work-card-actions { position: absolute; top: 16px; right: 12px; display: flex; flex-direction: column; gap: 4px; opacity: 0; transform: translateX(10px); transition: opacity 0.3s, transform 0.3s var(--ease-out-expo); z-index: 10; }
+        .work-card:hover .work-card-actions { opacity: 1; transform: translateX(0); }
+        .work-card-action { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.9); border: 1px solid var(--silver); border-radius: 4px; cursor: pointer; transition: all 0.3s; backdrop-filter: blur(8px); }
+        .work-card-action:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.15); }
+        .work-card-action svg { width: 12px; height: 12px; stroke: var(--smoke); }
+        .work-card-action.edit:hover { border-color: var(--champagne); }
+        .work-card-action.delete:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.15); }
+        .work-card-action.delete:hover svg { stroke: var(--rose-gold); }
+
+        /* Preview Button */
+        .card-preview-btn { position: absolute; bottom: 12px; right: 12px; padding: 3px 10px; background: rgba(201,169,110,0.15); border: 1px solid rgba(201,169,110,0.3); font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--champagne); z-index: 4; opacity: 0; transform: translateY(8px); transition: all 0.4s var(--ease-out-expo); backdrop-filter: blur(4px); }
+        .work-card:hover .card-preview-btn { opacity: 1; transform: translateY(0); }
+        .card-preview-btn:hover { background: rgba(201,169,110,0.25); }
+
+        .work-card-body { padding: 16px; position: relative; z-index: 2; }
+        
+        .work-card-content {
+            position: relative;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(201, 169, 110, 0.05) 0%, rgba(0, 0, 0, 0.8) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        
+        .work-card:hover .work-card-content {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201, 169, 110, 0.2);
+            border-color: rgba(201, 169, 110, 0.4);
+        }
+        
+        .work-card-loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 5;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(201, 169, 110, 0.2);
+            border-top-color: rgba(201, 169, 110, 0.8);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .work-card-loading span {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--smoke);
+        }
+        
+
+        
+        .work-card-visit-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            background: rgba(201, 169, 110, 0.1);
+            border: 1px solid rgba(201, 169, 110, 0.3);
+            border-radius: 6px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--champagne);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            margin-left: auto;
+        }
+        
+        .work-card-visit-link:hover {
+            background: rgba(201, 169, 110, 0.2);
+            border-color: rgba(201, 169, 110, 0.5);
+            transform: translateY(-1px);
+        }
+        
+        .work-card-visit-link svg {
+            width: 14px;
+            height: 14px;
+            stroke: var(--champagne);
+        }
+        
+        .work-card-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .work-card:hover .work-card-iframe {
+            pointer-events: auto;
+        }
+        
+        .work-card-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .work-card-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: transparent;
+        }
+        
+        .work-card-video::-webkit-media-controls-panel {
+            display: none !important;
+        }
+        
+        .work-card-video::-webkit-media-controls-play-button {
+            display: none !important;
+        }
+        
+        .work-card-video::-webkit-media-controls-start-playback-button {
+            display: none !important;
+        }
+        
+        .work-card-video::-webkit-media-controls {
+            display: none !important;
+        }
+        
+        .work-card-info {
+            padding: 0;
+            background: transparent;
+        }
+        
+        .work-card-info {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .work-card-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(201, 169, 110, 0.2) 0%, rgba(0, 0, 0, 0.7) 100%);
+            opacity: 0;
+            transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 10px;
+            z-index: 1;
+        }
+        
+        .work-card:hover .work-card-overlay {
+            opacity: 1;
+        }
+        .work-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 500; color: var(--ivory); margin-bottom: 8px; transition: all 0.3s; line-height: 1.3; }
+        .work-card:hover .work-card-title { color: var(--champagne); }
+        .work-card-desc { font-size: 13px; color: var(--ash); line-height: 1.5; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        
+        .work-card-footer { 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            flex-wrap: wrap; 
+            gap: 8px;
+            width: 100%;
+        }
+        .work-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .work-card-tag { font-family: var(--font-mono); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); padding: 3px 8px; background: var(--graphite); border-radius: 2px; }
+        .work-card-date { font-family: var(--font-mono); font-size: 9px; color: var(--mist); }
+        
+        /* Card Arrow */
+        .card-arrow { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--silver); transition: all 0.4s var(--ease-out-expo); flex-shrink: 0; }
+        .card-arrow svg { width: 14px; height: 14px; stroke: var(--ash); transition: stroke 0.3s; }
+        .work-card:hover .card-arrow { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); transform: translate(4px, -4px); }
+        .work-card:hover .card-arrow svg { stroke: var(--champagne); }
+
+        /* Stats Bar */
+        .stats-bar { display: flex; gap: 32px; margin-bottom: 40px; padding: 24px; background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(20, 20, 20, 0.95)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 2px; flex-wrap: wrap; }
+        .stat-item { display: flex; flex-direction: column; gap: 4px; }
+        .stat-item .stat-number { font-family: var(--font-display); font-size: 32px; font-weight: 300; color: var(--champagne); line-height: 1; }
+        .stat-item .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ash); }
+        .stat-divider { width: 1px; height: 50px; background: var(--silver); align-self: center; margin: 0 8px; }
+
+        /* Empty State */
+        .empty-state { text-align: center; padding: 80px 40px; background: linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(20, 20, 20, 0.9)); border: 1px dashed rgba(201, 169, 110, 0.15); border-radius: 2px; }
+        .empty-state-icon { width: 80px; height: 80px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.05); border-radius: 50%; }
+        .empty-state-icon svg { width: 36px; height: 36px; stroke: var(--champagne); opacity: 0.5; }
+        .empty-state h3 { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--ivory); margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; color: var(--ash); margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+        /* Batch Actions Bar */
+        .batch-actions-bar { display: none; align-items: center; gap: 16px; padding: 16px 24px; background: linear-gradient(135deg, rgba(201, 169, 110, 0.08), rgba(201, 169, 110, 0.03)); border: 1px solid rgba(201, 169, 110, 0.2); border-radius: 2px; margin-bottom: 24px; animation: slideDown 0.3s var(--ease-out-expo); }
+        .batch-actions-bar.active { display: flex; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .batch-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .batch-info .count { font-family: var(--font-mono); font-size: 12px; color: var(--champagne); }
+        .batch-info .count strong { font-size: 16px; margin-right: 4px; }
+        .batch-info .divider { width: 1px; height: 24px; background: var(--silver); }
+        .batch-info .selected-text { font-size: 13px; color: var(--ash); }
+        .batch-buttons { display: flex; gap: 8px; }
+        .batch-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--silver); background: var(--graphite); color: var(--smoke); cursor: pointer; transition: all 0.3s; }
+        .batch-btn:hover { border-color: var(--champagne); color: var(--champagne); }
+        .batch-btn.publish:hover { border-color: var(--emerald); color: var(--emerald); background: rgba(42, 107, 90, 0.1); }
+        .batch-btn.delete:hover { border-color: var(--rose-gold); color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .batch-btn.move:hover { border-color: var(--deep-blue); color: #6b8cce; background: rgba(26, 42, 74, 0.1); }
+        .batch-btn svg { width: 14px; height: 14px; stroke: currentColor; }
+        .batch-btn.cancel { margin-left: auto; border-color: var(--mist); }
+        .batch-btn.cancel:hover { border-color: var(--rose-gold); color: var(--rose-gold); }
+
+        /* Checkbox */
+        .work-card .card-checkbox { position: absolute; top: 16px; left: 16px; width: 20px; height: 20px; border: 1px solid var(--silver); border-radius: 2px; background: rgba(10, 10, 10, 0.8); z-index: 10; opacity: 0; transition: opacity 0.3s, border-color 0.3s, background 0.3s; cursor: pointer; backdrop-filter: blur(4px); }
+        .work-card:hover .card-checkbox, .work-card.selected .card-checkbox { opacity: 1; }
+        .work-card.selected .card-checkbox { border-color: var(--champagne); background: rgba(201, 169, 110, 0.2); }
+        .work-card.selected .card-checkbox::after { content: ''; position: absolute; top: 4px; left: 7px; width: 5px; height: 9px; border: solid var(--champagne); border-width: 0 2px 2px 0; transform: rotate(45deg); }
+        .work-card.selected { border-color: rgba(201, 169, 110, 0.4); box-shadow: 0 0 30px rgba(201, 169, 110, 0.1); }
+        .work-card.dragging { opacity: 0.5; transform: scale(0.98); }
+        .work-card.drag-over { border-color: var(--champagne); border-style: dashed; }
+
+        /* Import/Export Modal */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.9); z-index: 3000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .modal-overlay.show { opacity: 1; pointer-events: all; }
+        .modal-content { background: var(--charcoal); border: 1px solid rgba(201, 169, 110, 0.1); border-radius: 4px; padding: 40px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; transform: scale(0.95); transition: transform 0.3s var(--ease-out-expo); }
+        .modal-overlay.show .modal-content { transform: scale(1); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+        .modal-header h3 { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--champagne); }
+        .modal-close { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 2px; cursor: pointer; transition: border-color 0.3s; }
+        .modal-close:hover { border-color: var(--rose-gold); }
+        .modal-close svg { width: 18px; height: 18px; stroke: var(--smoke); }
+        .modal-body { }
+        .modal-section { margin-bottom: 32px; }
+        .modal-section h4 { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ash); margin-bottom: 16px; }
+        .modal-textarea { width: 100%; min-height: 200px; background: var(--obsidian); border: 1px solid var(--silver); border-radius: 2px; padding: 16px; color: var(--ivory); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.3s; }
+        .modal-textarea:focus { border-color: var(--champagne); }
+        .modal-textarea::placeholder { color: var(--mist); }
+        .modal-info { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(42, 107, 90, 0.08); border: 1px solid rgba(42, 107, 90, 0.2); border-radius: 2px; margin-top: 16px; }
+        .modal-info svg { width: 18px; height: 18px; stroke: var(--emerald); flex-shrink: 0; margin-top: 2px; }
+        .modal-info p { font-size: 12px; color: var(--ash); line-height: 1.6; }
+        .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
+
+        /* Activity Log Panel */
+        .activity-panel { position: fixed; top: 0; right: 0; width: 380px; height: 100vh; background: var(--charcoal); border-left: 1px solid rgba(201, 169, 110, 0.08); z-index: 2000; transform: translateX(100%); transition: transform 0.4s var(--ease-out-expo); }
+        .activity-panel.open { transform: translateX(0); }
+        .activity-header { display: flex; align-items: center; justify-content: space-between; padding: 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .activity-header h3 { font-family: var(--font-display); font-size: 22px; font-weight: 400; color: var(--champagne); }
+        .activity-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 2px; cursor: pointer; }
+        .activity-close svg { width: 16px; height: 16px; stroke: var(--smoke); }
+        .activity-list { padding: 16px; overflow-y: auto; height: calc(100vh - 80px); }
+        .activity-item { display: flex; gap: 12px; padding: 16px; background: var(--graphite); border-radius: 2px; margin-bottom: 12px; transition: background 0.3s; }
+        .activity-item:hover { background: rgba(201, 169, 110, 0.05); }
+        .activity-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.08); border-radius: 50%; flex-shrink: 0; }
+        .activity-icon svg { width: 16px; height: 16px; stroke: var(--champagne); }
+        .activity-icon.delete { background: rgba(183, 110, 121, 0.08); }
+        .activity-icon.delete svg { stroke: var(--rose-gold); }
+        .activity-icon.publish { background: rgba(42, 107, 90, 0.08); }
+        .activity-icon.publish svg { stroke: var(--emerald); }
+        .activity-content { flex: 1; }
+        .activity-content .action { font-size: 13px; color: var(--ivory); margin-bottom: 4px; }
+        .activity-content .time { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .activity-empty { text-align: center; padding: 48px 24px; color: var(--ash); }
+        .activity-empty svg { width: 48px; height: 48px; stroke: var(--mist); margin-bottom: 16px; opacity: 0.5; }
+
+        /* Category Management */
+        .category-manager { display: flex; flex-direction: column; gap: 12px; }
+        .category-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 2px; }
+        .category-item .cat-name { flex: 1; font-size: 13px; color: var(--ivory); }
+        .category-item .cat-count { font-family: var(--font-mono); font-size: 10px; color: var(--ash); padding: 2px 8px; background: var(--obsidian); border-radius: 10px; }
+        .category-item .cat-actions { display: flex; gap: 4px; }
+        .category-item .cat-btn { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: none; border: none; cursor: pointer; transition: color 0.3s; }
+        .category-item .cat-btn svg { width: 12px; height: 12px; stroke: var(--smoke); }
+        .category-item .cat-btn:hover svg { stroke: var(--champagne); }
+        .category-item .cat-btn.delete:hover svg { stroke: var(--rose-gold); }
+
+        /* Drag Drop Indicator */
+        .drop-zone-indicator { position: absolute; inset: 0; border: 2px dashed var(--champagne); border-radius: 2px; background: rgba(201, 169, 110, 0.05); display: none; align-items: center; justify-content: center; z-index: 100; }
+        .drop-zone-indicator.active { display: flex; }
+        .drop-zone-indicator span { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--champagne); }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 32px; right: 32px; padding: 16px 24px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 2px; font-size: 14px; color: var(--ivory); z-index: 5000; transform: translateX(120%); transition: transform 0.4s var(--ease-out-expo); backdrop-filter: blur(8px); }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: var(--emerald); background: rgba(42, 107, 90, 0.1); }
+        .toast.error { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .toast.info { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); }
+
+        /* Keyboard Shortcuts Modal */
+        .shortcuts-modal { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.9); z-index: 6000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .shortcuts-modal.show { opacity: 1; pointer-events: all; }
+        .shortcuts-content { background: var(--charcoal); border: 1px solid rgba(201, 169, 110, 0.1); border-radius: 4px; padding: 40px; max-width: 600px; width: 90%; }
+        .shortcuts-content h3 { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--champagne); margin-bottom: 24px; }
+        .shortcut-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .shortcut-item:last-child { border-bottom: none; }
+        .shortcut-keys { display: flex; gap: 8px; }
+        .key { padding: 4px 12px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 2px; font-family: var(--font-mono); font-size: 11px; color: var(--champagne); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+            .cursor-dot, .cursor-ring { display: none; }
+            body { cursor: auto; }
+            .batch-actions-bar { flex-wrap: wrap; }
+            .activity-panel { width: 100%; }
+        }
+        @media (max-width: 768px) {
+            .works-grid { grid-template-columns: 1fr; }
+            .stats-bar { flex-wrap: wrap; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+            .filters { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Custom Cursor -->
+    <div class="cursor-dot" id="cursorDot"></div>
+    <div class="cursor-ring" id="cursorRing"></div>
+
+    <!-- Loader -->
+    <div id="loader">
+        <div class="loader-text">加载中</div>
+        <div class="loader-bar-track">
+            <div class="loader-bar-fill" id="loaderBar"></div>
+        </div>
+        <div class="loader-percent" id="loaderPercent">0%</div>
+    </div>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="dashboard.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                        <span class="nav-badge" id="worksCount">0</span>
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">L</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Loading...</p>
+                        <p class="user-email" id="userEmail">...</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">
+                    <span class="line">作品<em>管理</em></span>
+                </h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" id="importBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入
+                    </button>
+                    <button class="btn btn-primary" id="createBtn">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalWorks">0</span>
+                    <span class="stat-label">作品总数</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="publishedWorks">0</span>
+                    <span class="stat-label">已发布</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="draftWorks">0</span>
+                    <span class="stat-label">草稿</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat-item">
+                    <span class="stat-number" id="designWorks">0</span>
+                    <span class="stat-label">设计</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="devWorks">0</span>
+                    <span class="stat-label">开发</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="videoWorks">0</span>
+                    <span class="stat-label">视频</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="photoWorks">0</span>
+                    <span class="stat-label">摄影</span>
+                </div>
+            </div>
+
+            <!-- Batch Actions Bar -->
+            <div class="batch-actions-bar" id="batchActionsBar">
+                <div class="batch-info">
+                    <span class="count"><strong id="selectedCount">0</strong>项已选中</span>
+                    <div class="divider"></div>
+                    <span class="selected-text">已选择作品</span>
+                </div>
+                <div class="batch-buttons">
+                    <button class="batch-btn publish" id="batchPublishBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                        批量发布
+                    </button>
+                    <button class="batch-btn move" id="batchMoveBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        移动分类
+                    </button>
+                    <button class="batch-btn delete" id="batchDeleteBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                        批量删除
+                    </button>
+                    <button class="batch-btn cancel" id="cancelSelectionBtn">
+                        取消选择
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="filter-group">
+                    <label class="filter-label">状态</label>
+                    <select class="filter-select" id="statusFilter">
+                        <option value="all">全部</option>
+                        <option value="published">已发布</option>
+                        <option value="draft">草稿</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">分类</label>
+                    <select class="filter-select" id="categoryFilter">
+                        <option value="all">全部</option>
+                        <option value="design">设计</option>
+                        <option value="development">开发</option>
+                        <option value="video">视频</option>
+                        <option value="photography">摄影</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label class="filter-label">排序</label>
+                    <select class="filter-select" id="sortFilter">
+                        <option value="latest">最新优先</option>
+                        <option value="oldest">最早优先</option>
+                        <option value="name">名称</option>
+                    </select>
+                </div>
+                
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" id="searchInput" placeholder="搜索作品...">
+                </div>
+                
+                <div class="view-toggle">
+                    <button class="view-btn active" id="gridViewBtn" title="网格视图">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    </button>
+                    <button class="view-btn" id="listViewBtn" title="列表视图">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="works-grid" id="worksGrid">
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <h3>加载中...</h3>
+                    <p>正在获取您的作品列表，请稍候...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Keyboard Shortcuts Modal -->
+    <div class="shortcuts-modal" id="shortcutsModal">
+        <div class="shortcuts-content">
+            <h3>键盘快捷键</h3>
+            <div class="shortcut-item">
+                <span>新建作品</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">N</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>搜索</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">K</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>刷新</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">R</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>关闭弹窗</span>
+                <div class="shortcut-keys"><span class="key">Esc</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>全选</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">A</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>批量删除</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">D</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>导出数据</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">E</span></div>
+            </div>
+            <div class="shortcut-item">
+                <span>活动日志</span>
+                <div class="shortcut-keys"><span class="key">Ctrl</span><span class="key">L</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import/Export Modal -->
+    <div class="modal-overlay" id="importExportModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">导入/导出</h3>
+                <button class="modal-close" id="closeModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>导出作品数据</h4>
+                    <p style="font-size: 13px; color: var(--ash); margin-bottom: 16px;">将您的作品导出为JSON格式，便于备份或迁移。</p>
+                    <button class="btn btn-secondary" id="exportBtn" style="margin-bottom: 16px;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        导出JSON
+                    </button>
+                    <div class="modal-info">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <p>导出的数据包含作品标题、描述、分类、标签等信息。图片和附件需要单独备份。</p>
+                    </div>
+                </div>
+                <div class="modal-section">
+                    <h4>导入作品数据</h4>
+                    <p style="font-size: 13px; color: var(--ash); margin-bottom: 16px;">从JSON文件或剪贴板导入作品数据。</p>
+                    <textarea class="modal-textarea" id="importData" placeholder="粘贴JSON数据到这里..."></textarea>
+                    <button class="btn btn-primary" id="importBtn" style="margin-top: 16px;">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入数据
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Move Modal -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>移动到分类</h3>
+                <button class="modal-close" id="closeCategoryModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>选择目标分类</h4>
+                    <div class="category-manager" id="categoryList">
+                        <div class="category-item" data-category="design">
+                            <span class="cat-name">设计</span>
+                            <span class="cat-count" id="cat-design-count">0</span>
+                        </div>
+                        <div class="category-item" data-category="development">
+                            <span class="cat-name">开发</span>
+                            <span class="cat-count" id="cat-development-count">0</span>
+                        </div>
+                        <div class="category-item" data-category="video">
+                            <span class="cat-name">视频</span>
+                            <span class="cat-count" id="cat-video-count">0</span>
+                        </div>
+                        <div class="category-item" data-category="photography">
+                            <span class="cat-name">摄影</span>
+                            <span class="cat-count" id="cat-photography-count">0</span>
+                        </div>
+                        <div class="category-item" data-category="other">
+                            <span class="cat-name">其他</span>
+                            <span class="cat-count" id="cat-other-count">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Modal -->
+    <div class="modal-overlay" id="previewModal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+            <div class="modal-header">
+                <h3 id="previewTitle">作品预览</h3>
+                <button class="modal-close" id="closePreviewModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 0;">
+                <div class="preview-iframe-container" style="width: 100%; height: 70vh; background: var(--obsidian); border-radius: 4px; overflow: hidden;">
+                    <iframe id="previewIframe" style="width: 100%; height: 100%; border: none;" src=""></iframe>
+                </div>
+                <div style="padding: 20px; border-top: 1px solid rgba(201,169,110,0.08);">
+                    <div class="preview-url-bar" style="display: flex; align-items: center; gap: 8px;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; stroke: var(--ash);"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        <a id="previewUrlLink" href="#" target="_blank" style="font-family: var(--font-mono); font-size: 12px; color: var(--champagne); text-decoration: none; word-break: break-all;"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Panel -->
+    <div class="activity-panel" id="activityPanel">
+        <div class="activity-header">
+            <h3>活动日志</h3>
+            <button class="activity-close" id="closeActivity">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+        <div class="activity-list" id="activityList">
+            <div class="activity-empty">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <p>暂无活动记录</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        const API_BASE = 'http://localhost:3002/api';
+        let authToken = localStorage.getItem('token');
+        let currentUser = null;
+        let works = [];
+        let filteredWorks = [];
+        let isGridView = true;
+        let selectedWorks = new Set();
+        let activityLog = [];
+        let draggedCard = null;
+
+        if (!authToken) {
+            window.location.href = 'landing.html';
+            return;
+        }
+
+        // Custom Cursor
+        const cursorDot = document.getElementById('cursorDot');
+        const cursorRing = document.getElementById('cursorRing');
+        let mouseX = 0, mouseY = 0;
+        let ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        function animateRing() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            cursorRing.style.left = ringX + 'px';
+            cursorRing.style.top = ringY + 'px';
+            requestAnimationFrame(animateRing);
+        }
+        animateRing();
+
+        // Hover effects for cursor
+        document.querySelectorAll('a, button, .work-card, .nav-item').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorDot.classList.add('hovering');
+                cursorRing.classList.add('hovering');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorDot.classList.remove('hovering');
+                cursorRing.classList.remove('hovering');
+            });
+        });
+
+        // Loader Animation
+        let loaderProgress = 0;
+        const loaderBar = document.getElementById('loaderBar');
+        const loaderPercent = document.getElementById('loaderPercent');
+        const loader = document.getElementById('loader');
+
+        function updateLoader(progress) {
+            loaderProgress = progress;
+            loaderBar.style.width = progress + '%';
+            loaderPercent.textContent = Math.round(progress) + '%';
+            if (progress >= 100) {
+                setTimeout(() => {
+                    loader.style.opacity = '0';
+                    loader.style.pointerEvents = 'none';
+                    setTimeout(() => loader.remove(), 500);
+                }, 300);
+            }
+        }
+
+        // Initial load animation
+        gsap.to({}, { duration: 1.5, onUpdate: function() {
+            updateLoader(Math.min(90, this.progress() * 100));
+        }});
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'landing.html';
+                return null;
+            }
+            return response;
+        }
+
+        async function loadUserInfo() {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                updateUserUI(currentUser);
+            }
+            try {
+                const response = await fetchWithAuth('/auth/me');
+                if (response && response.ok) {
+                    const result = await response.json();
+                    currentUser = result.user || result;
+                    updateUserUI(currentUser);
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+            }
+        }
+
+        function updateUserUI(user) {
+            const name = user.username || user.email?.split('@')[0] || '创作者';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userEmail').textContent = user.email || '';
+            
+            const avatar = document.getElementById('userAvatar');
+            if (user.avatar_url) {
+                avatar.innerHTML = `<img src="${user.avatar_url}" alt="${name}">`;
+            } else {
+                avatar.textContent = name.charAt(0).toUpperCase();
+            }
+        }
+
+        async function loadWorks() {
+            try {
+                const response = await fetchWithAuth('/works');
+                if (response && response.ok) {
+                    works = await response.json();
+                    filteredWorks = [...works];
+                    updateStats();
+                    renderWorks();
+                }
+            } catch (err) {
+                console.error('Failed to load works:', err);
+                showToast('加载作品失败', 'error');
+            } finally {
+                updateLoader(100);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalWorks').textContent = works.length;
+            document.getElementById('publishedWorks').textContent = works.filter(w => w.status === 'published').length;
+            document.getElementById('draftWorks').textContent = works.filter(w => w.status === 'draft').length;
+            document.getElementById('designWorks').textContent = works.filter(w => w.category === 'design').length;
+            document.getElementById('devWorks').textContent = works.filter(w => w.category === 'development').length;
+            document.getElementById('videoWorks').textContent = works.filter(w => w.category === 'video').length;
+            document.getElementById('photoWorks').textContent = works.filter(w => w.category === 'photography').length;
+            document.getElementById('worksCount').textContent = works.length;
+        }
+
+        function renderWorks() {
+            const grid = document.getElementById('worksGrid');
+            
+            if (filteredWorks.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <h3>暂无作品</h3>
+                        <p>开始创建您的第一个作品集吧</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('createBtn').click()">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            创建作品
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = filteredWorks.map((work, index) => `
+                <div class="work-card" data-id="${work.uuid || work.id}" data-category="${work.category || 'other'}" data-status="${work.status || 'draft'}" style="opacity: 0; transform: translateY(30px);" draggable="true">
+                    <div class="card-checkbox" data-work-id="${work.uuid || work.id}"></div>
+                    <div class="card-glow"></div>
+                    <div class="work-card-content" data-url="${work.url || work.project_url || ''}" data-source="${work.source}">
+                        <div class="work-card-loading">
+                            <div class="loading-spinner"></div>
+                            <span>加载中...</span>
+                        </div>
+                        ${(() => {
+                            if (work.source === 'upload') {
+                                if (work.file_type === 'image') {
+                                    return `<img src="${work.url}" class="work-card-image" onload="this.parentElement.querySelector('.work-card-loading').style.display='none'; this.style.opacity = '1';" onerror="this.parentElement.querySelector('.work-card-loading').style.display='none'; this.style.opacity = '0'; this.style.display = 'none';" alt="${work.title}">`;
+                                } else if (work.file_type === 'video') {
+                                    return `<video class="work-card-video" onloadeddata="this.parentElement.querySelector('.work-card-loading').style.display='none'; this.style.opacity = '1';" onerror="this.parentElement.querySelector('.work-card-loading').style.display='none'; this.style.opacity = '0'; this.style.display = 'none';" controls>
+                                        <source src="${work.url}" type="video/mp4">
+                                        您的浏览器不支持视频播放
+                                    </video>`;
+                                } else {
+                                    return `<div class="work-card-file-placeholder">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                            <polyline points="14 2 14 8 20 8"/>
+                                            <line x1="16" y1="13" x2="8" y2="13"/>
+                                            <line x1="16" y1="17" x2="8" y2="17"/>
+                                        </svg>
+                                    </div>`;
+                                }
+                            } else {
+                                return `<iframe src="${work.url || work.project_url || ''}" class="work-card-iframe" frameborder="0" allowfullscreen onload="this.style.opacity = '1'; this.previousElementSibling.style.display='none';" onerror="this.style.opacity = '0'; this.style.display = 'none'; this.previousElementSibling.style.display='none';"></iframe>`;
+                            }
+                        })()}
+                        <div class="work-card-header-overlay">
+                            <span class="work-card-number">${String(index + 1).padStart(2, '0')}</span>
+                            <span class="work-card-category">${work.category || 'other'}</span>
+                            <span class="work-card-status ${work.status || 'draft'}">${work.status === 'published' ? '已发布' : '草稿'}</span>
+                            <div class="work-card-actions">
+                                <button class="work-card-action edit" title="编辑" onclick="editWork('${work.uuid || work.id}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </button>
+                                <button class="work-card-action delete" title="删除" onclick="deleteWork('${work.uuid || work.id}')">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                </button>
+                            </div>
+                            <button class="card-preview-btn" onclick="previewWork('${work.uuid || work.id}')">预览</button>
+                        </div>
+                    </div>
+                    <div class="work-card-info">
+                        <h3 class="work-card-title">${work.title || '未命名作品'}</h3>
+                        <p class="work-card-desc">${work.description || '暂无描述'}</p>
+                        <div class="work-card-meta">
+                            ${work.source === 'upload' ? `<span class="work-card-file-type">${work.file_type === 'image' ? '🖼️ 图片' : work.file_type === 'video' ? '🎬 视频' : '📁 文件'}</span>` : '<span class="work-card-file-type">🔗 链接</span>'}
+                            <div class="work-card-footer">
+                                <div class="work-card-tags">
+                                    ${(() => {
+                                        try {
+                                            const tags = typeof work.tags === 'string' ? JSON.parse(work.tags) : work.tags || [];
+                                            return tags.slice(0, 3).map(tag => `<span class="work-card-tag">${tag}</span>`).join('');
+                                        } catch {
+                                            return '';
+                                        }
+                                    })()}
+                                </div>
+                                <span class="work-card-date">${work.created_at ? new Date(work.created_at).toLocaleDateString('zh-CN') : ''}</span>
+                                ${work.source !== 'upload' ? `
+                                <a href="${work.url || work.project_url || ''}" target="_blank" class="work-card-visit-link" title="访问项目">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                                        <polyline points="15 3 21 3 21 9"/>
+                                        <line x1="10" y1="14" x2="21" y2="3"/>
+                                    </svg>
+                                    <span>访问项目</span>
+                                </a>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Animate cards with stagger
+            gsap.to(grid.querySelectorAll('.work-card'), {
+                opacity: 1,
+                y: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: 'power3.out'
+            });
+
+            // Add hover effects
+            grid.querySelectorAll('.work-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    gsap.to(card, { scale: 1.02, duration: 0.3 });
+                });
+                card.addEventListener('mouseleave', () => {
+                    gsap.to(card, { scale: 1, duration: 0.3 });
+                });
+            });
+
+            // Add checkbox handlers
+            grid.querySelectorAll('.card-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const workId = checkbox.dataset.workId;
+                    toggleWorkSelection(workId);
+                });
+            });
+
+            // Add drag and drop handlers
+            grid.querySelectorAll('.work-card').forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragover', handleDragOver);
+                card.addEventListener('drop', handleDrop);
+                card.addEventListener('dragleave', handleDragLeave);
+            });
+
+            updateBatchUI();
+        }
+
+        function toggleWorkSelection(workId) {
+            if (selectedWorks.has(workId)) {
+                selectedWorks.delete(workId);
+            } else {
+                selectedWorks.add(workId);
+            }
+            updateWorkCardSelection();
+            updateBatchUI();
+        }
+
+        function updateWorkCardSelection() {
+            document.querySelectorAll('.work-card').forEach(card => {
+                const workId = card.dataset.id;
+                if (selectedWorks.has(workId)) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+            });
+        }
+
+        function updateBatchUI() {
+            const batchBar = document.getElementById('batchActionsBar');
+            const countEl = document.getElementById('selectedCount');
+            const count = selectedWorks.size;
+
+            if (count > 0) {
+                batchBar.classList.add('active');
+                countEl.textContent = count;
+            } else {
+                batchBar.classList.remove('active');
+            }
+        }
+
+        function clearSelection() {
+            selectedWorks.clear();
+            updateWorkCardSelection();
+            updateBatchUI();
+        }
+
+        function selectAllWorks() {
+            filteredWorks.forEach(work => {
+                selectedWorks.add(work.uuid || work.id);
+            });
+            updateWorkCardSelection();
+            updateBatchUI();
+        }
+
+        // Drag and Drop handlers
+        function handleDragStart(e) {
+            draggedCard = this;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.work-card').forEach(card => {
+                card.classList.remove('drag-over');
+            });
+            draggedCard = null;
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            if (this !== draggedCard) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            if (this !== draggedCard) {
+                const draggedId = e.dataTransfer.getData('text/plain');
+                const targetId = this.dataset.id;
+                swapWorksOrder(draggedId, targetId);
+            }
+        }
+
+        function swapWorksOrder(draggedId, targetId) {
+            const draggedIndex = works.findIndex(w => (w.uuid || w.id) === draggedId);
+            const targetIndex = works.findIndex(w => (w.uuid || w.id) === targetId);
+
+            if (draggedIndex > -1 && targetIndex > -1) {
+                const temp = works[draggedIndex];
+                works[draggedIndex] = works[targetIndex];
+                works[targetIndex] = temp;
+
+                addActivity('排序', `调整了作品顺序`);
+                renderWorks();
+                showToast('作品顺序已更新', 'success');
+            }
+        }
+
+        // Batch Operations
+        async function batchPublish() {
+            if (selectedWorks.size === 0) return;
+
+            const confirmMsg = `确定要发布 ${selectedWorks.size} 个作品吗？`;
+            if (!confirm(confirmMsg)) return;
+
+            let successCount = 0;
+            for (const workId of selectedWorks) {
+                try {
+                    const response = await fetchWithAuth(`/works/${workId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ status: 'published' })
+                    });
+                    if (response && response.ok) {
+                        successCount++;
+                    }
+                } catch (err) {
+                    console.error('Failed to publish work:', err);
+                }
+            }
+
+            if (successCount > 0) {
+                addActivity('批量发布', `发布了 ${successCount} 个作品`);
+                showToast(`已成功发布 ${successCount} 个作品`, 'success');
+                clearSelection();
+                await loadWorks();
+            }
+        }
+
+        async function batchDelete() {
+            if (selectedWorks.size === 0) return;
+
+            const confirmMsg = `确定要删除 ${selectedWorks.size} 个作品吗？此操作不可撤销。`;
+            if (!confirm(confirmMsg)) return;
+
+            let successCount = 0;
+            for (const workId of selectedWorks) {
+                try {
+                    const response = await fetchWithAuth(`/works/${workId}`, {
+                        method: 'DELETE'
+                    });
+                    if (response && response.ok) {
+                        successCount++;
+                    }
+                } catch (err) {
+                    console.error('Failed to delete work:', err);
+                }
+            }
+
+            if (successCount > 0) {
+                addActivity('批量删除', `删除了 ${successCount} 个作品`);
+                showToast(`已成功删除 ${successCount} 个作品`, 'success');
+                clearSelection();
+                await loadWorks();
+            }
+        }
+
+        function showCategoryModal() {
+            if (selectedWorks.size === 0) return;
+
+            const categories = ['design', 'development', 'video', 'photography', 'other'];
+            categories.forEach(cat => {
+                const count = works.filter(w => w.category === cat && selectedWorks.has(w.uuid || w.id)).length;
+                document.getElementById(`cat-${cat}-count`).textContent = count;
+            });
+
+            document.getElementById('categoryModal').classList.add('show');
+        }
+
+        async function moveToCategory(category) {
+            if (selectedWorks.size === 0) return;
+
+            let successCount = 0;
+            for (const workId of selectedWorks) {
+                try {
+                    const response = await fetchWithAuth(`/works/${workId}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ category })
+                    });
+                    if (response && response.ok) {
+                        successCount++;
+                    }
+                } catch (err) {
+                    console.error('Failed to move work:', err);
+                }
+            }
+
+            if (successCount > 0) {
+                addActivity('移动分类', `将 ${successCount} 个作品移动到"${category}"分类`);
+                showToast(`已成功移动 ${successCount} 个作品`, 'success');
+                clearSelection();
+                document.getElementById('categoryModal').classList.remove('show');
+                await loadWorks();
+            }
+        }
+
+        // Import/Export Functions
+        function exportWorks() {
+            const exportData = filteredWorks.map(work => ({
+                title: work.title,
+                description: work.description,
+                category: work.category,
+                tags: work.tags || [],
+                status: work.status,
+                project_url: work.project_url,
+                github_url: work.github_url,
+                created_at: work.created_at
+            }));
+
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `folio-works-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            addActivity('导出数据', `导出了 ${filteredWorks.length} 个作品`);
+            showToast('数据导出成功', 'success');
+        }
+
+        async function importWorks() {
+            const importText = document.getElementById('importData').value.trim();
+            if (!importText) {
+                showToast('请输入要导入的数据', 'error');
+                return;
+            }
+
+            try {
+                const importData = JSON.parse(importText);
+                if (!Array.isArray(importData)) {
+                    throw new Error('Invalid format');
+                }
+
+                let successCount = 0;
+                for (const item of importData) {
+                    try {
+                        const response = await fetchWithAuth('/works', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                                title: item.title || '未命名',
+                                description: item.description || '',
+                                category: item.category || 'other',
+                                tags: item.tags || [],
+                                status: item.status || 'draft',
+                                project_url: item.project_url || '',
+                                github_url: item.github_url || ''
+                            })
+                        });
+                        if (response && response.ok) {
+                            successCount++;
+                        }
+                    } catch (err) {
+                        console.error('Failed to import work:', err);
+                    }
+                }
+
+                if (successCount > 0) {
+                    addActivity('导入数据', `导入了 ${successCount} 个作品`);
+                    showToast(`成功导入 ${successCount} 个作品`, 'success');
+                    document.getElementById('importData').value = '';
+                    document.getElementById('importExportModal').classList.remove('show');
+                    await loadWorks();
+                } else {
+                    showToast('导入失败，请检查数据格式', 'error');
+                }
+            } catch (err) {
+                showToast('JSON格式错误，请检查输入', 'error');
+            }
+        }
+
+        // Activity Log
+        function addActivity(action, detail) {
+            const now = new Date();
+            activityLog.unshift({
+                action,
+                detail,
+                time: now.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+                date: now.toLocaleDateString('zh-CN')
+            });
+
+            if (activityLog.length > 50) {
+                activityLog = activityLog.slice(0, 50);
+            }
+
+            renderActivityLog();
+            localStorage.setItem('worksActivityLog', JSON.stringify(activityLog));
+        }
+
+        function renderActivityLog() {
+            const list = document.getElementById('activityList');
+
+            if (activityLog.length === 0) {
+                list.innerHTML = `
+                    <div class="activity-empty">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        <p>暂无活动记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = activityLog.map(item => `
+                <div class="activity-item">
+                    <div class="activity-icon ${item.action.includes('删除') ? 'delete' : item.action.includes('发布') ? 'publish' : ''}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            ${item.action.includes('删除') ?
+                                '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>' :
+                                item.action.includes('发布') ?
+                                '<polyline points="20 6 9 17 4 12"/>' :
+                                '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+                            }
+                        </svg>
+                    </div>
+                    <div class="activity-content">
+                        <p class="action"><strong>${item.action}</strong> - ${item.detail}</p>
+                        <p class="time">${item.date} ${item.time}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function loadActivityLog() {
+            const saved = localStorage.getItem('worksActivityLog');
+            if (saved) {
+                try {
+                    activityLog = JSON.parse(saved);
+                    renderActivityLog();
+                } catch (err) {
+                    activityLog = [];
+                }
+            }
+        }
+
+        function filterWorks() {
+            const status = document.getElementById('statusFilter').value;
+            const category = document.getElementById('categoryFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            filteredWorks = works.filter(work => {
+                const matchStatus = status === 'all' || work.status === status;
+                const matchCategory = category === 'all' || work.category === category;
+                const matchSearch = !search || 
+                    work.title?.toLowerCase().includes(search) || 
+                    work.description?.toLowerCase().includes(search);
+                return matchStatus && matchCategory && matchSearch;
+            });
+
+            // Sort
+            filteredWorks.sort((a, b) => {
+                switch (sort) {
+                    case 'latest':
+                        return new Date(b.created_at) - new Date(a.created_at);
+                    case 'oldest':
+                        return new Date(a.created_at) - new Date(b.created_at);
+                    case 'name':
+                        return (a.title || '').localeCompare(b.title || '');
+                    default:
+                        return 0;
+                }
+            });
+
+            renderWorks();
+        }
+
+        // View toggle
+        document.getElementById('gridViewBtn').addEventListener('click', () => {
+            isGridView = true;
+            document.getElementById('worksGrid').classList.remove('list-view');
+            document.getElementById('gridViewBtn').classList.add('active');
+            document.getElementById('listViewBtn').classList.remove('active');
+        });
+
+        document.getElementById('listViewBtn').addEventListener('click', () => {
+            isGridView = false;
+            document.getElementById('worksGrid').classList.add('list-view');
+            document.getElementById('listViewBtn').classList.add('active');
+            document.getElementById('gridViewBtn').classList.remove('active');
+        });
+
+        // Filter listeners
+        document.getElementById('statusFilter').addEventListener('change', filterWorks);
+        document.getElementById('categoryFilter').addEventListener('change', filterWorks);
+        document.getElementById('sortFilter').addEventListener('change', filterWorks);
+        document.getElementById('searchInput').addEventListener('input', filterWorks);
+
+        // Button handlers
+        document.getElementById('createBtn').addEventListener('click', () => {
+            window.location.href = 'work-editor.html';
+        });
+
+        document.getElementById('importBtn').addEventListener('click', () => {
+            document.getElementById('importExportModal').classList.add('show');
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', exportWorks);
+        document.getElementById('importBtn').addEventListener('click', importWorks);
+
+        // Batch action handlers
+        document.getElementById('batchPublishBtn').addEventListener('click', batchPublish);
+        document.getElementById('batchDeleteBtn').addEventListener('click', batchDelete);
+        document.getElementById('batchMoveBtn').addEventListener('click', showCategoryModal);
+        document.getElementById('cancelSelectionBtn').addEventListener('click', clearSelection);
+
+        // Category modal handlers
+        document.getElementById('closeCategoryModal').addEventListener('click', () => {
+            document.getElementById('categoryModal').classList.remove('show');
+        });
+
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', () => {
+                moveToCategory(item.dataset.category);
+            });
+        });
+
+        // Preview modal handlers
+        document.getElementById('closePreviewModal').addEventListener('click', () => {
+            document.getElementById('previewModal').classList.remove('show');
+        });
+
+        document.getElementById('previewModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('previewModal')) {
+                document.getElementById('previewModal').classList.remove('show');
+            }
+        });
+
+        // Modal handlers
+        document.getElementById('closeModal').addEventListener('click', () => {
+            document.getElementById('importExportModal').classList.remove('show');
+        });
+
+        document.getElementById('closeActivity').addEventListener('click', () => {
+            document.getElementById('activityPanel').classList.remove('open');
+        });
+
+        // Close modals on overlay click
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+
+        window.editWork = function(id) {
+            window.location.href = `work-editor.html?id=${id}`;
+        };
+
+        window.deleteWork = async function(id) {
+            if (!confirm('确定要删除这个作品吗？此操作不可撤销。')) return;
+
+            try {
+                const response = await fetchWithAuth(`/works/${id}`, { method: 'DELETE' });
+                if (response && response.ok) {
+                    addActivity('删除', `删除了作品`);
+                    showToast('作品已删除', 'success');
+                    await loadWorks();
+                } else {
+                    showToast('删除失败', 'error');
+                }
+            } catch (err) {
+                showToast('删除失败', 'error');
+            }
+        };
+
+        window.previewWork = function(id) {
+            const work = filteredWorks.find(w => (w.uuid || w.id) == id);
+            if (!work) return;
+
+            const url = work.url || work.project_url || work.source_file || '';
+            if (!url) {
+                showToast('该作品没有可预览的链接', 'error');
+                return;
+            }
+
+            let previewUrl = url;
+            if (url.startsWith('/extracted/')) {
+                previewUrl = `http://localhost:3001${url}`;
+            } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                previewUrl = `http://localhost:3001${url.startsWith('/') ? url : '/' + url}`;
+            }
+
+            document.getElementById('previewTitle').textContent = work.title || '作品预览';
+            document.getElementById('previewIframe').src = previewUrl;
+            document.getElementById('previewUrlLink').href = previewUrl;
+            document.getElementById('previewUrlLink').textContent = previewUrl;
+            document.getElementById('previewModal').classList.add('show');
+        };
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'landing.html';
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                document.getElementById('createBtn').click();
+            }
+            if (e.ctrlKey && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+            }
+            if (e.ctrlKey && e.key === 'a') {
+                e.preventDefault();
+                selectAllWorks();
+            }
+            if (e.ctrlKey && e.key === 'd' && selectedWorks.size > 0) {
+                e.preventDefault();
+                batchDelete();
+            }
+            if (e.ctrlKey && e.key === 'e') {
+                e.preventDefault();
+                document.getElementById('importExportModal').classList.add('show');
+            }
+            if (e.ctrlKey && e.key === 'l') {
+                e.preventDefault();
+                document.getElementById('activityPanel').classList.toggle('open');
+            }
+            if (e.key === 'Escape') {
+                document.getElementById('shortcutsModal').classList.remove('show');
+                document.getElementById('importExportModal').classList.remove('show');
+                document.getElementById('categoryModal').classList.remove('show');
+                document.getElementById('activityPanel').classList.remove('open');
+                clearSelection();
+            }
+            if (e.ctrlKey && e.shiftKey && e.key === '/') {
+                e.preventDefault();
+                document.getElementById('shortcutsModal').classList.toggle('show');
+            }
+        });
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        // Initialize
+        loadTheme();
+        loadUserInfo();
+        loadWorks();
+        loadActivityLog();
+        
+        // Global card click handler for embedded preview and navigation
+        document.addEventListener('click', (e) => {
+            const cardContent = e.target.closest('.work-card-content');
+            if (cardContent) {
+                const url = cardContent.dataset.url;
+                const source = cardContent.dataset.source;
+                
+                if (url && source !== 'upload') {
+                    // For non-upload works, open in new tab
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            }
+        });
+
+        // Animate page header
+        gsap.from('.page-title', {
+            opacity: 0,
+            y: 30,
+            duration: 1,
+            delay: 0.2,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.page-actions', {
+            opacity: 0,
+            y: 30,
+            duration: 1,
+            delay: 0.3,
+            ease: 'power3.out'
+        });
+
+        gsap.from('.stats-bar .stat-item', {
+            opacity: 0,
+            y: 20,
+            duration: 0.8,
+            stagger: 0.1,
+            delay: 0.4,
+            ease: 'power3.out'
+        });
+    })();
+    </script>
+</body>
+</html>

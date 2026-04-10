@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据分析 - FolioStack</title>
+    <meta name="description" content="FolioStack 作品集数据分析">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--champagne); }
+
+        .dashboard-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+        .nav-item .nav-badge { margin-left: auto; background: var(--champagne); color: var(--obsidian); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .sidebar-footer { padding: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .user-card { display: flex; align-items: center; gap: 14px; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--obsidian); }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 2px; }
+        .user-email { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .logout-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .logout-btn svg { width: 18px; height: 18px; stroke: var(--smoke); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); }
+        .page-title em { font-style: italic; color: var(--champagne); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .stat-card { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 32px; transition: all 0.4s var(--ease-out-expo); }
+        .stat-card:hover { border-color: rgba(201, 169, 110, 0.25); transform: translateY(-4px); }
+        .stat-value { font-family: var(--font-display); font-size: 48px; font-weight: 300; color: var(--champagne); margin-bottom: 8px; }
+        .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); }
+        .stat-trend { font-size: 12px; color: var(--emerald); display: flex; align-items: center; gap: 6px; margin-top: 12px; }
+        .stat-trend.negative { color: var(--rose-gold); }
+
+        .charts-section { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 40px; }
+        .chart-card { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 32px; }
+        .chart-title { font-family: var(--font-display); font-size: 20px; font-weight: 400; color: var(--ivory); margin-bottom: 24px; }
+        .chart-container { position: relative; height: 300px; }
+        .chart-placeholder { height: 300px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.05); border-radius: 2px; }
+        .chart-placeholder svg { width: 48px; height: 48px; stroke: var(--champagne); opacity: 0.3; }
+
+        .top-works { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 32px; }
+        .section-title { font-family: var(--font-display); font-size: 20px; font-weight: 400; color: var(--ivory); margin-bottom: 24px; }
+        .work-list { display: flex; flex-direction: column; gap: 16px; }
+        .work-item { display: flex; align-items: center; gap: 16px; padding: 16px; background: rgba(20, 20, 20, 0.5); border-radius: 2px; }
+        .work-rank { font-family: var(--font-display); font-size: 24px; font-weight: 300; color: var(--champagne); width: 32px; text-align: center; }
+        .work-info { flex: 1; }
+        .work-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 4px; }
+        .work-meta { font-size: 12px; color: var(--ash); }
+        .work-stats { display: flex; gap: 24px; }
+        .stat-item { text-align: center; }
+        .stat-number { font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--champagne); }
+        .stat-name { font-size: 10px; color: var(--mist); }
+
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+            .charts-section { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="dashboard.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                    </a>
+                    <a href="analytics.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">L</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Loading...</p>
+                        <p class="user-email" id="userEmail">...</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">数据<em>分析</em></h1>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">2,453</div>
+                    <div class="stat-label">总访问量</div>
+                    <div class="stat-trend">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        +12% 本月
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">156</div>
+                    <div class="stat-label">收藏数</div>
+                    <div class="stat-trend">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        +8% 本月
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">48</div>
+                    <div class="stat-label">平均停留时间</div>
+                    <div class="stat-trend">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 18 8.5 12.5 13.5 17.5 23 8"/><polyline points="1 6 8.5 11.5 13.5 6.5 23 16"/></svg>
+                        -3% 本月
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">24</div>
+                    <div class="stat-label">转化率</div>
+                    <div class="stat-trend">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                        +5% 本月
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-section">
+                <div class="chart-card">
+                    <h3 class="chart-title">访问趋势</h3>
+                    <div class="chart-container">
+                        <canvas id="visitsChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">作品表现</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="top-works">
+                <h3 class="section-title">热门作品</h3>
+                <div class="work-list">
+                    <div class="work-item">
+                        <div class="work-rank">1</div>
+                        <div class="work-info">
+                            <div class="work-name">个人作品集网站</div>
+                            <div class="work-meta">设计 · 前端开发</div>
+                        </div>
+                        <div class="work-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">892</div>
+                                <div class="stat-name">访问</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">45</div>
+                                <div class="stat-name">收藏</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-item">
+                        <div class="work-rank">2</div>
+                        <div class="work-info">
+                            <div class="work-name">移动应用界面设计</div>
+                            <div class="work-meta">UI/UX · 设计</div>
+                        </div>
+                        <div class="work-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">645</div>
+                                <div class="stat-name">访问</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">32</div>
+                                <div class="stat-name">收藏</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="work-item">
+                        <div class="work-rank">3</div>
+                        <div class="work-info">
+                            <div class="work-name">响应式网站开发</div>
+                            <div class="work-meta">前端 · 开发</div>
+                        </div>
+                        <div class="work-stats">
+                            <div class="stat-item">
+                                <div class="stat-number">432</div>
+                                <div class="stat-name">访问</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-number">28</div>
+                                <div class="stat-name">收藏</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    (function() {
+        const API_BASE = 'http://localhost:3002/api';
+        let authToken = localStorage.getItem('token');
+        let currentUser = null;
+        let visitsChart = null;
+        let performanceChart = null;
+        let isDataLoaded = false;
+
+        if (!authToken) {
+            window.location.href = 'landing.html';
+            return;
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'landing.html';
+                return null;
+            }
+            return response;
+        }
+
+        async function loadUserInfo() {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                updateUserUI(currentUser);
+            }
+            try {
+                const response = await fetchWithAuth('/auth/me');
+                if (response && response.ok) {
+                    currentUser = await response.json();
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    updateUserUI(currentUser);
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+            }
+        }
+
+        function updateUserUI(user) {
+            if (!user) return;
+            const name = user.username || user.email?.split('@')[0] || '创作者';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userEmail').textContent = user.email || '';
+            document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'landing.html';
+        });
+
+        function generateMockVisitData() {
+            const labels = [];
+            const data = [];
+            const now = new Date();
+            
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date(now);
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
+                data.push(Math.floor(Math.random() * 100) + 50);
+            }
+            
+            return { labels, data };
+        }
+
+        function generateMockPerformanceData() {
+            return {
+                labels: ['作品1', '作品2', '作品3', '作品4', '作品5'],
+                visits: [892, 645, 432, 320, 256],
+                likes: [45, 32, 28, 21, 18]
+            };
+        }
+
+        async function loadAnalyticsData() {
+            try {
+                const response = await fetchWithAuth('/analytics');
+                if (response && response.ok) {
+                    const data = await response.json();
+                    return data;
+                }
+                return null;
+            } catch (err) {
+                console.error('Failed to load analytics data:', err);
+                return null;
+            }
+        }
+
+        function renderVisitsChart(data) {
+            const ctx = document.getElementById('visitsChart').getContext('2d');
+            
+            visitsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: '每日访问量',
+                        data: data.data,
+                        borderColor: '#c9a96e',
+                        backgroundColor: 'rgba(201, 169, 110, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#c9a96e',
+                        pointBorderColor: '#0a0a0a',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 10, 10, 0.9)',
+                            titleColor: '#f0ece4',
+                            bodyColor: '#d4d4d4',
+                            borderColor: '#c9a96e',
+                            borderWidth: 1,
+                            padding: 12,
+                            displayColors: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#8a8a8a',
+                                font: {
+                                    family: 'var(--font-body)',
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#8a8a8a',
+                                font: {
+                                    family: 'var(--font-body)',
+                                    size: 11
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderPerformanceChart(data) {
+            const ctx = document.getElementById('performanceChart').getContext('2d');
+            
+            performanceChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        {
+                            label: '访问量',
+                            data: data.visits,
+                            backgroundColor: 'rgba(201, 169, 110, 0.7)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: '收藏数',
+                            data: data.likes,
+                            backgroundColor: 'rgba(42, 107, 90, 0.7)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                color: '#d4d4d4',
+                                font: {
+                                    family: 'var(--font-body)',
+                                    size: 12
+                                },
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(10, 10, 10, 0.9)',
+                            titleColor: '#f0ece4',
+                            bodyColor: '#d4d4d4',
+                            borderColor: '#c9a96e',
+                            borderWidth: 1,
+                            padding: 12
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                color: '#8a8a8a',
+                                font: {
+                                    family: 'var(--font-body)',
+                                    size: 11
+                                }
+                            }
+                        },
+                        y: {
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.05)'
+                            },
+                            ticks: {
+                                color: '#8a8a8a',
+                                font: {
+                                    family: 'var(--font-body)',
+                                    size: 11
+                                }
+                            },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateStatsCards(data) {
+            const totalVisits = data.totalVisits || 2453;
+            const totalLikes = data.totalLikes || 156;
+            const avgTime = data.avgTime || 48;
+            const conversion = data.conversion || 24;
+
+            document.querySelector('.stat-card:nth-child(1) .stat-value').textContent = totalVisits.toLocaleString();
+            document.querySelector('.stat-card:nth-child(2) .stat-value').textContent = totalLikes.toLocaleString();
+            document.querySelector('.stat-card:nth-child(3) .stat-value').textContent = avgTime + '秒';
+            document.querySelector('.stat-card:nth-child(4) .stat-value').textContent = conversion + '%';
+        }
+
+        async function loadDashboard() {
+            const analyticsData = await loadAnalyticsData();
+            
+            if (analyticsData) {
+                updateStatsCards(analyticsData);
+                renderVisitsChart(analyticsData.visitData || generateMockVisitData());
+                renderPerformanceChart(analyticsData.performanceData || generateMockPerformanceData());
+            } else {
+                updateStatsCards({});
+                renderVisitsChart(generateMockVisitData());
+                renderPerformanceChart(generateMockPerformanceData());
+            }
+            
+            isDataLoaded = true;
+        }
+
+        function animateStats() {
+            const statValues = document.querySelectorAll('.stat-value');
+            
+            statValues.forEach(stat => {
+                const target = parseFloat(stat.textContent.replace(/[^\d.]/g, ''));
+                const duration = 2000;
+                const startTime = Date.now();
+                const startValue = 0;
+
+                function updateStat() {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    const currentValue = Math.floor(startValue + (target - startValue) * progress);
+                    
+                    stat.textContent = stat.textContent.replace(/[\d,]+/, currentValue.toLocaleString());
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(updateStat);
+                    }
+                }
+                
+                updateStat();
+            });
+        }
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        loadTheme();
+        loadUserInfo();
+        loadDashboard();
+
+        setTimeout(animateStats, 500);
+    })();
+    </script>
+</body>
+</html>

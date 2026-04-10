@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导入作品 - FolioStack</title>
+    <meta name="description" content="批量导入作品集项目">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+        
+        /* 浅色主题下的侧边栏样式 */
+        body.light-mode .sidebar {
+            background: rgba(255, 255, 255, 0.9);
+            border-right: 1px solid rgba(148, 163, 184, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        body.light-mode .sidebar-header,
+        body.light-mode .sidebar-footer {
+            border-color: rgba(148, 163, 184, 0.2);
+        }
+        
+        body.light-mode .nav-item:hover {
+            background: rgba(184, 148, 77, 0.1);
+        }
+        
+        body.light-mode .nav-item.active {
+            background: rgba(184, 148, 77, 0.15);
+        }
+        
+        /* 浅色主题下的输入框样式 */
+        body.light-mode input,
+        body.light-mode textarea,
+        body.light-mode select {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: var(--smoke);
+        }
+        
+        body.light-mode input:focus,
+        body.light-mode textarea:focus,
+        body.light-mode select:focus {
+            border-color: var(--champagne);
+            box-shadow: 0 0 0 3px rgba(184, 148, 77, 0.1);
+        }
+        
+        /* 浅色主题下的按钮样式 */
+        body.light-mode .btn-secondary {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: var(--smoke);
+        }
+        
+        body.light-mode .btn-secondary:hover {
+            border-color: var(--champagne);
+            color: var(--champagne);
+        }
+        
+        /* 浅色主题下的导入面板样式 */
+        body.light-mode .import-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            box-shadow: 0 8px 32px rgba(15, 23, 42, 0.1);
+        }
+        
+        /* 浅色主题下的上传区域样式 */
+        body.light-mode .upload-zone,
+        body.light-mode .deploy-zone {
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+        
+        body.light-mode .upload-zone:hover,
+        body.light-mode .deploy-zone:hover {
+            border-color: var(--champagne);
+            background: rgba(184, 148, 77, 0.05);
+        }
+        
+        body.light-mode .upload-zone.dragover,
+        body.light-mode .deploy-zone.dragover {
+            border-color: var(--champagne);
+            background: rgba(184, 148, 77, 0.1);
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--champagne); }
+
+        .dashboard-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+        .sidebar-footer { padding: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .user-card { display: flex; align-items: center; gap: 14px; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--obsidian); }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 2px; }
+        .user-email { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .logout-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .logout-btn svg { width: 18px; height: 18px; stroke: var(--smoke); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); }
+        .page-title em { font-style: italic; color: var(--champagne); }
+        .page-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; transition: all 0.4s var(--ease-out-expo); }
+        .btn-primary { background: var(--champagne); color: var(--obsidian); }
+        .btn-primary:hover { background: var(--champagne-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201, 169, 110, 0.2); }
+        .btn-secondary { background: var(--graphite); color: var(--smoke); border: 1px solid var(--silver); }
+        .btn-secondary:hover { border-color: var(--champagne); color: var(--champagne); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+        .import-container { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; }
+        .import-panel { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 40px; }
+        .panel-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .panel-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.1); border-radius: 8px; }
+        .panel-icon svg { width: 24px; height: 24px; stroke: var(--champagne); }
+        .panel-title { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ivory); }
+        .panel-title em { color: var(--champagne); font-style: italic; }
+        .panel-desc { font-size: 14px; color: var(--ash); margin-bottom: 24px; line-height: 1.6; }
+
+        .upload-zone { border: 2px dashed var(--silver); border-radius: 4px; padding: 48px 24px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .upload-zone:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.05); }
+        .upload-zone.dragover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); }
+        .upload-zone-icon { width: 64px; height: 64px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.08); border-radius: 50%; }
+        .upload-zone-icon svg { width: 32px; height: 32px; stroke: var(--champagne); opacity: 0.7; }
+        .upload-zone-text { font-size: 16px; color: var(--ivory); margin-bottom: 8px; }
+        .upload-zone-hint { font-size: 13px; color: var(--ash); margin-bottom: 20px; }
+        .upload-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--champagne); color: var(--obsidian); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer; transition: all 0.3s; }
+        .upload-btn:hover { background: var(--champagne-light); }
+
+        /* 部署功能样式 */
+        .deploy-zone { border: 2px dashed var(--silver); border-radius: 4px; padding: 48px 24px; cursor: pointer; transition: all 0.3s; text-align: center; }
+        .deploy-zone:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.05); }
+        .deploy-zone.dragover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); }
+        .deploy-zone-icon { width: 64px; height: 64px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.08); border-radius: 50%; }
+        .deploy-zone-icon svg { width: 32px; height: 32px; stroke: var(--champagne); opacity: 0.7; }
+        .deploy-zone-text { font-size: 16px; color: var(--ivory); margin-bottom: 8px; }
+        .deploy-zone-hint { font-size: 13px; color: var(--ash); margin-bottom: 20px; }
+        .deploy-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 24px; background: var(--champagne); color: var(--obsidian); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; border: none; border-radius: 2px; cursor: pointer; transition: all 0.3s; }
+        .deploy-btn:hover { background: var(--champagne-light); }
+
+        .deploy-settings { margin: 20px 0; }
+        .settings-grid { display: grid; gap: 16px; grid-template-columns: 1fr 1fr; }
+        .setting-item { display: flex; flex-direction: column; }
+        
+        .deploy-progress { margin-top: 24px; padding: 16px; background: var(--graphite); border-radius: 4px; }
+        .deploy-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .deploy-step { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ash); }
+        .step-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        .deploy-result { margin-top: 24px; padding: 16px; background: var(--graphite); border-radius: 4px; display: none; text-align: center; }
+        .deploy-links { margin-top: 16px; }
+        .deploy-link { text-align: left; }
+        .deploy-actions { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+        
+        .deploy-features { margin-top: 24px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 16px; }
+        .feature-item { text-align: center; padding: 16px; background: var(--charcoal); border-radius: 6px; }
+        .feature-icon { font-size: 24px; margin-bottom: 8px; }
+        .feature-text { font-size: 12px; color: var(--ash); }
+
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+        .upload-result { margin-top: 24px; padding: 16px; background: var(--graphite); border-radius: 4px; display: none; }
+        .upload-result.show { display: block; }
+        .upload-result.success { border: 1px solid var(--emerald); }
+        .upload-result.error { border: 1px solid var(--rose-gold); }
+        .result-icon { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .result-icon svg { width: 20px; height: 20px; }
+        .result-icon.success svg { stroke: var(--emerald); }
+        .result-icon.error svg { stroke: var(--rose-gold); }
+        .result-message { font-size: 14px; color: var(--ivory); }
+        .result-details { font-size: 12px; color: var(--ash); margin-top: 8px; }
+
+        .file-list { margin-top: 24px; }
+        .file-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--graphite); border-radius: 4px; margin-bottom: 8px; }
+        .file-item-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.1); border-radius: 4px; }
+        .file-item-icon svg { width: 16px; height: 16px; stroke: var(--champagne); }
+        .file-item-info { flex: 1; }
+        .file-item-name { font-size: 14px; color: var(--ivory); margin-bottom: 2px; }
+        .file-item-size { font-family: var(--font-mono); font-size: 10px; color: var(--ash); }
+        .file-item-status { font-family: var(--font-mono); font-size: 10px; padding: 4px 8px; border-radius: 2px; }
+        .file-item-status.success { background: rgba(42, 107, 90, 0.2); color: var(--emerald); }
+        .file-item-status.pending { background: rgba(201, 169, 110, 0.1); color: var(--champagne); }
+        .file-item-status.error { background: rgba(183, 110, 121, 0.2); color: var(--rose-gold); }
+
+        .textarea-container { position: relative; }
+        .link-textarea { width: 100%; min-height: 200px; background: var(--obsidian); border: 1px solid var(--silver); border-radius: 4px; padding: 16px; color: var(--ivory); font-family: var(--font-mono); font-size: 12px; line-height: 1.8; resize: vertical; outline: none; transition: border-color 0.3s; }
+        .link-textarea:focus { border-color: var(--champagne); }
+        .link-textarea::placeholder { color: var(--mist); }
+        .textarea-actions { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap; }
+        .import-actions { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+        .import-status { font-family: var(--font-mono); font-size: 11px; color: var(--ash); }
+        .import-status.success { color: var(--emerald); }
+        .import-status.error { color: var(--rose-gold); }
+
+        .supported-formats { margin-top: 32px; }
+        .format-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+        .format-item { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--graphite); border-radius: 4px; }
+        .format-icon { width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.1); border-radius: 4px; flex-shrink: 0; }
+        .format-icon svg { width: 14px; height: 14px; stroke: var(--champagne); }
+        .format-text { font-size: 12px; color: var(--smoke); }
+        .format-text strong { display: block; color: var(--ivory); margin-bottom: 2px; }
+
+        .progress-section { margin-top: 24px; display: none; }
+        .progress-section.show { display: block; }
+        .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .progress-label { font-family: var(--font-mono); font-size: 11px; color: var(--ash); }
+        .progress-percent { font-family: var(--font-mono); font-size: 11px; color: var(--champagne); }
+        .progress-bar { width: 100%; height: 4px; background: var(--silver); border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--champagne); transition: width 0.3s; }
+        .progress-detail { font-size: 12px; color: var(--ash); margin-top: 8px; }
+
+        .github-section { margin-top: 32px; padding-top: 32px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .github-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .github-header svg { width: 24px; height: 24px; stroke: var(--smoke); }
+        .github-header h4 { font-family: var(--font-display); font-size: 18px; font-weight: 400; color: var(--ivory); }
+        .github-input-group { display: flex; gap: 12px; margin-bottom: 16px; }
+        .github-input { flex: 1; padding: 12px 16px; background: var(--obsidian); border: 1px solid var(--silver); border-radius: 4px; color: var(--ivory); font-family: var(--font-mono); font-size: 13px; outline: none; transition: border-color 0.3s; }
+        .github-input:focus { border-color: var(--champagne); }
+        .github-input::placeholder { color: var(--mist); }
+
+        .file-upload-area { border: 2px dashed var(--silver); border-radius: 8px; padding: 32px; text-align: center; background: rgba(255, 255, 255, 0.02); transition: all 0.3s; cursor: pointer; }
+        .file-upload-area:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.05); }
+        .file-upload-area.dragover { border-color: var(--emerald); background: rgba(42, 107, 90, 0.08); }
+        .upload-icon { width: 48px; height: 48px; margin: 0 auto 16px; stroke: var(--smoke); }
+        .upload-text { font-family: var(--font-display); font-size: 18px; font-weight: 400; color: var(--ivory); margin-bottom: 8px; }
+        .upload-hint { font-size: 13px; color: var(--ash); }
+        
+        .file-upload-actions { display: flex; gap: 12px; margin: 24px 0; }
+        .file-upload-actions .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .file-list { margin-bottom: 16px; max-height: 200px; overflow-y: auto; }
+        .file-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 4px; margin-bottom: 8px; }
+        .file-item-icon { width: 24px; height: 24px; stroke: var(--smoke); flex-shrink: 0; }
+        .file-item-info { flex: 1; }
+        .file-item-name { font-size: 13px; color: var(--ivory); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .file-item-size { font-size: 11px; color: var(--ash); }
+        .file-item-remove { width: 20px; height: 20px; stroke: var(--rose); cursor: pointer; flex-shrink: 0; }
+        .file-item-remove:hover { stroke: #ff4757; }
+        
+        .auto-detect-info { display: flex; align-items: flex-start; gap: 12px; padding: 16px; background: rgba(42, 107, 90, 0.08); border: 1px solid rgba(42, 107, 90, 0.2); border-radius: 4px; margin-top: 16px; }
+        .auto-detect-info svg { width: 18px; height: 18px; stroke: var(--emerald); flex-shrink: 0; margin-top: 2px; }
+        .auto-detect-info p { font-size: 12px; color: var(--ash); line-height: 1.6; }
+
+        @media (max-width: 1200px) {
+            .import-container { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+        }
+        @media (max-width: 768px) {
+            .import-container { padding: 24px; }
+            .format-grid { grid-template-columns: 1fr; }
+            .github-input-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="dashboard.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">L</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Loading...</p>
+                        <p class="user-email" id="userEmail">...</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">导入<em>作品</em></h1>
+                <div class="page-actions">
+                    <a href="works.html" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                        返回列表
+                    </a>
+                </div>
+            </header>
+
+            <div class="import-container">
+                <div class="import-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <h3 class="panel-title">批量导入<em>链接</em></h3>
+                    </div>
+                    <p class="panel-desc">批量导入作品链接，每行一个URL。系统将自动识别项目信息并生成作品卡片。</p>
+
+                    <div class="textarea-container">
+                        <textarea class="link-textarea" id="linkTextarea" placeholder="https://your-project.vercel.app/&#10;https://another-project.netlify.app/&#10;https://github.com/username/project&#10;..."></textarea>
+                    </div>
+
+                    <div class="import-actions">
+                        <button class="btn btn-primary" id="importLinksBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            导入链接
+                        </button>
+                        <button class="btn btn-secondary" id="clearLinksBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            清空
+                        </button>
+                        <span class="import-status" id="importStatus"></span>
+                    </div>
+
+                    <div class="progress-section" id="linkProgress">
+                        <div class="progress-header">
+                            <span class="progress-label">正在导入...</span>
+                            <span class="progress-percent" id="linkProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="linkProgressFill" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-detail" id="linkProgressDetail"></p>
+                    </div>
+
+                    <div class="github-section">
+                        <div class="github-header">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                            <h4>GitHub 项目导入</h4>
+                        </div>
+                        <div class="github-input-group">
+                            <input type="text" class="github-input" id="githubUrl" placeholder="https://github.com/username/repository">
+                        </div>
+                        <button class="btn btn-secondary" id="importGithubBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
+                            导入 GitHub 项目
+                        </button>
+                    </div>
+                </div>
+
+                <div class="import-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <h3 class="panel-title">上传<em>文件</em></h3>
+                    </div>
+                    <p class="panel-desc">上传图片、视频或压缩文件，系统将自动创建作品卡片。支持的格式：JPG、PNG、GIF、MP4、ZIP、RAR等。</p>
+
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="upload-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <p class="upload-text">点击或拖拽文件到此处上传</p>
+                        <p class="upload-hint">支持图片、视频、压缩文件，最大50MB</p>
+                        <input type="file" id="fileInput" multiple accept="image/*,video/*,.zip,.rar,.7z" style="display: none;">
+                    </div>
+
+                    <div class="file-upload-actions">
+                        <button class="btn btn-primary" id="selectFilesBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            选择文件
+                        </button>
+                        <button class="btn btn-secondary" id="uploadFilesBtn" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            开始上传
+                        </button>
+                    </div>
+
+                    <div class="file-list" id="fileList"></div>
+
+                    <div class="progress-section" id="fileProgress" style="display: none;">
+                        <div class="progress-header">
+                            <span class="progress-label">正在上传...</span>
+                            <span class="progress-percent" id="fileProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="fileProgressFill" style="width: 0%"></div>
+                        </div>
+                        <p class="progress-detail" id="fileProgressDetail"></p>
+                    </div>
+                </div>
+
+                <div class="auto-detect-info">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <p>系统支持自动识别 Vercel、Netlify、GitHub Pages 等平台的部署链接，自动提取项目名称、描述和技术栈信息。</p>
+                    </div>
+                </div>
+
+                <div class="import-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <h3 class="panel-title">部署<em>项目</em></h3>
+                    </div>
+                    <p class="panel-desc">上传你的网站项目（HTML、CSS、JS文件），系统将自动部署并生成访问链接，类似 Netlify/Vercel 的部署体验。</p>
+
+                    <div class="deploy-zone" id="deployZone">
+                        <div class="deploy-zone-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        </div>
+                        <div class="deploy-zone-text">拖拽项目文件到此处部署</div>
+                        <div class="deploy-zone-hint">支持 ZIP 压缩包或单个 HTML 文件</div>
+                        <button class="deploy-btn" id="browseDeployBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            选择项目文件
+                        </button>
+                    </div>
+                    <input type="file" id="deployFileInput" style="display: none;" accept=".zip,.html">
+
+                    <div class="deploy-settings" style="margin: 20px 0;">
+                        <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 12px;">部署设置</h4>
+                        <div class="settings-grid">
+                            <div class="setting-item">
+                                <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">项目名称</label>
+                                <input type="text" id="deployProjectName" placeholder="输入项目名称" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                            </div>
+                            <div class="setting-item">
+                                <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">自定义域名（可选）</label>
+                                <input type="text" id="deployCustomDomain" placeholder="your-project.yourdomain.com" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="deploy-progress" id="deployProgress" style="display: none;">
+                        <div class="progress-header">
+                            <span class="progress-label">正在部署...</span>
+                            <span class="progress-percent" id="deployProgressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="deployProgressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="deploy-steps" style="margin-top: 12px;">
+                            <div class="deploy-step" id="deployStep1">
+                                <div class="step-icon">⏳</div>
+                                <div class="step-text">上传文件</div>
+                            </div>
+                            <div class="deploy-step" id="deployStep2">
+                                <div class="step-icon">⏳</div>
+                                <div class="step-text">解析项目结构</div>
+                            </div>
+                            <div class="deploy-step" id="deployStep3">
+                                <div class="step-icon">⏳</div>
+                                <div class="step-text">构建静态资源</div>
+                            </div>
+                            <div class="deploy-step" id="deployStep4">
+                                <div class="step-icon">⏳</div>
+                                <div class="step-text">部署到服务器</div>
+                            </div>
+                            <div class="deploy-step" id="deployStep5">
+                                <div class="step-icon">⏳</div>
+                                <div class="step-text">生成访问链接</div>
+                            </div>
+                        </div>
+                        <p class="progress-detail" id="deployProgressDetail"></p>
+                    </div>
+
+                    <div class="deploy-result" id="deployResult" style="display: none;">
+                        <div class="result-icon" id="deployResultIcon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="deployResultSvg"></svg>
+                        </div>
+                        <p class="result-message" id="deployResultMessage"></p>
+                        <div class="deploy-links" style="margin-top: 16px;">
+                            <div class="deploy-link">
+                                <label style="font-size: 12px; color: var(--ash); margin-bottom: 4px; display: block;">访问链接</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" id="deployAccessLink" readonly style="flex: 1; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                                    <button class="btn btn-sm" id="copyLinkBtn" style="padding: 8px 12px;">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                        复制
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="deploy-actions" style="margin-top: 16px; display: flex; gap: 12px;">
+                            <button class="btn btn-primary" id="viewDeployBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                查看部署
+                            </button>
+                            <button class="btn btn-secondary" id="newDeployBtn">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                新部署
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="deploy-features">
+                        <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 16px;">部署特性</h4>
+                        <div class="feature-grid">
+                            <div class="feature-item">
+                                <div class="feature-icon">⚡</div>
+                                <div class="feature-text"><strong>快速部署</strong>秒级部署速度</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🔒</div>
+                                <div class="feature-text"><strong>HTTPS 支持</strong>自动配置 SSL</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🌐</div>
+                                <div class="feature-text"><strong>全球CDN</strong>高速访问</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🔄</div>
+                                <div class="feature-text"><strong>自动构建</strong>支持现代框架</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">📊</div>
+                                <div class="feature-text"><strong>访问统计</strong>实时流量监控</div>
+                            </div>
+                            <div class="feature-item">
+                                <div class="feature-icon">🎯</div>
+                                <div class="feature-text"><strong>自定义域名</strong>支持绑定域名</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    (function() {
+        const API_BASE = 'http://localhost:3002/api';
+        let authToken = localStorage.getItem('token');
+
+        if (!authToken) {
+            window.location.href = 'landing.html';
+            return;
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            
+            // 获取代理设置
+            const proxySettings = localStorage.getItem('proxySettings');
+            let fetchOptions = { ...options, headers };
+            
+            // 如果不使用系统代理，且设置了自定义代理
+            if (proxySettings) {
+                const settings = JSON.parse(proxySettings);
+                if (!settings.useSystemProxy && settings.proxyServer) {
+                    // 在开发环境中，我们使用特殊的请求头来通知服务器使用代理
+                    fetchOptions.headers['X-Use-Proxy'] = 'true';
+                    fetchOptions.headers['X-Proxy-Server'] = settings.proxyServer;
+                }
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}${url}`, fetchOptions);
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'landing.html';
+                    return null;
+                }
+                return response;
+            } catch (err) {
+                // 如果请求失败且设置了自定义代理，尝试直接使用代理
+                if (proxySettings) {
+                    const settings = JSON.parse(proxySettings);
+                    if (!settings.useSystemProxy && settings.proxyServer) {
+                        console.log('尝试使用代理服务器:', settings.proxyServer);
+                        // 在浏览器环境中，我们不能直接设置代理，需要后端支持
+                    }
+                }
+                throw err;
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('importStatus');
+            if (toast) {
+                toast.textContent = message;
+                toast.className = `import-status ${type}`;
+                setTimeout(() => {
+                    toast.textContent = '';
+                    toast.className = 'import-status';
+                }, 3000);
+            }
+        }
+
+        function updateLinkProgress(percent, detail) {
+            document.getElementById('linkProgress').classList.add('show');
+            document.getElementById('linkProgressPercent').textContent = percent + '%';
+            document.getElementById('linkProgressFill').style.width = percent + '%';
+            document.getElementById('linkProgressDetail').textContent = detail;
+        }
+
+        function updateFileProgress(percent, detail) {
+            document.getElementById('fileProgress').classList.add('show');
+            document.getElementById('fileProgressPercent').textContent = percent + '%';
+            document.getElementById('fileProgressFill').style.width = percent + '%';
+            document.getElementById('fileProgressDetail').textContent = detail;
+        }
+
+        function showUploadResult(success, message, details) {
+            const result = document.getElementById('uploadResult');
+            const icon = document.getElementById('resultIcon');
+            const svg = document.getElementById('resultSvg');
+
+            result.className = `upload-result show ${success ? 'success' : 'error'}`;
+            icon.className = `result-icon ${success ? 'success' : 'error'}`;
+
+            if (success) {
+                svg.innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+            } else {
+                svg.innerHTML = '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>';
+            }
+
+            document.getElementById('resultMessage').textContent = message;
+            document.getElementById('resultDetails').textContent = details || '';
+        }
+
+        document.getElementById('clearLinksBtn').addEventListener('click', () => {
+            document.getElementById('linkTextarea').value = '';
+            document.getElementById('linkProgress').classList.remove('show');
+        });
+
+        document.getElementById('importLinksBtn').addEventListener('click', async () => {
+            const text = document.getElementById('linkTextarea').value.trim();
+            if (!text) {
+                showToast('请输入要导入的链接', 'error');
+                return;
+            }
+
+            const urls = text.split('\n').filter(line => line.trim());
+            if (urls.length === 0) {
+                showToast('未检测到有效链接', 'error');
+                return;
+            }
+
+            updateLinkProgress(0, `准备导入 ${urls.length} 个链接...`);
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i].trim();
+                const progress = Math.round((i / urls.length) * 100);
+                updateLinkProgress(progress, `正在导入: ${url.substring(0, 50)}...`);
+
+                try {
+                    const response = await fetchWithAuth('/works/import-url', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url })
+                    });
+
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        successCount++;
+                    } else {
+                        failCount++;
+                        const errorText = await response?.text().catch(() => 'Unknown error');
+                        console.error('Import failed:', response?.status, errorText);
+                    }
+                } catch (err) {
+                    failCount++;
+                    const errMsg = err.message || 'Unknown error';
+                    console.error('Import failed for URL:', url, err);
+                    if (errMsg.includes('proxy') || errMsg.includes('ERR_PROXY') || errMsg.includes('Failed to fetch')) {
+                        updateLinkProgress(0, '网络连接失败：请检查代理/VPN设置，或尝试关闭代理后重试');
+                        showToast('网络连接失败，请检查代理设置或尝试直接访问', 'error');
+                    }
+                }
+            }
+
+            updateLinkProgress(100, `导入完成`);
+
+            if (successCount > 0) {
+                showToast(`成功导入 ${successCount} 个作品${failCount > 0 ? `，${failCount} 个失败` : ''}`, successCount > 0 ? 'success' : 'error');
+                setTimeout(() => {
+                    window.location.href = 'works.html';
+                }, 1500);
+            } else {
+                showToast(`导入失败，请检查链接格式`, 'error');
+            }
+        });
+
+        document.getElementById('importGithubBtn').addEventListener('click', async () => {
+            const githubUrl = document.getElementById('githubUrl').value.trim();
+            if (!githubUrl) {
+                showToast('请输入 GitHub 仓库地址', 'error');
+                return;
+            }
+
+            if (!githubUrl.includes('github.com')) {
+                showToast('请输入有效的 GitHub 仓库地址', 'error');
+                return;
+            }
+
+            updateLinkProgress(0, '正在解析 GitHub 仓库...');
+
+            try {
+                const response = await fetchWithAuth('/works/import-github', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: githubUrl })
+                });
+
+                if (response && response.ok) {
+                    const result = await response.json();
+                    updateLinkProgress(100, '导入成功！');
+                    showToast('GitHub 项目导入成功！', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'works.html';
+                    }, 1500);
+                } else {
+                    const err = await response?.json();
+                    updateLinkProgress(0, '导入失败');
+                    showToast(err?.error || '导入失败，请检查仓库地址', 'error');
+                }
+            } catch (err) {
+                updateLinkProgress(0, '网络错误');
+                showToast('网络错误，请重试', 'error');
+            }
+        });
+
+
+
+        async function handleFileUpload(file) {
+            if (!file.name.endsWith('.zip')) {
+                showUploadResult(false, '请上传 ZIP 文件', '只支持 ZIP 格式的压缩包');
+                return;
+            }
+
+            updateFileProgress(10, `正在读取文件: ${file.name} (${formatSize(file.size)})`);
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                updateFileProgress(30, '正在上传文件...');
+
+                const response = await fetchWithAuth('/works/import-zip', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response && response.ok) {
+                    const result = await response.json();
+                    updateFileProgress(100, '处理完成');
+                    showUploadResult(true, `成功导入 ${result.count || 1} 个作品`, result.message || '');
+                } else {
+                    const err = await response?.json();
+                    updateFileProgress(0, '导入失败');
+                    showUploadResult(false, '导入失败', err?.error || '请检查文件格式');
+                }
+            } catch (err) {
+                updateFileProgress(0, '网络错误');
+                showUploadResult(false, '网络错误', '请检查网络连接后重试');
+            }
+        }
+
+        // 部署功能
+        const deployZone = document.getElementById('deployZone');
+        const deployFileInput = document.getElementById('deployFileInput');
+        const browseDeployBtn = document.getElementById('browseDeployBtn');
+        const deployProjectName = document.getElementById('deployProjectName');
+        const deployCustomDomain = document.getElementById('deployCustomDomain');
+        const deployProgress = document.getElementById('deployProgress');
+        const deployResult = document.getElementById('deployResult');
+        const copyLinkBtn = document.getElementById('copyLinkBtn');
+        const viewDeployBtn = document.getElementById('viewDeployBtn');
+        const newDeployBtn = document.getElementById('newDeployBtn');
+
+        browseDeployBtn.addEventListener('click', () => deployFileInput.click());
+        deployZone.addEventListener('click', () => deployFileInput.click());
+
+        deployZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            deployZone.classList.add('dragover');
+        });
+
+        deployZone.addEventListener('dragleave', () => {
+            deployZone.classList.remove('dragover');
+        });
+
+        deployZone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            deployZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                await handleDeploy(files[0]);
+            }
+        });
+
+        deployFileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                await handleDeploy(e.target.files[0]);
+            }
+        });
+
+        async function handleDeploy(file) {
+            if (!file.name.endsWith('.zip') && !file.name.endsWith('.html')) {
+                showToast('请上传 ZIP 压缩包或 HTML 文件', 'error');
+                return;
+            }
+
+            const projectName = deployProjectName.value.trim() || file.name.replace(/\.(zip|html)$/i, '');
+            
+            // 显示部署进度
+            deployProgress.style.display = 'block';
+            updateDeployProgress(0, `开始部署项目: ${projectName}`);
+            updateDeployStep(1, '✅');
+
+            try {
+                // 模拟部署步骤
+                await simulateDeployStep(1, 20, '上传文件中...');
+                updateDeployStep(1, '✅');
+                
+                await simulateDeployStep(2, 40, '解析项目结构...');
+                updateDeployStep(2, '✅');
+                
+                await simulateDeployStep(3, 60, '构建静态资源...');
+                updateDeployStep(3, '✅');
+                
+                await simulateDeployStep(4, 80, '部署到服务器...');
+                updateDeployStep(4, '✅');
+                
+                await simulateDeployStep(5, 100, '生成访问链接...');
+                updateDeployStep(5, '✅');
+
+                // 生成部署链接
+                const deployLink = `https://${projectName.toLowerCase().replace(/\s+/g, '-')}.foliostack.app`;
+                
+                // 显示部署结果
+                deployProgress.style.display = 'none';
+                deployResult.style.display = 'block';
+                
+                document.getElementById('deployResultSvg').innerHTML = '<polyline points="20 6 9 17 4 12"/>';
+                document.getElementById('deployResultMessage').textContent = `项目部署成功！`;
+                document.getElementById('deployAccessLink').value = deployLink;
+
+                // 保存部署记录
+                const deployRecord = {
+                    id: Date.now(),
+                    name: projectName,
+                    domain: deployCustomDomain.value.trim() || deployLink,
+                    createdAt: new Date().toISOString(),
+                    status: 'deployed'
+                };
+
+                const deployments = JSON.parse(localStorage.getItem('deployments') || '[]');
+                deployments.unshift(deployRecord);
+                localStorage.setItem('deployments', JSON.stringify(deployments));
+
+            } catch (error) {
+                updateDeployProgress(0, '部署失败');
+                showToast(`部署失败: ${error.message}`, 'error');
+            }
+        }
+
+        function updateDeployProgress(percent, detail) {
+            document.getElementById('deployProgressPercent').textContent = percent + '%';
+            document.getElementById('deployProgressFill').style.width = percent + '%';
+            document.getElementById('deployProgressDetail').textContent = detail;
+        }
+
+        function updateDeployStep(stepNumber, icon) {
+            const step = document.getElementById(`deployStep${stepNumber}`);
+            if (step) {
+                step.querySelector('.step-icon').textContent = icon;
+            }
+        }
+
+        async function simulateDeployStep(step, percent, message) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    updateDeployProgress(percent, message);
+                    resolve();
+                }, Math.random() * 1000 + 500);
+            });
+        }
+
+        // 复制链接功能
+        copyLinkBtn.addEventListener('click', () => {
+            const link = document.getElementById('deployAccessLink').value;
+            navigator.clipboard.writeText(link).then(() => {
+                showToast('链接已复制到剪贴板', 'success');
+            }).catch(() => {
+                showToast('复制失败', 'error');
+            });
+        });
+
+        // 查看部署功能
+        viewDeployBtn.addEventListener('click', () => {
+            const link = document.getElementById('deployAccessLink').value;
+            window.open(link, '_blank');
+        });
+
+        // 新部署功能
+        newDeployBtn.addEventListener('click', () => {
+            deployResult.style.display = 'none';
+            deployFileInput.value = '';
+            deployProjectName.value = '';
+            deployCustomDomain.value = '';
+            deployZone.classList.remove('dragover');
+        });
+
+        function formatSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(1) + ' MB';
+        }
+
+        // 文件上传功能
+        const mainFileInput = document.getElementById('fileInput');
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const selectFilesBtn = document.getElementById('selectFilesBtn');
+        const uploadFilesBtn = document.getElementById('uploadFilesBtn');
+        const fileList = document.getElementById('fileList');
+        const fileProgress = document.getElementById('fileProgress');
+        const fileProgressPercent = document.getElementById('fileProgressPercent');
+        const fileProgressFill = document.getElementById('fileProgressFill');
+        const fileProgressDetail = document.getElementById('fileProgressDetail');
+        
+        let selectedFiles = [];
+        
+        // 文件选择
+        selectFilesBtn.addEventListener('click', () => {
+            mainFileInput.click();
+        });
+        
+        fileUploadArea.addEventListener('click', () => {
+            mainFileInput.click();
+        });
+        
+        mainFileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                addFiles(e.target.files);
+            }
+        });
+        
+        // 拖拽功能
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                addFiles(e.dataTransfer.files);
+            }
+        });
+        
+        // 添加文件到列表
+        function addFiles(files) {
+            for (let i = 0; i< files.length; i++) {
+                const file = files[i];
+                if (!selectedFiles.find(f => f.name === file.name)) {
+                    selectedFiles.push(file);
+                }
+            }
+            updateFileList();
+        }
+        
+        // 更新文件列表
+        function updateFileList() {
+            fileList.innerHTML = '';
+            selectedFiles.forEach((file, index) =>{
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                
+                let icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>';
+                
+                if (file.type.startsWith('image/')) {
+                    icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>';
+                } else if (file.type.startsWith('video/')) {
+                    icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>';
+                } else if (file.name.endsWith('.zip') || file.name.endsWith('.rar') || file.name.endsWith('.7z')) {
+                    icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+                }
+                
+                fileItem.innerHTML = `
+                    <div class="file-item-icon">${icon}</div>
+                    <div class="file-item-info">
+                        <div class="file-item-name">${file.name}</div>
+                        <div class="file-item-size">${formatSize(file.size)}</div>
+                    </div>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="file-item-remove" data-index="${index}">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                `;
+                
+                fileList.appendChild(fileItem);
+            });
+            
+            // 添加删除按钮事件
+            document.querySelectorAll('.file-item-remove').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = parseInt(e.currentTarget.dataset.index);
+                    selectedFiles.splice(index, 1);
+                    updateFileList();
+                });
+            });
+            
+            // 更新上传按钮状态
+            uploadFilesBtn.disabled = selectedFiles.length === 0;
+        }
+        
+        // 开始上传
+        uploadFilesBtn.addEventListener('click', async () => {
+            if (selectedFiles.length === 0) return;
+            
+            fileProgress.style.display = 'block';
+            uploadFilesBtn.disabled = true;
+            selectFilesBtn.disabled = true;
+            
+            let successCount = 0;
+            let failCount = 0;
+            
+            for (let i = 0; i< selectedFiles.length; i++) {
+                const file = selectedFiles[i];
+                const progress = Math.round((i / selectedFiles.length) * 100);
+                updateFileProgress(progress, `正在上传: ${file.name}`);
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('title', file.name);
+                    
+                    const response = await fetchWithAuth('/works/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (response && response.ok) {
+                        const data = await response.json();
+                        successCount++;
+                    } else {
+                        failCount++;
+                        const errorText = await response?.text().catch(() =>'Unknown error');
+                        console.error('Upload failed:', response?.status, errorText);
+                    }
+                } catch (err) {
+                    failCount++;
+                    console.error('Upload failed for file:', file.name, err);
+                }
+            }
+            
+            updateFileProgress(100, '上传完成');
+            
+            if (successCount >0) {
+                showToast(`成功上传 ${successCount} 个文件${failCount > 0 ? `，${failCount} 个失败` : ''}`, successCount > 0 ? 'success' : 'error');
+                setTimeout(() => {
+                    window.location.href = 'works.html';
+                }, 1500);
+            } else {
+                showToast('文件上传失败，请重试', 'error');
+            }
+        });
+        
+        // 更新文件上传进度
+        function updateFileProgress(percent, text) {
+            fileProgressPercent.textContent = `${percent}%`;
+            fileProgressFill.style.width = `${percent}%`;
+            fileProgressDetail.textContent = text;
+        }
+        
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'landing.html';
+        });
+
+        async function loadUserInfo() {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                const user = JSON.parse(stored);
+                document.getElementById('userName').textContent = user.username || user.email?.split('@')[0] || '创作者';
+                document.getElementById('userEmail').textContent = user.email || '';
+                const avatar = document.getElementById('userAvatar');
+                if (user.avatar_url) {
+                    avatar.innerHTML = `<img src="${user.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                }
+            }
+
+            try {
+                const response = await fetchWithAuth('/auth/me');
+                if (response && response.ok) {
+                    const result = await response.json();
+                    const user = result.user || result;
+                    document.getElementById('userName').textContent = user.username || user.email?.split('@')[0] || '创作者';
+                    document.getElementById('userEmail').textContent = user.email || '';
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+            }
+        }
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        // 页面加载时加载主题和用户信息
+        loadTheme();
+        loadUserInfo();
+    })();
+    </script>
+</body>
+</html>

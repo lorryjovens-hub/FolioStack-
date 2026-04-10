@@ -1,0 +1,63 @@
+[
+  {
+    "id": 1,
+    "uuid": "0aa84c7f-36ce-46fb-808e-9ac63e4ad387",
+    "username": "testuser4",
+    "email": "test4@qq.com",
+    "password_hash": "$2a$10$31rATuR.9/fvilyqM7yJjOleLmQRjC/7qNHvvvxGRHoVrV0KY4l5a",
+    "display_name": "测试用户4",
+    "created_at": "2026-04-09T19:56:03.02Z",
+    "updated_at": "2026-04-09T19:56:03.02Z",
+    "status": "active"
+  },
+  {
+    "id": 2,
+    "uuid": "7c41ff27-3fdb-437f-b7eb-14bef43b68b9",
+    "username": "frontenduser",
+    "email": "frontend@qq.com",
+    "password_hash": "$2a$10$y.w9IY.dVNxWZrjHTY/ZkeMZAoBVxWwcv6FalfSVEA/u7yHMU8GRu",
+    "display_name": "前端测试用户",
+    "created_at": "2026-04-09T19:57:30.66Z",
+    "updated_at": "2026-04-09T19:57:30.66Z",
+    "status": "active",
+    "last_login": "2026-04-09T20:53:28.753Z",
+    "login_count": 2
+  },
+  {
+    "id": 3,
+    "uuid": "8854e8e7-f791-4f29-9c47-c67dc3f1df38",
+    "username": "lorry",
+    "email": "2574566046@qq.com",
+    "password_hash": "$2a$10$PmwkMUOXqhVAFLGhqrAsFO0SShb/EalcmpGGsfQK9AH6lrC/dBGXu",
+    "display_name": "lorry",
+    "created_at": "2026-04-09T19:59:25.567Z",
+    "updated_at": "2026-04-09T19:59:25.567Z",
+    "status": "active",
+    "last_login": "2026-04-10T06:38:28.495Z",
+    "login_count": 5
+  },
+  {
+    "id": 4,
+    "uuid": "feeb5c3d-eae7-42aa-8430-7abbad3b9e06",
+    "username": "viky",
+    "email": "lorryjovens@gmaile.com",
+    "password_hash": "$2a$10$ulVG4pCxFjQUjjQQcfcYKeXqG/7sJIQnhlFxsEY6qlTDVdOjEnHGS",
+    "display_name": "viky",
+    "created_at": "2026-04-09T20:13:04.383Z",
+    "updated_at": "2026-04-09T20:13:04.383Z",
+    "status": "active"
+  },
+  {
+    "id": 5,
+    "uuid": "348ae0fb-a78f-4125-9f26-ccf015590eec",
+    "username": "testuser999",
+    "email": "test999@example.com",
+    "password_hash": "$2a$12$BMs.yTuuj19kPLTRVKxHa.HwmPahIKzkHhhQ9yvKfWitTRqykkHM2",
+    "display_name": "测试用户999",
+    "created_at": "2026-04-09T20:53:39.457Z",
+    "updated_at": "2026-04-09T20:53:39.457Z",
+    "last_login": null,
+    "login_count": 0,
+    "status": "active"
+  }
+]

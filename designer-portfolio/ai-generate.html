@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI生成 - FolioStack</title>
+    <meta name="description" content="使用AI生成专业简历网站作品集">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--obsidian);
+            color: var(--ivory);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--charcoal);
+            border-right: 1px solid rgba(201, 169, 110, 0.08);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 28px 24px;
+            border-bottom: 1px solid rgba(201, 169, 110, 0.08);
+        }
+
+        .sidebar-logo {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 600;
+            color: var(--champagne);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-logo span {
+            font-weight: 300;
+            color: var(--smoke);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 0;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section-title {
+            font-family: var(--font-mono);
+            font-size: 9px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--mist);
+            padding: 0 24px;
+            margin-bottom: 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 24px;
+            color: var(--smoke);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--champagne);
+            transform: scaleY(0);
+            transition: transform 0.3s;
+        }
+
+        .nav-item:hover {
+            color: var(--ivory);
+            background: rgba(201, 169, 110, 0.05);
+        }
+
+        .nav-item.active {
+            color: var(--champagne);
+            background: rgba(201, 169, 110, 0.08);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-item svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.5;
+            flex-shrink: 0;
+        }
+
+        .nav-item .nav-badge {
+            margin-left: auto;
+            background: var(--champagne);
+            color: var(--obsidian);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 24px;
+            border-top: 1px solid rgba(201, 169, 110, 0.08);
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .user-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--champagne-dark), var(--champagne));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--obsidian);
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ivory);
+            margin-bottom: 2px;
+        }
+
+        .user-email {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--mist);
+        }
+
+        .logout-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: none;
+            border: 1px solid var(--silver);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            border-color: var(--rose-gold);
+            background: rgba(183, 110, 121, 0.1);
+        }
+
+        .logout-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--smoke);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 32px 48px;
+        }
+
+        .page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .page-title {
+            font-family: var(--font-display);
+            font-size: 36px;
+            font-weight: 400;
+            color: var(--ivory);
+        }
+
+        .page-title em {
+            font-style: italic;
+            color: var(--champagne);
+        }
+
+        .page-subtitle {
+            color: var(--ash);
+            font-size: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .ai-generate-container {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        .input-section {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--obsidian) 100%);
+            border: 1px solid rgba(201,169,110,0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--champagne) var(--graphite);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .input-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .input-section::-webkit-scrollbar-track {
+            background: rgba(201,169,110,0.05);
+            border-radius: 3px;
+        }
+        
+        .input-section::-webkit-scrollbar-thumb {
+            background: var(--champagne);
+            border-radius: 3px;
+        }
+        
+        .input-section::-webkit-scrollbar-thumb:hover {
+            background: var(--champagne-light);
+        }
+        
+        .input-group {
+            background: rgba(10,10,10,0.5);
+            border: 1px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .input-group:hover {
+            border-color: var(--champagne);
+            box-shadow: 0 4px 16px rgba(201,169,110,0.1);
+        }
+        
+        .input-group-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--ivory);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--champagne);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .input-group-title::before {
+            content: '';
+            width: 4px;
+            height: 16px;
+            background: var(--champagne);
+            border-radius: 2px;
+        }
+
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            font-weight: 500;
+            color: var(--ivory);
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-label {
+            display: block;
+            color: var(--smoke);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: rgba(20,20,20,0.8);
+            border: 2px solid rgba(201,169,110,0.1);
+            border-radius: 6px;
+            color: var(--ivory);
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--champagne);
+            box-shadow: 0 0 0 3px rgba(201,169,110,0.1);
+            background: rgba(20,20,20,0.9);
+        }
+        
+        .form-input::placeholder {
+            color: rgba(201,169,110,0.3);
+        }
+
+        .file-upload-container {
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .file-upload-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: var(--graphite);
+            border: 2px dashed rgba(201,169,110,0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--ivory);
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .file-upload-button:hover {
+            border-color: var(--champagne);
+            background: rgba(201,169,110,0.05);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: var(--graphite);
+            border: 1px solid rgba(201,169,110,0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--smoke);
+            margin-top: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .file-info.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .file-size {
+            color: var(--champagne);
+            margin: 0 12px;
+        }
+
+        .remove-file {
+            color: var(--rose-gold);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+
+        .remove-file:hover {
+            background: rgba(183,110,121,0.1);
+        }
+
+        .style-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .style-card {
+            background: rgba(20,20,20,0.8);
+            border: 2px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--champagne), var(--champagne-light));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .style-card:hover {
+            border-color: var(--champagne);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(201,169,110,0.15);
+        }
+
+        .style-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .style-card.selected {
+            border-color: var(--champagne);
+            background: rgba(201,169,110,0.05);
+            box-shadow: 0 4px 16px rgba(201,169,110,0.2);
+        }
+
+        .style-card.selected::before {
+            transform: scaleX(1);
+        }
+
+        .style-card h5 {
+            color: var(--ivory);
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .style-card p {
+            color: var(--ash);
+            font-size: 0.8rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .design-fields {
+            font-size: 0.7rem;
+            color: var(--champagne);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-body);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--champagne) 0%, var(--champagne-light) 100%);
+            color: var(--obsidian);
+            box-shadow: 0 4px 16px rgba(201,169,110,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(201,169,110,0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(20,20,20,0.8);
+            color: var(--ivory);
+            border: 2px solid rgba(201,169,110,0.2);
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--champagne);
+            background: rgba(20,20,20,0.9);
+            box-shadow: 0 4px 16px rgba(201,169,110,0.1);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .preview-section {
+            background: linear-gradient(135deg, var(--charcoal) 0%, var(--obsidian) 100%);
+            border: 1px solid rgba(201,169,110,0.15);
+            border-radius: 12px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            max-height: calc(100vh - 120px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--champagne) var(--graphite);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .preview-section::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .preview-section::-webkit-scrollbar-track {
+            background: rgba(201,169,110,0.05);
+            border-radius: 3px;
+        }
+        
+        .preview-section::-webkit-scrollbar-thumb {
+            background: var(--champagne);
+            border-radius: 3px;
+        }
+        
+        .preview-section::-webkit-scrollbar-thumb:hover {
+            background: var(--champagne-light);
+        }
+
+        .preview-container { 
+            width: 100%; 
+            height: 350px; 
+            border: 2px solid rgba(201,169,110,0.1); 
+            border-radius: 8px; 
+            overflow: hidden; 
+            background: rgba(10,10,10,0.8); 
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .preview-container:hover {
+            border-color: var(--champagne);
+            box-shadow: 0 12px 40px rgba(201,169,110,0.15);
+        }
+        
+        .preview-placeholder { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100%; 
+            color: var(--ash); 
+            font-size: 14px;
+            font-family: var(--font-mono);
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .preview-placeholder svg {
+            width: 48px;
+            height: 48px;
+            fill: var(--champagne);
+            opacity: 0.3;
+        }
+        
+        .preview-container iframe { 
+            width: 100%; 
+            height: 100%; 
+            border: none;
+            background: var(--obsidian);
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .generated-site-section {
+            background: rgba(10,10,10,0.6);
+            border: 1px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .generated-site-container {
+            width: 100%;
+            height: 300px;
+            border: 2px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(10,10,10,0.8);
+            position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+        
+        .generated-site-container:hover {
+            border-color: var(--champagne);
+            box-shadow: 0 12px 40px rgba(201,169,110,0.15);
+        }
+
+        .generated-site-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: var(--obsidian);
+        }
+
+        .generated-site-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--ash);
+            font-size: 14px;
+            font-family: var(--font-mono);
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1024px) {
+            .ai-generate-container {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .input-section,
+            .preview-section {
+                max-height: none;
+            }
+            
+            .preview-container {
+                height: 400px;
+            }
+            
+            .generated-site-container {
+                height: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .ai-generate-container {
+                padding: 0 1rem;
+            }
+            
+            .input-section,
+            .preview-section {
+                padding: 1.5rem;
+            }
+            
+            .input-group {
+                padding: 1rem;
+            }
+            
+            .input-group-title {
+                font-size: 1.1rem;
+            }
+            
+            .form-input {
+                font-size: 0.9rem;
+                padding: 0.6rem;
+            }
+            
+            .style-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 0.75rem;
+            }
+            
+            .style-card {
+                padding: 0.75rem;
+            }
+            
+            .style-card h5 {
+                font-size: 0.9rem;
+            }
+            
+            .style-card p {
+                font-size: 0.7rem;
+            }
+            
+            .btn {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.8rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+            
+            .section-title {
+                font-size: 1.2rem;
+            }
+            
+            .input-group-title {
+                font-size: 1rem;
+            }
+            
+            .form-input {
+                font-size: 0.85rem;
+                padding: 0.5rem;
+            }
+            
+            .style-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 0.5rem;
+            }
+            
+            .style-card {
+                padding: 0.6rem;
+            }
+            
+            .style-card h5 {
+                font-size: 0.8rem;
+            }
+            
+            .style-card p {
+                font-size: 0.65rem;
+            }
+            
+            .btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.75rem;
+            }
+            
+            .preview-container {
+                height: 300px;
+            }
+            
+            .generated-site-container {
+                height: 250px;
+            }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--graphite);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--champagne), var(--champagne-light));
+            border-radius: 2px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .status-message {
+            color: var(--smoke);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .streaming-indicator {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(201,169,110,0.2);
+            border-radius: 4px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .streaming-indicator::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--champagne);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--charcoal);
+            border: 1px solid rgba(201,169,110,0.2);
+            border-radius: 4px;
+            padding: 1rem 1.5rem;
+            color: var(--ivory);
+            font-size: 0.9rem;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            border-color: var(--emerald);
+        }
+
+        .notification.error {
+            border-color: var(--rose-gold);
+        }
+
+        .footer {
+            background: var(--charcoal);
+            border-top: 1px solid rgba(201,169,110,0.1);
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            text-align: center;
+            color: var(--ash);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.4s;
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding: 24px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .ai-generate-container {
+                grid-template-columns: 1fr;
+            }
+
+            .main-content {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="landing.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">U</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">用户</p>
+                        <p class="user-email" id="userEmail">user@example.com</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">AI生成</h1>
+            </header>
+
+            <div class="ai-generate-container">
+                <div class="input-section">
+                    <!-- AI设置 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">AI设置</h3>
+                        <div class="form-group">
+                            <label class="form-label">AI提供商</label>
+                            <select class="form-input" id="aiProvider">
+                                <option value="openai">OpenAI (GPT-4)</option>
+                                <option value="anthropic">Anthropic (Claude)</option>
+                                <option value="google">Google (Gemini)</option>
+                                <option value="zhipu">智谱AI (GLM-4)</option>
+                                <option value="volcengine">火山引擎 (Doubao)</option>
+                                <option value="minimax">Minimax (abab6)</option>
+                                <option value="kimi">Moonshot (Kimi)</option>
+                                <option value="aliyun">阿里云百炼 (Qwen)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">API密钥</label>
+                            <input type="password" class="form-input" id="apiKey" placeholder="输入您的API密钥（可选，使用内置AI）">
+                        </div>
+                    </div>
+
+                    <!-- 基本信息 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">基本信息</h3>
+                        <div class="form-group">
+                            <label class="form-label">姓名</label>
+                            <input type="text" class="form-input" id="userName" placeholder="请输入您的姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">职业/职位</label>
+                            <input type="text" class="form-input" id="userTitle" placeholder="例如：UI设计师、前端开发者、产品经理">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">个人简介</label>
+                            <textarea class="form-input" id="userBio" rows="3" placeholder="请简要介绍自己，包括专业背景、核心优势和职业目标"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 联系方式 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">联系方式</h3>
+                        <div class="form-group">
+                            <label class="form-label">联系信息</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <input type="email" class="form-input" id="userEmail" placeholder="邮箱地址">
+                                <input type="tel" class="form-input" id="userPhone" placeholder="手机号码">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">社交媒体</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <input type="url" class="form-input" id="userGithub" placeholder="GitHub链接">
+                                <input type="url" class="form-input" id="userLinkedIn" placeholder="LinkedIn链接">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 专业背景 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">专业背景</h3>
+                        <div class="form-group">
+                            <label class="form-label">教育背景</label>
+                            <textarea class="form-input" id="userEducation" rows="2" placeholder="请详细描述您的教育经历，包括学校名称、专业、学位、毕业时间等"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">工作经历</label>
+                            <textarea class="form-input" id="userExperience" rows="4" placeholder="请详细描述您的工作经历，包括公司名称、职位、工作时间、主要职责和成就等"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 技能与作品 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">技能与作品</h3>
+                        <div class="form-group">
+                            <label class="form-label">技能特长</label>
+                            <textarea class="form-input" id="userSkills" rows="3" placeholder="请列出您的专业技能，如：UI设计、前端开发、项目管理等，可用逗号分隔"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">作品集项目</label>
+                            <textarea class="form-input" id="userProjects" rows="4" placeholder="请描述您的代表作品，包括项目名称、项目描述、使用技术、项目成果等"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- 简历上传 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">简历上传</h3>
+                        <div class="form-group">
+                            <label class="form-label">上传简历文件</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="resumeFile" class="file-input" accept=".pdf,.doc,.docx,.txt">
+                                <label for="resumeFile" class="file-upload-button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="7 10 12 15 17 10"/>
+                                        <line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    点击上传简历文件（可选）
+                                </label>
+                            </div>
+                            <div id="fileInfo" class="file-info"></div>
+                        </div>
+                    </div>
+
+                    <!-- 设计风格 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">设计风格</h3>
+                        <div class="form-group">
+                            <label class="form-label">选择网站风格</label>
+                            <div class="style-grid" id="templateGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- 生成控制 -->
+                    <div class="input-group" style="background: var(--charcoal); border-color: var(--champagne);">
+                        <h3 class="input-group-title">生成网站</h3>
+                        <div class="form-actions" style="display: flex; gap: 1rem;">
+                            <button class="btn btn-primary" id="generateBtn" style="flex: 1;">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                    <path d="M2 17l10 5 10-5"/>
+                                    <path d="M2 12l10 5 10-5"/>
+                                </svg>
+                                生成网站
+                            </button>
+                        </div>
+                        <div class="progress-bar" style="margin: 1rem 0;">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="status-message" id="statusMessage">准备就绪</div>
+                    </div>
+                </div>
+
+                <div class="preview-section">
+                    <h2 class="section-title">实时预览</h2>
+                    <div class="preview-container" id="previewContainer">
+                        <div class="preview-placeholder">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+                            </svg>
+                            <p>生成完成后将在这里显示网站预览</p>
+                        </div>
+                    </div>
+
+                    <div class="preview-actions">
+                        <button class="btn btn-secondary" id="showPreviewBtn" disabled>在新窗口打开</button>
+                        <button class="btn btn-secondary" id="refreshPreviewBtn" disabled>刷新预览</button>
+                    </div>
+                </div>
+
+                <div class="generated-site-section" id="generatedSiteSection" style="display: none;">
+                    <h2 class="section-title">生成结果</h2>
+                    <div class="generated-site-container" id="generatedSiteContainer">
+                        <div class="generated-site-placeholder">
+                            <p>生成的网站将在这里展示</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <div class="footer-content">
+                <p>&copy; 2024 FolioStack. 专业的设计师作品集网站生成平台。</p>
+            </div>
+        </footer>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let selectedStyle = 'vogue';
+
+        const styles = [
+            { name: 'futuristic', label: '未来科技', description: '霓虹灯光，赛博朋克风格' },
+            { name: 'natural', label: '自然有机', description: '田园风光，温暖色调' },
+            { name: 'fashion', label: '时尚潮流', description: '大胆撞色，现代设计' },
+            { name: 'minimalist', label: '极简主义', description: '简洁布局，现代艺术' },
+            { name: 'vintage', label: '复古怀旧', description: '手工质感，温暖色调' },
+            { name: 'artistic', label: '艺术实验', description: '大胆色彩，创新设计' },
+            { name: 'corporate', label: '商务专业', description: '现代简洁，专业形象' }
+        ];
+
+        function renderStyleGrid() {
+            const grid = document.getElementById('templateGrid');
+            grid.innerHTML = '';
+            
+            const templates = [
+                { id: 'neon', name: '霓虹律动', description: '赛博朋克风格，霓虹灯光效果，未来科技感', designFields: '游戏设计、概念设计、交互设计', style: 'futuristic' },
+                { id: 'manor', name: '庄园风华', description: '自然有机风格，田园风光，温暖色调', designFields: '景观设计、环保设计、食品设计', style: 'natural' },
+                { id: 'forest', name: '林深秘境', description: '自然风格，绿色主题，神秘氛围', designFields: '景观设计、环保设计、自然摄影', style: 'natural' },
+                { id: 'prairie', name: '暖土风华', description: '大地色系，草原风光，温暖舒适', designFields: '景观设计、环保设计、生活方式', style: 'natural' },
+                { id: 'lipstick', name: '唇色锋芒', description: '时尚潮流风格，大胆撞色，现代设计', designFields: '服装设计、时尚摄影、美妆设计', style: 'fashion' },
+                { id: 'modern', name: '摩登展厅', description: '极简主义风格，现代艺术，简洁布局', designFields: 'UI/UX设计、产品设计、艺术展示', style: 'minimalist' },
+                { id: 'craftsman', name: '素朴匠心', description: '复古怀旧风格，手工质感，温暖色调', designFields: '手工艺设计、陶瓷设计、传统工艺', style: 'vintage' },
+                { id: 'pioneer', name: '先锋色块', description: '艺术实验风格，大胆色彩，创新设计', designFields: '当代艺术、实验设计、视觉传达', style: 'artistic' },
+                { id: 'visionary', name: '锐创视界', description: '商务专业风格，现代简洁，专业形象', designFields: '商业咨询、工业设计、品牌设计', style: 'corporate' },
+                { id: 'vogue', name: '非凡镜界', description: '时尚杂志风格，高端大气，视觉冲击力', designFields: '时尚设计、摄影、品牌宣传', style: 'fashion' },
+                { id: 'art', name: '艺展画刊', description: '艺术展览风格，文化氛围，优雅设计', designFields: '艺术展览、文化活动、画廊设计', style: 'artistic' },
+                { id: 'light', name: '光影之镜', description: '光影艺术风格，黑白对比，高级质感', designFields: '摄影、建筑设计、视觉艺术', style: 'minimalist' }
+            ];
+            
+            templates.forEach(template => {
+                const card = document.createElement('div');
+                card.className = `style-card ${selectedStyle === template.id ? 'selected' : ''}`;
+                card.innerHTML = `
+                    <h5>${template.name}</h5>
+                    <p>${template.description}</p>
+                    <div class="design-fields">${template.designFields}</div>
+                `;
+                card.addEventListener('click', () => {
+                    selectedStyle = template.id;
+                    renderStyleGrid();
+                });
+                grid.appendChild(card);
+            });
+        }
+
+        function updateGenerationProgress(progress, message) {
+            const progressFill = document.getElementById('progressFill');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            progressFill.style.width = `${progress}%`;
+            statusMessage.textContent = message;
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }, 100);
+        }
+
+        function getAIProviderConfig(provider) {
+            const configs = {
+                openai: {
+                    endpoint: 'https://api.openai.com/v1/chat/completions',
+                    model: 'gpt-4',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'openai',
+                    streaming: true
+                },
+                anthropic: {
+                    endpoint: 'https://api.anthropic.com/v1/messages',
+                    model: 'claude-3-opus-20240229',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-api-key': '{apiKey}',
+                        'anthropic-version': '2023-06-01'
+                    },
+                    requestFormat: 'anthropic',
+                    streaming: true
+                },
+                google: {
+                    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent',
+                    model: 'gemini-pro',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'google',
+                    streaming: true
+                },
+                zhipu: {
+                    endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
+                    model: 'glm-4',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'openai',
+                    streaming: true
+                },
+                volcengine: {
+                    endpoint: 'https://maas-api.ml-platform-cn-beijing.volces.com/api/v3/chat/completions',
+                    model: 'Doubao-7B-Chat',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'openai',
+                    streaming: true
+                },
+                minimax: {
+                    endpoint: 'https://api.minimax.chat/v1/text/chatcompletion',
+                    model: 'abab6-chat',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'minimax',
+                    streaming: true
+                },
+                kimi: {
+                    endpoint: 'https://api.moonshot.cn/v1/chat/completions',
+                    model: 'moonshot-v1-8k',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'openai',
+                    streaming: true
+                },
+                aliyun: {
+                    endpoint: 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+                    model: 'qwen-turbo',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer {apiKey}'
+                    },
+                    requestFormat: 'aliyun',
+                    streaming: true
+                }
+            };
+            return configs[provider];
+        }
+
+        function generatePrompt(style) {
+            const templates = [
+                { id: 'neon', name: '霓虹律动', style: 'futuristic' },
+                { id: 'manor', name: '庄园风华', style: 'natural' },
+                { id: 'forest', name: '林深秘境', style: 'natural' },
+                { id: 'prairie', name: '暖土风华', style: 'natural' },
+                { id: 'lipstick', name: '唇色锋芒', style: 'fashion' },
+                { id: 'modern', name: '摩登展厅', style: 'minimalist' },
+                { id: 'craftsman', name: '素朴匠心', style: 'vintage' },
+                { id: 'pioneer', name: '先锋色块', style: 'artistic' },
+                { id: 'visionary', name: '锐创视界', style: 'corporate' },
+                { id: 'vogue', name: '非凡镜界', style: 'fashion' },
+                { id: 'art', name: '艺展画刊', style: 'artistic' },
+                { id: 'light', name: '光影之镜', style: 'minimalist' }
+            ];
+            
+            const selectedTemplateInfo = templates.find(t => t.id === style);
+            const styleName = selectedTemplateInfo ? selectedTemplateInfo.name : '默认风格';
+            
+            // 获取所有输入字段的值
+            const name = document.getElementById('userName').value.trim();
+            const title = document.getElementById('userTitle').value.trim();
+            const bio = document.getElementById('userBio').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            const phone = document.getElementById('userPhone').value.trim();
+            const github = document.getElementById('userGithub').value.trim();
+            const linkedin = document.getElementById('userLinkedIn').value.trim();
+            const education = document.getElementById('userEducation').value.trim();
+            const experience = document.getElementById('userExperience').value.trim();
+            const skills = document.getElementById('userSkills').value.trim();
+            const projects = document.getElementById('userProjects').value.trim();
+            
+            // 构建详细的个人信息
+            let userInfo = '';
+            if (name) userInfo += `姓名：${name}\n`;
+            if (title) userInfo += `职位：${title}\n`;
+            if (bio) userInfo += `个人简介：${bio}\n`;
+            if (email) userInfo += `邮箱：${email}\n`;
+            if (phone) userInfo += `电话：${phone}\n`;
+            if (github) userInfo += `GitHub：${github}\n`;
+            if (linkedin) userInfo += `LinkedIn：${linkedin}\n`;
+            if (education) userInfo += `教育背景：${education}\n`;
+            if (experience) userInfo += `工作经历：${experience}\n`;
+            if (skills) userInfo += `技能特长：${skills}\n`;
+            if (projects) userInfo += `作品集项目：${projects}\n`;
+            
+            return `请根据以下详细的个人简历信息，创建一个专业的作品集网站HTML代码。网站必须是完整的、可直接运行的HTML文件，包含所有必要的CSS和JavaScript。
+
+个人详细信息：
+${userInfo}
+
+设计要求：
+1. 使用"${styleName}"风格
+2. 设计必须专业、美观，符合当代设计趋势
+3. 使用深色主题，金色点缀（#c9a96e）
+4. 响应式设计，适配各种屏幕尺寸
+5. 包含导航栏、个人简介、作品集展示、技能展示、联系方式等完整结构
+6. 添加适当的动画效果和交互功能
+7. 使用现代无衬线字体，排版清晰
+8. 确保代码结构清晰，有适当的注释
+9. 根据提供的详细信息创建内容丰富的个人网站
+10. 作品集部分要突出展示项目经验
+11. 技能部分要清晰展示专业技能
+12. 联系方式部分要包含所有提供的联系信息
+
+请直接返回完整的HTML代码，不要包含任何解释性文字。代码应该可以直接保存为HTML文件并在浏览器中运行。`;
+        }
+
+        function processAIResponse(response, style) {
+            const htmlMatch = response.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
+            if (htmlMatch) {
+                return { html: htmlMatch[0] };
+            }
+            return { html: response };
+        }
+
+        function saveGeneratedSite(websiteData) {
+            const blob = new Blob([websiteData.html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `portfolio-${Date.now()}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            URL.revokeObjectURL(url);
+        }
+
+        // 构建请求体
+        function buildRequestBody(config, prompt, stream) {
+            const messages = [
+                { role: 'system', content: '你是一位专业的网页设计师' },
+                { role: 'user', content: prompt }
+            ];
+            
+            switch (config.requestFormat) {
+                case 'openai':
+                    return {
+                        model: config.model,
+                        messages: messages,
+                        temperature: 0.7,
+                        stream: stream
+                    };
+                
+                case 'anthropic':
+                    return {
+                        model: config.model,
+                        messages: messages,
+                        temperature: 0.7,
+                        stream: stream
+                    };
+                
+                case 'google':
+                    return {
+                        contents: messages.map(msg => ({
+                            role: msg.role,
+                            parts: [{ text: msg.content }]
+                        })),
+                        generationConfig: {
+                            temperature: 0.7
+                        }
+                    };
+                
+                case 'minimax':
+                    return {
+                        model: config.model,
+                        messages: messages,
+                        temperature: 0.7,
+                        stream: stream,
+                        reply_constraints: {
+                            sender_type: 'BOT',
+                            sender_name: 'AI'
+                        }
+                    };
+                
+                case 'aliyun':
+                    return {
+                        model: config.model,
+                        input: prompt,
+                        parameters: {
+                            temperature: 0.7
+                        }
+                    };
+                
+                default:
+                    return {
+                        model: config.model,
+                        messages: messages,
+                        temperature: 0.7,
+                        stream: stream
+                    };
+            }
+        }
+
+        // 解析流式响应
+        function parseStreamingResponse(line, config) {
+            if (!line.startsWith('data: ')) return null;
+            
+            const data = line.substring(6);
+            if (data === '[DONE]') return null;
+            
+            try {
+                const parsed = JSON.parse(data);
+                
+                switch (config.requestFormat) {
+                    case 'openai':
+                    case 'zhipu':
+                    case 'volcengine':
+                    case 'kimi':
+                        if (parsed.choices && parsed.choices[0].delta.content) {
+                            return parsed.choices[0].delta.content;
+                        }
+                        break;
+                    
+                    case 'anthropic':
+                        if (parsed.type === 'content_block_delta' && parsed.delta.text) {
+                            return parsed.delta.text;
+                        }
+                        break;
+                    
+                    case 'google':
+                        if (parsed.candidates && parsed.candidates[0].content.parts) {
+                            return parsed.candidates[0].content.parts[0].text;
+                        }
+                        break;
+                    
+                    case 'minimax':
+                        if (parsed.choices && parsed.choices[0].delta) {
+                            return parsed.choices[0].delta;
+                        }
+                        break;
+                    
+                    case 'aliyun':
+                        if (parsed.output && parsed.output.text) {
+                            return parsed.output.text;
+                        }
+                        break;
+                }
+                
+                return null;
+            } catch (e) {
+                console.error('解析流式数据失败:', e);
+                return null;
+            }
+        }
+
+        // 流式传输AI响应（真实API模式）
+        async function streamAIResponse(provider, apiKey, prompt, style) {
+            const config = getAIProviderConfig(provider);
+            const headers = { ...config.headers };
+            
+            // 替换API密钥
+            Object.keys(headers).forEach(key => {
+                if (headers[key].includes('{apiKey}')) {
+                    headers[key] = headers[key].replace('{apiKey}', apiKey);
+                }
+            });
+            
+            let accumulatedResponse = '';
+            let previewUpdated = false;
+            
+            try {
+                const requestBody = buildRequestBody(config, prompt, true);
+                
+                const response = await fetch(config.endpoint, {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(requestBody)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`API请求失败: ${response.status} ${response.statusText}\n${errorText}`);
+                }
+                
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(line => line.trim() !== '');
+                    
+                    for (const line of lines) {
+                        const content = parseStreamingResponse(line, config);
+                        if (content) {
+                            accumulatedResponse += content;
+                            
+                            // 定期更新预览
+                            if (!previewUpdated && accumulatedResponse.length > 500) {
+                                updateStreamingPreview(accumulatedResponse);
+                                previewUpdated = true;
+                            }
+                        }
+                    }
+                }
+                
+                // 处理完整响应
+                const websiteData = processAIResponse(accumulatedResponse, style);
+                saveGeneratedSite(websiteData);
+                updatePreview(websiteData.html);
+                
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // 更新流式预览
+        function updateStreamingPreview(content) {
+            const previewContainer = document.getElementById('previewContainer');
+            
+            // 尝试提取HTML内容
+            const htmlMatch = content.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
+            let displayContent = '';
+            
+            if (htmlMatch) {
+                // 如果找到HTML内容，直接使用
+                displayContent = htmlMatch[0];
+            } else {
+                // 如果没有找到完整HTML，创建美观的加载界面
+                displayContent = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>生成中...</title>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: var(--font-body); 
+            background: var(--obsidian); 
+            color: var(--ivory);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 2rem;
+        }
+        .loading-container {
+            text-align: center;
+            max-width: 600px;
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--champagne);
+            margin-bottom: 1rem;
+        }
+        .logo span {
+            font-weight: 300;
+            color: var(--smoke);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        .status {
+            font-size: 1.1rem;
+            color: var(--ivory);
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }
+        .progress-dots {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--champagne);
+            opacity: 0.3;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+        .preview-text {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            color: var(--ash);
+            background: var(--graphite);
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--silver);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container">
+        <div class="logo">Folio<span>Stack</span></div>
+        <div class="status">网站生成中...</div>
+        <div class="progress-dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+        <div class="preview-text">${content.substring(0, 500)}${content.length > 500 ? '...' : ''}</div>
+    </div>
+</body>
+</html>`;
+            }
+            
+            const blob = new Blob([displayContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const iframe = previewContainer.querySelector('iframe') || document.createElement('iframe');
+            iframe.src = url;
+            iframe.title = '实时预览';
+            
+            if (!previewContainer.querySelector('iframe')) {
+                previewContainer.innerHTML = '';
+                previewContainer.appendChild(iframe);
+            }
+        }
+
+        // 生成模拟网站（测试模式）
+        function generateMockWebsite(prompt, style) {
+            const styleDef = styles.find(s => s.name === style);
+            const styleName = styleDef ? styleDef.label : '默认风格';
+            
+            const mockHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人简历作品集 - ${styleName}</title>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: var(--font-body);
+            background: var(--obsidian);
+            color: var(--ivory);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        header {
+            background: var(--charcoal);
+            border-bottom: 1px solid rgba(201,169,110,0.1);
+            padding: 2rem 0;
+        }
+        .logo {
+            font-family: var(--font-display);
+            font-size: 2.5rem;
+            font-weight: 600;
+            color: var(--champagne);
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        .logo span {
+            font-weight: 300;
+            color: var(--smoke);
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+        nav {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        nav a {
+            color: var(--ash);
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+        nav a:hover {
+            color: var(--champagne);
+        }
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+        }
+        .hero h1 {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 600;
+            color: var(--ivory);
+            margin-bottom: 1rem;
+        }
+        .hero p {
+            color: var(--ash);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .section {
+            padding: 4rem 0;
+        }
+        .section-title {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--ivory);
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        .portfolio-item {
+            background: var(--charcoal);
+            border: 1px solid rgba(201,169,110,0.1);
+            border-radius: 4px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+        .portfolio-item h3 {
+            color: var(--ivory);
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .portfolio-item p {
+            color: var(--ash);
+            font-size: 0.9rem;
+        }
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+        }
+        .skill-tag {
+            background: rgba(201,169,110,0.1);
+            border: 1px solid var(--champagne);
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            color: var(--champagne);
+            font-size: 0.8rem;
+        }
+        footer {
+            background: var(--charcoal);
+            border-top: 1px solid rgba(201,169,110,0.1);
+            padding: 2rem 0;
+            text-align: center;
+            color: var(--ash);
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">Portfolio<span>Design</span></div>
+            <nav>
+                <a href="#home">首页</a>
+                <a href="#about">关于我</a>
+                <a href="#portfolio">作品集</a>
+                <a href="#skills">技能</a>
+                <a href="#contact">联系</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero" id="home">
+        <div class="container">
+            <h1>专业设计师作品集</h1>
+            <p>这是一个使用AI生成的专业作品集网站，展示了我的设计作品和专业技能。网站采用${styleName}风格，设计简洁现代，突出作品展示。</p>
+        </div>
+    </section>
+
+    <section class="section" id="about">
+        <div class="container">
+            <h2 class="section-title">关于我</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto; color: var(--smoke);">
+                我是一位充满激情的设计师，专注于创造美观、实用的设计作品。拥有多年的设计经验，擅长UI/UX设计、品牌设计和网页设计。
+            </p>
+        </div>
+    </section>
+
+    <section class="section" id="portfolio">
+        <div class="container">
+            <h2 class="section-title">作品集</h2>
+            <div class="portfolio-grid">
+                <div class="portfolio-item">
+                    <h3>项目一</h3>
+                    <p>现代网页设计项目，展示了创新的用户界面设计和交互体验。</p>
+                </div>
+                <div class="portfolio-item">
+                    <h3>项目二</h3>
+                    <p>品牌设计项目，创建了完整的品牌视觉识别系统。</p>
+                </div>
+                <div class="portfolio-item">
+                    <h3>项目三</h3>
+                    <p>移动应用UI设计，注重用户体验和界面美观。</p>
+                </div>
+                <div class="portfolio-item">
+                    <h3>项目四</h3>
+                    <p>包装设计项目，结合创意和实用性的完美体现。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="skills">
+        <div class="container">
+            <h2 class="section-title">专业技能</h2>
+            <div class="skills">
+                <span class="skill-tag">UI/UX设计</span>
+                <span class="skill-tag">品牌设计</span>
+                <span class="skill-tag">网页设计</span>
+                <span class="skill-tag">插画设计</span>
+                <span class="skill-tag">Photoshop</span>
+                <span class="skill-tag">Illustrator</span>
+                <span class="skill-tag">Figma</span>
+                <span class="skill-tag">HTML/CSS</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="contact">
+        <div class="container">
+            <h2 class="section-title">联系我</h2>
+            <p style="text-align: center; color: var(--smoke);">
+                邮箱：contact@example.com | 电话：+86 123 4567 8901
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 个人简历作品集. 保留所有权利.</p>
+        </div>
+    </footer>
+</body>
+</html>`;
+            
+            return { html: mockHtml };
+        }
+
+        function updatePreview(htmlContent) {
+            const previewContainer = document.getElementById('previewContainer');
+            const showPreviewBtn = document.getElementById('showPreviewBtn');
+            const refreshPreviewBtn = document.getElementById('refreshPreviewBtn');
+            
+            // 创建Blob对象
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            previewContainer.innerHTML = '';
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.title = '网站预览';
+            previewContainer.appendChild(iframe);
+            
+            // 启用预览按钮
+            showPreviewBtn.disabled = false;
+            refreshPreviewBtn.disabled = false;
+            
+            // 保存预览URL以便刷新
+            previewContainer.currentPreviewUrl = url;
+            
+            // 显示生成结果区域
+            showGeneratedSite(htmlContent);
+        }
+
+        function showGeneratedSite(htmlContent) {
+            const generatedSiteSection = document.getElementById('generatedSiteSection');
+            const generatedSiteContainer = document.getElementById('generatedSiteContainer');
+            
+            generatedSiteSection.style.display = 'block';
+            generatedSiteContainer.innerHTML = '';
+            
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const iframe = document.createElement('iframe');
+            iframe.src = url;
+            iframe.title = '生成结果';
+            iframe.onload = function() {
+                URL.revokeObjectURL(url);
+            };
+            
+            generatedSiteContainer.appendChild(iframe);
+        }
+
+        function showFullPreview() {
+            const previewContainer = document.getElementById('previewContainer');
+            if (previewContainer.currentPreviewUrl) {
+                window.open(previewContainer.currentPreviewUrl, '_blank');
+            }
+        }
+
+        function refreshPreview() {
+            const previewContainer = document.getElementById('previewContainer');
+            if (previewContainer.currentPreviewUrl) {
+                const iframe = previewContainer.querySelector('iframe');
+                if (iframe) {
+                    iframe.src = previewContainer.currentPreviewUrl;
+                }
+            }
+        }
+
+        // 文件上传处理
+        document.getElementById('resumeFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showFileInfo(file);
+            }
+        });
+
+        // 显示文件信息
+        function showFileInfo(file) {
+            const fileInfoDiv = document.getElementById('fileInfo');
+            const fileSize = formatFileSize(file.size);
+            
+            fileInfoDiv.innerHTML = `
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">${fileSize}</span>
+                <span class="remove-file" onclick="removeFile()">删除</span>
+            `;
+            fileInfoDiv.classList.add('show');
+        }
+
+        // 移除文件
+        function removeFile() {
+            const fileInput = document.getElementById('resumeFile');
+            const fileInfoDiv = document.getElementById('fileInfo');
+            
+            fileInput.value = '';
+            fileInfoDiv.classList.remove('show');
+            fileInfoDiv.innerHTML = '';
+        }
+
+        // 格式化文件大小
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // 生成按钮点击事件
+        document.getElementById('generateBtn').addEventListener('click', async () => {
+            const provider = document.getElementById('aiProvider').value;
+            const apiKey = document.getElementById('apiKey').value;
+            const name = document.getElementById('userName').value.trim();
+            const title = document.getElementById('userTitle').value.trim();
+            const bio = document.getElementById('userBio').value.trim();
+            
+            // 验证必填字段
+            if (!name) {
+                showNotification('请输入姓名', 'error');
+                return;
+            }
+            
+            if (!title) {
+                showNotification('请输入职业/职位', 'error');
+                return;
+            }
+            
+            if (!bio) {
+                showNotification('请输入个人简介', 'error');
+                return;
+            }
+            
+            updateGenerationProgress(0, '正在准备生成...');
+            
+            try {
+                const prompt = generatePrompt(selectedStyle);
+                
+                if (apiKey) {
+                    // 真实API模式
+                    await streamAIResponse(provider, apiKey, prompt, selectedStyle);
+                } else {
+                    // 测试模式
+                    const websiteData = generateMockWebsite(prompt, selectedStyle);
+                    saveGeneratedSite(websiteData);
+                    updatePreview(websiteData.html);
+                }
+                
+                updateGenerationProgress(100, '生成完成！');
+                showNotification('网站生成成功！', 'success');
+                
+            } catch (error) {
+                updateGenerationProgress(0, '生成失败');
+                showNotification(`生成失败: ${error.message}`, 'error');
+            }
+        });
+
+        // 预览按钮事件
+        document.getElementById('showPreviewBtn').addEventListener('click', showFullPreview);
+        document.getElementById('refreshPreviewBtn').addEventListener('click', refreshPreview);
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            renderStyleGrid();
+        });
+    </script>
+</body>
+</html>

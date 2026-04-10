@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台 - FolioStack</title>
+    <meta name="description" content="FolioStack 作品集管理后台">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; cursor: none; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--champagne); }
+
+        .cursor-dot { position: fixed; width: 8px; height: 8px; background: var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.3s var(--ease-out-expo), height 0.3s var(--ease-out-expo), background 0.3s; }
+        .cursor-ring { position: fixed; width: 40px; height: 40px; border: 1.5px solid var(--champagne); border-radius: 50%; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); transition: width 0.4s var(--ease-out-expo), height 0.4s var(--ease-out-expo), border-color 0.3s, opacity 0.3s; opacity: 0.5; }
+        .cursor-dot.hovering { width: 16px; height: 16px; background: var(--champagne-light); }
+        .cursor-ring.hovering { width: 60px; height: 60px; border-color: var(--champagne-light); opacity: 0.3; }
+
+        .dashboard-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; cursor: none; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+        .nav-item .nav-badge { margin-left: auto; background: var(--champagne); color: var(--obsidian); font-family: var(--font-mono); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; }
+        .sidebar-footer { padding: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .user-card { display: flex; align-items: center; gap: 14px; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--obsidian); }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 2px; }
+        .user-email { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .logout-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 8px; cursor: none; transition: all 0.3s; }
+        .logout-btn:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .logout-btn svg { width: 18px; height: 18px; stroke: var(--smoke); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); }
+        .page-title em { font-style: italic; color: var(--champagne); }
+        .page-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border: none; cursor: none; transition: all 0.4s var(--ease-out-expo); }
+        .btn-primary { background: var(--champagne); color: var(--obsidian); }
+        .btn-primary:hover { background: var(--champagne-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201, 169, 110, 0.2); }
+        .btn-secondary { background: var(--graphite); color: var(--smoke); border: 1px solid var(--silver); }
+        .btn-secondary:hover { border-color: var(--champagne); color: var(--champagne); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 48px; }
+        .stat-card { background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(20, 20, 20, 0.95)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 28px; position: relative; overflow: hidden; transition: all 0.4s var(--ease-out-expo); }
+        .stat-card:hover { border-color: rgba(201, 169, 110, 0.2); transform: translateY(-4px); }
+        .stat-card::before { content: ''; position: absolute; top: 0; right: 0; width: 80px; height: 80px; background: radial-gradient(circle, rgba(201, 169, 110, 0.1) 0%, transparent 70%); }
+        .stat-icon { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.08); border-radius: 12px; margin-bottom: 20px; }
+        .stat-icon svg { width: 24px; height: 24px; stroke: var(--champagne); fill: none; }
+        .stat-value { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); margin-bottom: 4px; }
+        .stat-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); }
+
+        .content-section { margin-bottom: 48px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .section-title { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ivory); }
+        .section-title em { font-style: italic; color: var(--champagne); }
+
+        .works-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; }
+        .work-card { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; overflow: hidden; transition: all 0.4s var(--ease-out-expo); position: relative; }
+        .work-card:hover { border-color: rgba(201, 169, 110, 0.25); transform: translateY(-6px); box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); }
+        .work-card-header { height: 180px; position: relative; overflow: hidden; }
+        .work-card-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+        .work-card-bg .bg-icon { width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); border-radius: 50%; backdrop-filter: blur(8px); }
+        .work-card-bg .bg-icon svg { width: 24px; height: 24px; stroke: rgba(255,255,255,0.4); fill: none; }
+        .work-card-bg .bg-label { font-family: var(--font-display); font-size: 24px; font-weight: 300; color: rgba(255,255,255,0.3); }
+        .work-card-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 30%, rgba(10, 10, 10, 0.9) 100%); }
+        .work-card-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.4s;
+        }
+        .work-card-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            background: transparent;
+        }
+        .work-card-iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .work-card-status { position: absolute; top: 16px; left: 16px; padding: 4px 12px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; border-radius: 2px; }
+        .work-card-status.published { background: rgba(42, 107, 90, 0.2); border: 1px solid var(--emerald); color: var(--emerald); }
+        .work-card-status.draft { background: rgba(201, 169, 110, 0.1); border: 1px solid var(--champagne-dark); color: var(--champagne); }
+        .work-card-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; opacity: 0; transition: opacity 0.3s; }
+        .work-card:hover .work-card-actions { opacity: 1; }
+        .work-card-action { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(10, 10, 10, 0.8); border: 1px solid var(--silver); border-radius: 4px; cursor: none; transition: all 0.3s; }
+        .work-card-action:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); }
+        .work-card-action svg { width: 14px; height: 14px; stroke: var(--smoke); }
+        .work-card-action.delete:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .work-card-action.delete svg { stroke: var(--rose-gold); }
+        .work-card-body { padding: 24px; }
+        .work-card-title { font-family: var(--font-display); font-size: 22px; font-weight: 400; color: var(--ivory); margin-bottom: 8px; transition: color 0.3s; }
+        .work-card:hover .work-card-title { color: var(--champagne); }
+        .work-card-desc { font-size: 13px; color: var(--ash); line-height: 1.6; margin-bottom: 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .work-card-meta { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .work-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+        .work-card-tag { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mist); padding: 4px 10px; background: var(--graphite); border-radius: 2px; }
+        .work-card-date { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .empty-state { text-align: center; padding: 80px 40px; background: linear-gradient(135deg, rgba(26, 26, 26, 0.8), rgba(20, 20, 20, 0.9)); border: 1px dashed rgba(201, 169, 110, 0.15); border-radius: 4px; }
+        .empty-state-icon { width: 80px; height: 80px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.05); border-radius: 50%; }
+        .empty-state-icon svg { width: 36px; height: 36px; stroke: var(--champagne); opacity: 0.5; }
+        .empty-state h3 { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--ivory); margin-bottom: 12px; }
+        .empty-state p { font-size: 14px; color: var(--ash); margin-bottom: 32px; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(10, 10, 10, 0.9); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.4s var(--ease-out-expo); }
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+        .modal-container { background: var(--charcoal); border: 1px solid rgba(201, 169, 110, 0.15); border-radius: 4px; width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; transform: translateY(20px) scale(0.95); transition: transform 0.4s var(--ease-out-expo); }
+        .modal-overlay.active .modal-container { transform: translateY(0) scale(1); }
+        .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 24px 32px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .modal-header h2 { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ivory); }
+        .modal-close { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 50%; cursor: none; transition: all 0.3s; }
+        .modal-close:hover { border-color: var(--champagne); }
+        .modal-close svg { width: 16px; height: 16px; stroke: var(--smoke); }
+        .modal-body { padding: 32px; }
+        .form-group { margin-bottom: 24px; }
+        .form-group label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--smoke); margin-bottom: 10px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 14px 18px; background: var(--obsidian); border: 1px solid var(--silver); border-radius: 2px; color: var(--ivory); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.3s; cursor: none; }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--champagne); }
+        .form-group input::placeholder, .form-group textarea::placeholder { color: var(--mist); }
+        .form-group textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-hint { font-size: 12px; color: var(--mist); margin-top: 8px; }
+        .modal-footer { display: flex; gap: 16px; justify-content: flex-end; padding: 24px 32px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .btn-cancel { padding: 12px 28px; background: transparent; border: 1px solid var(--silver); color: var(--smoke); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; cursor: none; transition: all 0.3s; }
+        .btn-cancel:hover { border-color: var(--rose-gold); color: var(--rose-gold); }
+
+        .upload-zone { border: 2px dashed rgba(201, 169, 110, 0.2); border-radius: 4px; padding: 48px; text-align: center; transition: all 0.3s; cursor: none; }
+        .upload-zone:hover, .upload-zone.dragover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.05); }
+        .upload-zone svg { width: 48px; height: 48px; stroke: var(--champagne); opacity: 0.6; margin-bottom: 16px; }
+        .upload-zone p { font-size: 14px; color: var(--ash); margin-bottom: 8px; }
+        .upload-zone .upload-hint { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--mist); }
+
+        .confirm-modal .modal-container { max-width: 400px; text-align: center; }
+        .confirm-icon { width: 64px; height: 64px; margin: 0 auto 24px; display: flex; align-items: center; justify-content: center; background: rgba(183, 110, 121, 0.1); border-radius: 50%; }
+        .confirm-icon svg { width: 28px; height: 28px; stroke: var(--rose-gold); }
+        .confirm-modal h3 { font-family: var(--font-display); font-size: 24px; font-weight: 400; color: var(--ivory); margin-bottom: 12px; }
+        .confirm-modal p { font-size: 14px; color: var(--ash); margin-bottom: 32px; }
+
+        .toast { position: fixed; bottom: 32px; right: 32px; padding: 16px 24px; background: var(--charcoal); border: 1px solid var(--silver); border-radius: 4px; font-size: 14px; color: var(--ivory); z-index: 2000; transform: translateX(120%); transition: transform 0.4s var(--ease-out-expo); }
+        .toast.show { transform: translateX(0); }
+        .toast.success { border-color: var(--emerald); }
+        .toast.error { border-color: var(--rose-gold); }
+
+        @media (max-width: 1200px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+            .menu-toggle { display: flex; }
+        }
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .works-grid { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+
+        .menu-toggle { display: none; width: 44px; height: 44px; align-items: center; justify-content: center; background: var(--graphite); border: 1px solid var(--silver); border-radius: 4px; cursor: none; }
+        .menu-toggle svg { width: 20px; height: 20px; stroke: var(--smoke); }
+    </style>
+</head>
+<body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="landing.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                        <span class="nav-badge" id="worksCount">0</span>
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">L</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Loading...</p>
+                        <p class="user-email" id="userEmail">...</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">欢迎回来，<em id="welcomeName">创作者</em></h1>
+                <div class="page-actions">
+                    <button class="btn btn-secondary" id="importBtn">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入
+                    </button>
+                    <button class="btn btn-primary" id="createBtn">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </button>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    </div>
+                    <p class="stat-value" id="totalWorks">0</p>
+                    <p class="stat-label">作品总数</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <p class="stat-value" id="totalViews">0</p>
+                    <p class="stat-label">总浏览量</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                    </div>
+                    <p class="stat-value" id="totalLikes">0</p>
+                    <p class="stat-label">总点赞数</p>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <p class="stat-value" id="thisWeek">0</p>
+                    <p class="stat-label">本周新增</p>
+                </div>
+            </div>
+
+            <section class="content-section" id="recentWorksSection">
+                <div class="section-header">
+                    <h2 class="section-title">最近 <em>作品</em></h2>
+                    <a href="#" class="btn btn-secondary" id="viewAllBtn">查看全部</a>
+                </div>
+                <div class="works-grid" id="worksGrid">
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h2>创建新作品</h2>
+                <button class="modal-close" id="closeCreateModal">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="createForm">
+                    <div class="form-group">
+                        <label>作品标题</label>
+                        <input type="text" name="title" placeholder="给你的作品起个名字" required>
+                    </div>
+                    <div class="form-group">
+                        <label>作品描述</label>
+                        <textarea name="description" placeholder="描述一下这个作品的亮点和创作背景"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>分类</label>
+                            <select name="category">
+                                <option value="design">设计</option>
+                                <option value="development">开发</option>
+                                <option value="video">视频</option>
+                                <option value="photography">摄影</option>
+                                <option value="other">其他</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>标签</label>
+                            <input type="text" name="tags" placeholder="用逗号分隔，如: UI, Web, App">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>封面图片 URL</label>
+                        <input type="url" name="cover_url" placeholder="https://...">
+                        <p class="form-hint">留空将使用分类默认封面</p>
+                    </div>
+                    <div class="form-group">
+                        <label>作品链接</label>
+                        <input type="url" name="project_url" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label>上传文件</label>
+                        <div class="upload-zone" id="uploadZone">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            <p>拖拽文件到这里，或点击选择</p>
+                            <span class="upload-hint">支持 ZIP, HTML, 图片，最大 50MB</span>
+                            <input type="file" id="fileInput" style="display: none;" accept=".zip,.html,.jpg,.jpeg,.png,.gif,.webp">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" id="cancelCreate">取消</button>
+                <button class="btn btn-primary" id="submitCreate">创建作品</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay confirm-modal" id="confirmModal">
+        <div class="modal-container">
+            <div class="confirm-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            </div>
+            <h3>确认删除</h3>
+            <p>确定要删除这个作品吗？此操作无法撤销。</p>
+            <div class="modal-footer" style="justify-content: center;">
+                <button class="btn-cancel" id="cancelDelete">取消</button>
+                <button class="btn btn-primary" id="confirmDelete" style="background: var(--rose-gold);">确认删除</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+    (function() {
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorRing = document.querySelector('.cursor-ring');
+        let mouseX = 0, mouseY = 0;
+        let ringX = 0, ringY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        function animateCursor() {
+            ringX += (mouseX - ringX) * 0.15;
+            ringY += (mouseY - ringY) * 0.15;
+            cursorRing.style.left = ringX + 'px';
+            cursorRing.style.top = ringY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        document.querySelectorAll('a, button, .stat-card, .work-card, .upload-zone').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                cursorDot.classList.add('hovering');
+                cursorRing.classList.add('hovering');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorDot.classList.remove('hovering');
+                cursorRing.classList.remove('hovering');
+            });
+        });
+
+        const API_BASE = 'http://localhost:3002/api';
+        let authToken = localStorage.getItem('token');
+        let currentUser = null;
+
+        if (!authToken) {
+            window.location.href = 'landing.html';
+            return;
+        }
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
+            if (response.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'landing.html';
+                return null;
+            }
+            return response;
+        }
+
+        // 全局事件系统
+        const EventBus = {
+            events: {},
+            
+            on(event, callback) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push(callback);
+            },
+            
+            emit(event, data) {
+                if (this.events[event]) {
+                    this.events[event].forEach(callback => callback(data));
+                }
+            }
+        };
+
+        // 监听localStorage变化，实现跨页面数据同步
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'user') {
+                if (event.newValue) {
+                    const user = JSON.parse(event.newValue);
+                    currentUser = user;
+                    updateUserUI(user);
+                    EventBus.emit('userUpdated', user);
+                }
+            }
+        });
+
+        async function loadUserInfo() {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                updateUserUI(currentUser);
+            }
+            try {
+                const response = await fetchWithAuth('/auth/me');
+                if (response && response.ok) {
+                    const userData = await response.json();
+                    currentUser = userData;
+                    localStorage.setItem('user', JSON.stringify(currentUser));
+                    updateUserUI(currentUser);
+                    EventBus.emit('userLoaded', currentUser);
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+            }
+        }
+
+        function updateUserUI(user) {
+            if (!user) return;
+            const name = user.username || user.email?.split('@')[0] || '创作者';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userEmail').textContent = user.email || '';
+            document.getElementById('welcomeName').textContent = name;
+            document.getElementById('userAvatar').textContent = name.charAt(0).toUpperCase();
+        }
+
+        async function loadWorks() {
+            try {
+                const response = await fetchWithAuth('/works');
+                if (!response || !response.ok) return [];
+
+                const works = await response.json();
+                updateStats(works);
+                renderWorks(works);
+                return works;
+            } catch (err) {
+                console.error('Failed to load works:', err);
+                return [];
+            }
+        }
+
+        function updateStats(works) {
+            document.getElementById('totalWorks').textContent = works.length;
+            document.getElementById('worksCount').textContent = works.length;
+
+            const totalViews = works.reduce((sum, w) => sum + (w.view_count || w.views || 0), 0);
+            document.getElementById('totalViews').textContent = totalViews;
+
+            const totalLikes = works.reduce((sum, w) => sum + (w.likes || 0), 0);
+            document.getElementById('totalLikes').textContent = totalLikes;
+
+            const oneWeekAgo = new Date();
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const thisWeek = works.filter(w => new Date(w.created_at) > oneWeekAgo).length;
+            document.getElementById('thisWeek').textContent = thisWeek;
+        }
+
+        function renderWorks(works) {
+            const grid = document.getElementById('worksGrid');
+
+            if (works.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        </div>
+                        <h3>还没有作品</h3>
+                        <p>开始创建你的第一个作品集吧，展示你的才华和创意。</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('createBtn').click()">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            创建作品
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = works.slice(0, 6).map(work => `
+                <div class="work-card" data-id="${work.uuid || work.id}">
+                    <div class="work-card-header">
+                        ${(() => {
+                            if (work.source === 'upload') {
+                                if (work.file_type === 'image') {
+                                    return `<img src="${work.url}" class="work-card-image" alt="${work.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'; this.nextElementSibling.nextElementSibling.style.display='flex';"/>`;
+                                } else if (work.file_type === 'video') {
+                                    return `<video class="work-card-video" muted playsinline>
+                                        <source src="${work.url}" type="video/mp4">
+                                    </video>`;
+                                }
+                            } else if (work.url || work.project_url) {
+                                return `<iframe src="${work.url || work.project_url}" class="work-card-iframe" frameborder="0" allowfullscreen></iframe>`;
+                            }
+                            return '';
+                        })()}
+                        <div class="work-card-bg" style="${getCategoryGradient(work.category)}${(!work.source || work.source !== 'upload' && !work.url && !work.project_url) ? '' : '; display: none;'}">
+                            <div class="bg-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                            </div>
+                            <span class="bg-label">${work.category?.toUpperCase() || 'WORK'}</span>
+                        </div>
+                        <div class="work-card-overlay"></div>
+                        <span class="work-card-status ${work.status || 'draft'}">${work.status === 'published' ? '已发布' : '草稿'}</span>
+                        <div class="work-card-actions">
+                            <button class="work-card-action edit-btn" title="编辑">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            <button class="work-card-action delete delete-btn" title="删除">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="work-card-body">
+                        <h3 class="work-card-title">${work.title || '未命名作品'}</h3>
+                        <p class="work-card-desc">${work.description || '暂无描述'}</p>
+                        <div class="work-card-meta">
+                            <div class="work-card-tags">
+                                ${(() => {
+                                    try {
+                                        const tags = typeof work.tags === 'string' ? JSON.parse(work.tags) : work.tags || [];
+                                        return tags.slice(0, 3).map(tag => `<span class="work-card-tag">${tag}</span>`).join('');
+                                    } catch {
+                                        return '';
+                                    }
+                                })()}
+                            </div>
+                            <span class="work-card-date">${formatDate(work.created_at)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            grid.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.work-card');
+                    const workId = card.dataset.id;
+                    showDeleteConfirm(workId);
+                });
+            });
+        }
+
+        function getCategoryGradient(category) {
+            const gradients = {
+                design: 'background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);',
+                development: 'background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);',
+                video: 'background: linear-gradient(135deg, #1f1f1f 0%, #0d0d0d 100%);',
+                photography: 'background: linear-gradient(135deg, #252525 0%, #1a1a1a 100%);',
+                other: 'background: linear-gradient(135deg, #1a1a1a 0%, #252525 100%);'
+            };
+            return gradients[category] || gradients.other;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        let deleteTargetId = null;
+        const createModal = document.getElementById('createModal');
+        const confirmModal = document.getElementById('confirmModal');
+        const createBtn = document.getElementById('createBtn');
+        const importBtn = document.getElementById('importBtn');
+        const closeCreateModal = document.getElementById('closeCreateModal');
+        const cancelCreate = document.getElementById('cancelCreate');
+        const submitCreate = document.getElementById('submitCreate');
+        const createForm = document.getElementById('createForm');
+        const cancelDelete = document.getElementById('cancelDelete');
+        const confirmDelete = document.getElementById('confirmDelete');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        createBtn.addEventListener('click', () => openModal(createModal));
+        closeCreateModal.addEventListener('click', () => closeModal(createModal));
+        cancelCreate.addEventListener('click', () => closeModal(createModal));
+        createModal.addEventListener('click', (e) => { if (e.target === createModal) closeModal(createModal); });
+
+        cancelDelete.addEventListener('click', () => closeModal(confirmModal));
+        confirmDelete.addEventListener('click', async () => {
+            if (deleteTargetId) {
+                await deleteWork(deleteTargetId);
+                deleteTargetId = null;
+                closeModal(confirmModal);
+            }
+        });
+
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'landing.html';
+        });
+
+        submitCreate.addEventListener('click', async () => {
+            const formData = new FormData(createForm);
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                category: formData.get('category'),
+                tags: formData.get('tags'),
+                cover_url: formData.get('cover_url'),
+                project_url: formData.get('project_url'),
+                status: 'draft'
+            };
+
+            if (!data.title) {
+                showToast('请输入作品标题', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth('/works', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+
+                if (response && response.ok) {
+                    showToast('作品创建成功！', 'success');
+                    closeModal(createModal);
+                    createForm.reset();
+                    loadWorks();
+                } else if (response) {
+                    const result = await response.json();
+                    showToast(result.error || '创建失败', 'error');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试', 'error');
+            }
+        });
+
+        async function deleteWork(id) {
+            try {
+                const response = await fetchWithAuth(`/works/${id}`, { method: 'DELETE' });
+                if (response && response.ok) {
+                    showToast('作品已删除', 'success');
+                    loadWorks();
+                } else if (response) {
+                    const result = await response.json();
+                    showToast(result.error || '删除失败', 'error');
+                }
+            } catch (err) {
+                showToast('网络错误，请重试', 'error');
+            }
+        }
+
+        function showDeleteConfirm(id) {
+            deleteTargetId = id;
+            openModal(confirmModal);
+        }
+
+        function openModal(modal) {
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal(modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        async function handleFileUpload(file) {
+            showToast(`正在处理: ${file.name}`, 'info');
+            if (file.name.endsWith('.zip')) {
+                const formData = new FormData();
+                formData.append('file', file);
+                try {
+                    const response = await fetch(`${API_BASE}/works/import`, {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${authToken}` },
+                        body: formData
+                    });
+                    if (response.ok) {
+                        showToast('文件导入成功！', 'success');
+                        loadWorks();
+                    } else {
+                        showToast('导入失败，请重试', 'error');
+                    }
+                } catch (err) {
+                    showToast('网络错误，请重试', 'error');
+                }
+            } else {
+                showToast('支持 ZIP 文件批量导入', 'info');
+            }
+        }
+
+        // 导航现在使用直接的HTML链接，不需要JavaScript处理
+
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        // 页面加载时加载主题和用户信息
+        loadTheme();
+        loadUserInfo();
+        loadWorks();
+
+        gsap.from('.page-title', { opacity: 0, y: 30, duration: 0.8, delay: 0.2 });
+        gsap.from('.stats-grid .stat-card', { opacity: 0, y: 40, duration: 0.8, stagger: 0.1, delay: 0.4 });
+        gsap.from('.section-header', { opacity: 0, y: 20, duration: 0.8, delay: 0.8 });
+    })();
+    </script>
+</body>
+</html>

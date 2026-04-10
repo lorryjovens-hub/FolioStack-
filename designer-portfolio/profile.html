@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人资料 - FolioStack</title>
+    <meta name="description" content="管理个人资料和作品集设置">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        body { font-family: var(--font-body); background: var(--obsidian); color: var(--ivory); overflow-x: hidden; }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: #e2e8f0;
+            --mist: #64748b;
+            --ash: #475569;
+            --smoke: #1e293b;
+            --pearl: #0f172a;
+            --ivory: #0f172a;
+            --champagne: #b8944d;
+            --champagne-light: #d4b876;
+            --champagne-dark: #967a3a;
+            --rose-gold: #a85f6a;
+            --deep-blue: #1e40af;
+            --emerald: #059669;
+        }
+        
+        /* 浅色主题的背景渐变 */
+        body.light-mode {
+            background: var(--obsidian);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--obsidian); }
+        ::-webkit-scrollbar-thumb { background: var(--champagne-dark); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--champagne); }
+
+        .dashboard-layout { display: flex; min-height: 100vh; }
+
+        .sidebar { width: 260px; background: var(--charcoal); border-right: 1px solid rgba(201, 169, 110, 0.08); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 100; }
+        .sidebar-header { padding: 28px 24px; border-bottom: 1px solid rgba(201, 169, 110, 0.08); }
+        .sidebar-logo { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--champagne); text-decoration: none; display: flex; align-items: center; gap: 12px; }
+        .sidebar-logo span { font-weight: 300; color: var(--smoke); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .sidebar-nav { flex: 1; padding: 24px 0; }
+        .nav-section { margin-bottom: 32px; }
+        .nav-section-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--mist); padding: 0 24px; margin-bottom: 12px; }
+        .nav-item { display: flex; align-items: center; gap: 14px; padding: 14px 24px; color: var(--smoke); text-decoration: none; font-size: 14px; transition: all 0.3s; position: relative; }
+        .nav-item::before { content: ''; position: absolute; left: 0; top: 0; width: 3px; height: 100%; background: var(--champagne); transform: scaleY(0); transition: transform 0.3s var(--ease-out-expo); }
+        .nav-item:hover { color: var(--ivory); background: rgba(201, 169, 110, 0.05); }
+        .nav-item.active { color: var(--champagne); background: rgba(201, 169, 110, 0.08); }
+        .nav-item.active::before { transform: scaleY(1); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.5; flex-shrink: 0; }
+        .sidebar-footer { padding: 24px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .user-card { display: flex; align-items: center; gap: 14px; }
+        .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--obsidian); }
+        .user-info { flex: 1; }
+        .user-name { font-size: 14px; font-weight: 500; color: var(--ivory); margin-bottom: 2px; }
+        .user-email { font-family: var(--font-mono); font-size: 10px; color: var(--mist); }
+        .logout-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: none; border: 1px solid var(--silver); border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .logout-btn:hover { border-color: var(--rose-gold); background: rgba(183, 110, 121, 0.1); }
+        .logout-btn svg { width: 18px; height: 18px; stroke: var(--smoke); }
+
+        .main-content { flex: 1; margin-left: 260px; padding: 32px 48px; }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 40px; flex-wrap: wrap; gap: 20px; }
+        .page-title { font-family: var(--font-display); font-size: 36px; font-weight: 400; color: var(--ivory); }
+        .page-title em { font-style: italic; color: var(--champagne); }
+
+        .profile-container { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 48px; }
+        .profile-header { display: flex; align-items: center; gap: 24px; margin-bottom: 40px; }
+        .avatar-container { position: relative; }
+        .avatar { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--champagne-dark), var(--champagne)); display: flex; align-items: center; justify-content: center; font-family: var(--font-display); font-size: 48px; font-weight: 600; color: var(--obsidian); }
+        .avatar-edit { position: absolute; bottom: 0; right: 0; width: 36px; height: 36px; background: var(--champagne); border: 3px solid var(--obsidian); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .avatar-edit svg { width: 16px; height: 16px; stroke: var(--obsidian); }
+        .profile-info { flex: 1; }
+        .profile-name { font-family: var(--font-display); font-size: 32px; font-weight: 400; color: var(--ivory); margin-bottom: 8px; }
+        .profile-email { font-family: var(--font-mono); font-size: 14px; color: var(--ash); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .form-group { grid-column: span 1; }
+        .form-group.full-width { grid-column: span 2; }
+        .form-label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--mist); margin-bottom: 8px; }
+        .form-input, .form-textarea { width: 100%; padding: 12px 16px; background: var(--graphite); border: 1px solid var(--silver); border-radius: 2px; color: var(--ivory); font-family: var(--font-body); font-size: 14px; outline: none; transition: border-color 0.3s; }
+        .form-input:focus, .form-textarea:focus { border-color: var(--champagne); }
+        .form-textarea { resize: vertical; min-height: 120px; }
+
+        .social-links { margin-bottom: 32px; }
+        .social-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+        .social-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--graphite); border-radius: 2px; }
+        .social-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(201, 169, 110, 0.1); border-radius: 4px; }
+        .social-icon svg { width: 16px; height: 16px; stroke: var(--champagne); }
+        .social-input { flex: 1; background: transparent; border: none; color: var(--ivory); font-family: var(--font-body); font-size: 14px; outline: none; }
+
+        .form-actions { display: flex; gap: 16px; justify-content: flex-end; margin-top: 40px; }
+        .btn { display: inline-flex; align-items: center; gap: 10px; padding: 12px 28px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; text-decoration: none; border: none; cursor: pointer; transition: all 0.4s var(--ease-out-expo); }
+        .btn-primary { background: var(--champagne); color: var(--obsidian); }
+        .btn-primary:hover { background: var(--champagne-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201, 169, 110, 0.2); }
+        .btn-secondary { background: var(--graphite); color: var(--smoke); border: 1px solid var(--silver); }
+        .btn-secondary:hover { border-color: var(--champagne); color: var(--champagne); }
+        .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; }
+
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.4s var(--ease-out-expo); }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 24px; }
+        }
+        @media (max-width: 768px) {
+            .profile-header { flex-direction: column; text-align: center; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full-width { grid-column: span 1; }
+            .profile-container { padding: 32px 24px; }
+            .social-grid { grid-template-columns: 1fr; }
+            .page-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <a href="dashboard.html" class="sidebar-logo">Folio<span>Stack</span></a>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <p class="nav-section-title">概览</p>
+                    <a href="dashboard.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                        工作台
+                    </a>
+                    <a href="works.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        作品管理
+                    </a>
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">创作</p>
+                    <a href="work-editor.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        创建作品
+                    </a>
+                    <a href="import.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        导入作品
+                    </a>
+                    <a href="ai-generate.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI生成
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <p class="nav-section-title">设置</p>
+                    <a href="profile.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        个人资料
+                    </a>
+                    <a href="settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        系统设置
+                    </a>
+                </div>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-card">
+                    <div class="user-avatar" id="userAvatar">L</div>
+                    <div class="user-info">
+                        <p class="user-name" id="userName">Loading...</p>
+                        <p class="user-email" id="userEmail">...</p>
+                    </div>
+                    <button class="logout-btn" id="logoutBtn" title="退出登录">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">个人<em>资料</em></h1>
+            </header>
+
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="avatar-container">
+                        <div class="avatar" id="profileAvatar">L</div>
+                        <div class="avatar-edit">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </div>
+                    </div>
+                    <div class="profile-info">
+                        <h2 class="profile-name" id="profileName">Loading...</h2>
+                        <p class="profile-email" id="profileEmail">...</p>
+                    </div>
+                </div>
+
+                <form id="profileForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">用户名</label>
+                            <input type="text" class="form-input" name="username" id="username" placeholder="输入用户名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" name="email" id="email" placeholder="输入邮箱">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">个人简介</label>
+                            <textarea class="form-textarea" name="bio" id="bio" placeholder="介绍一下你自己..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">职业</label>
+                            <input type="text" class="form-input" name="occupation" id="occupation" placeholder="例如：设计师、开发者">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">位置</label>
+                            <input type="text" class="form-input" name="location" id="location" placeholder="例如：北京、上海">
+                        </div>
+                    </div>
+
+                    <div class="social-links">
+                        <label class="form-label">社交媒体</label>
+                        <div class="social-grid">
+                            <!-- 国内社交媒体平台 -->
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 2H8a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/><path d="M12 12h4"/><path d="M12 8h4"/><path d="M12 16h4"/><circle cx="8" cy="12" r="1"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="text" class="social-input" placeholder="微信" name="wechat" id="wechatInput">
+                                    <a href="#" class="social-link" id="wechatLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="小红书" name="xiaohongshu" id="xiaohongshuInput">
+                                    <a href="#" class="social-link" id="xiaohongshuLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="抖音" name="douyin" id="douyinInput">
+                                    <a href="#" class="social-link" id="douyinLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="B站" name="bilibili" id="bilibiliInput">
+                                    <a href="#" class="social-link" id="bilibiliLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="微博" name="weibo" id="weiboInput">
+                                    <a href="#" class="social-link" id="weiboLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            
+                            <!-- 国际社交媒体平台 -->
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="Facebook" name="facebook" id="facebookInput">
+                                    <a href="#" class="social-link" id="facebookLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="Twitter" name="twitter" id="twitterInput">
+                                    <a href="#" class="social-link" id="twitterLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="LinkedIn" name="linkedin" id="linkedinInput">
+                                    <a href="#" class="social-link" id="linkedinLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                            <div class="social-item">
+                                <div class="social-icon">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+                                </div>
+                                <div style="flex: 1;">
+                                    <input type="url" class="social-input" placeholder="GitHub" name="github" id="githubInput">
+                                    <a href="#" class="social-link" id="githubLink" target="_blank" style="display: none; font-size: 12px; color: var(--champagne); text-decoration: none; margin-top: 4px; display: block;">访问链接</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label class="form-label">个人二维码</label>
+                        <div style="display: flex; align-items: center; gap: 24px;">
+                            <div id="qrCodeContainer" style="width: 120px; height: 120px; background: white; padding: 8px; border-radius: 4px;">
+                                <canvas id="qrCodeCanvas" width="104" height="104"></canvas>
+                            </div>
+                            <div>
+                                <p style="color: var(--ash); font-size: 14px; margin-bottom: 8px;">扫描二维码访问您的个人资料页面</p>
+                                <button type="button" class="btn btn-secondary" id="regenerateQrBtn" style="padding: 8px 16px; font-size: 10px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>
+                                    重新生成
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.location.href='dashboard.html'">取消</button>
+                        <button type="submit" class="btn btn-primary">保存修改</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+    (function() {
+        const API_BASE = 'http://localhost:3002/api';
+        let authToken = localStorage.getItem('token');
+
+        if (!authToken) {
+            window.location.href = 'landing.html';
+            return;
+        }
+
+        // 全局事件系统
+        const EventBus = {
+            events: {},
+            
+            on(event, callback) {
+                if (!this.events[event]) {
+                    this.events[event] = [];
+                }
+                this.events[event].push(callback);
+            },
+            
+            emit(event, data) {
+                if (this.events[event]) {
+                    this.events[event].forEach(callback => callback(data));
+                }
+            }
+        };
+
+        // 监听localStorage变化，实现跨页面数据同步
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'user') {
+                if (event.newValue) {
+                    const user = JSON.parse(event.newValue);
+                    updateProfile(user);
+                    EventBus.emit('userUpdated', user);
+                }
+            }
+        });
+
+        async function fetchWithAuth(url, options = {}) {
+            const headers = { 'Content-Type': 'application/json', ...options.headers };
+            if (authToken) {
+                headers['Authorization'] = `Bearer ${authToken}`;
+            }
+            try {
+                const response = await fetch(`${API_BASE}${url}`, { ...options, headers });
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = 'landing.html';
+                    return null;
+                }
+                return response;
+            } catch (error) {
+                console.error('API请求失败:', error);
+                showNotification('网络连接失败，请检查网络设置', 'error');
+                return null;
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#10b981'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                font-size: 14px;
+                font-weight: 500;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        async function loadUserInfo() {
+            try {
+                // 优先从localStorage读取用户数据
+                const localStorageUser = localStorage.getItem('user');
+                if (localStorageUser) {
+                    const user = JSON.parse(localStorageUser);
+                    updateProfile(user);
+                    return;
+                }
+                
+                // 如果localStorage中没有数据，从API获取
+                const response = await fetchWithAuth('/auth/me');
+                if (response && response.ok) {
+                    const result = await response.json();
+                    // 更新localStorage
+                    localStorage.setItem('user', JSON.stringify(result.user));
+                    updateProfile(result.user);
+                    EventBus.emit('userLoaded', result.user);
+                } else if (response) {
+                    showNotification('无法加载用户信息', 'error');
+                }
+            } catch (err) {
+                console.error('Failed to load user info:', err);
+                showNotification('加载用户信息失败', 'error');
+            }
+        }
+
+        function updateProfile(user) {
+            const name = user.username || user.email?.split('@')[0] || '创作者';
+            
+            // 更新主页面显示
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileEmail').textContent = user.email || '';
+            
+            // 更新头像
+            const profileAvatar = document.getElementById('profileAvatar');
+            const userAvatar = document.getElementById('userAvatar');
+            
+            if (user.avatar_url) {
+                profileAvatar.innerHTML = `<img src="${user.avatar_url}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                userAvatar.innerHTML = `<img src="${user.avatar_url}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+            } else {
+                profileAvatar.textContent = name.charAt(0).toUpperCase();
+                userAvatar.textContent = name.charAt(0).toUpperCase();
+            }
+            
+            // 更新表单数据
+            document.getElementById('username').value = user.username || '';
+            document.getElementById('email').value = user.email || '';
+            document.getElementById('bio').value = user.bio || '';
+            document.getElementById('occupation').value = user.occupation || '';
+            document.getElementById('location').value = user.location || '';
+            
+            // 更新社交媒体数据
+            const socialPlatforms = [
+                'wechat', 'xiaohongshu', 'douyin', 'bilibili', 'weibo',
+                'facebook', 'twitter', 'linkedin', 'github'
+            ];
+            
+            socialPlatforms.forEach(platform => {
+                const input = document.querySelector(`input[name="${platform}"]`);
+                const link = document.getElementById(`${platform}Link`);
+                
+                input.value = user[platform] || '';
+                
+                // 更新链接显示
+                if (user[platform]) {
+                    if (platform === 'wechat') {
+                        link.textContent = `微信号: ${user[platform]}`;
+                        link.style.display = 'block';
+                        link.removeAttribute('href');
+                        link.removeAttribute('target');
+                    } else {
+                        let formattedUrl = user[platform];
+                        if (!user[platform].startsWith('http://') && !user[platform].startsWith('https://')) {
+                            formattedUrl = `https://${user[platform]}`;
+                        }
+                        link.href = formattedUrl;
+                        link.textContent = '访问链接';
+                        link.style.display = 'block';
+                        link.setAttribute('target', '_blank');
+                    }
+                } else {
+                    link.style.display = 'none';
+                }
+            });
+            
+            // 更新侧边栏显示
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userEmail').textContent = user.email || '';
+            
+            // 更新二维码
+            updateQRCode();
+            
+            // 触发更新事件
+            EventBus.emit('profileUpdated', user);
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                username: formData.get('username'),
+                email: formData.get('email'),
+                bio: formData.get('bio'),
+                occupation: formData.get('occupation'),
+                location: formData.get('location'),
+                // 国内社交媒体平台
+                wechat: formData.get('wechat'),
+                xiaohongshu: formData.get('xiaohongshu'),
+                douyin: formData.get('douyin'),
+                bilibili: formData.get('bilibili'),
+                weibo: formData.get('weibo'),
+                // 国际社交媒体平台
+                facebook: formData.get('facebook'),
+                twitter: formData.get('twitter'),
+                linkedin: formData.get('linkedin'),
+                github: formData.get('github')
+            };
+
+            // 显示加载状态
+            const submitBtn = e.submitter;
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 保存中...';
+            submitBtn.disabled = true;
+
+            try {
+                // 先更新本地存储，实现实时响应
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const updatedUser = { ...currentUser, ...data };
+                
+                // 保存到localStorage，触发storage事件实现跨页面同步
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                
+                // 更新当前页面显示
+                updateProfile(updatedUser);
+                showNotification('个人资料更新成功！', 'success');
+                
+                // 尝试同步到服务器
+                const response = await fetchWithAuth('/auth/update', {
+                    method: 'PUT',
+                    body: JSON.stringify(data)
+                });
+
+                if (!response || !response.ok) {
+                    showNotification('服务器同步失败，但本地已更新', 'warning');
+                }
+            } catch (err) {
+                console.error('更新失败:', err);
+                showNotification('更新失败，请检查网络连接', 'error');
+            } finally {
+                // 恢复按钮状态
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // 头像上传功能
+        const avatarEdit = document.querySelector('.avatar-edit');
+        avatarEdit.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    // 显示加载状态
+                    avatarEdit.style.opacity = '0.5';
+                    avatarEdit.style.cursor = 'not-allowed';
+                    
+                    try {
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const avatarUrl = event.target.result;
+                            
+                            // 获取当前表单数据
+                            const formData = new FormData(document.getElementById('profileForm'));
+                            const currentData = {
+                                username: formData.get('username'),
+                                email: formData.get('email'),
+                                bio: formData.get('bio'),
+                                occupation: formData.get('occupation'),
+                                location: formData.get('location'),
+                                wechat: formData.get('wechat'),
+                                xiaohongshu: formData.get('xiaohongshu'),
+                                douyin: formData.get('douyin'),
+                                bilibili: formData.get('bilibili'),
+                                weibo: formData.get('weibo'),
+                                facebook: formData.get('facebook'),
+                                twitter: formData.get('twitter'),
+                                linkedin: formData.get('linkedin'),
+                                github: formData.get('github'),
+                                avatar_url: avatarUrl
+                            };
+                            
+                            // 更新本地存储，触发跨页面同步
+                            localStorage.setItem('user', JSON.stringify(currentData));
+                            
+                            // 更新当前页面显示
+                            updateProfile(currentData);
+                            showNotification('头像上传成功！', 'success');
+                            
+                            // 尝试同步到服务器
+                            const uploadData = new FormData();
+                            uploadData.append('avatar', file);
+                            
+                            fetchWithAuth('/auth/upload-avatar', {
+                                method: 'POST',
+                                headers: {},
+                                body: uploadData
+                            }).then(response => {
+                                if (!response || !response.ok) {
+                                    showNotification('服务器同步失败，但本地已更新', 'warning');
+                                }
+                            }).catch(error => {
+                                console.error('头像上传到服务器失败:', error);
+                            });
+                        };
+                        reader.readAsDataURL(file);
+                    } catch (err) {
+                        console.error('头像上传出错:', err);
+                        showNotification('头像上传失败: ' + err.message, 'error');
+                    } finally {
+                        // 恢复按钮状态
+                        avatarEdit.style.opacity = '1';
+                        avatarEdit.style.cursor = 'pointer';
+                    }
+                }
+            };
+            input.click();
+        });
+
+        // 社交链接处理
+        function setupSocialLinkHandlers() {
+            const socialPlatforms = [
+                // 国内社交媒体平台
+                'wechat', 'xiaohongshu', 'douyin', 'bilibili', 'weibo',
+                // 国际社交媒体平台
+                'facebook', 'twitter', 'linkedin', 'github'
+            ];
+            
+            socialPlatforms.forEach(platform => {
+                const input = document.getElementById(`${platform}Input`);
+                const link = document.getElementById(`${platform}Link`);
+                const socialItem = input.closest('.social-item');
+                const socialIcon = socialItem.querySelector('.social-icon');
+                
+                // 实时输入变化监听
+                input.addEventListener('input', function() {
+                    const url = this.value.trim();
+                    if (url) {
+                        // 对于微信，可能是微信号而不是URL
+                        if (platform === 'wechat') {
+                            link.textContent = `微信号: ${url}`;
+                            link.style.display = 'block';
+                            link.removeAttribute('href');
+                            link.removeAttribute('target');
+                        } else {
+                            // 确保URL有正确的协议
+                            let formattedUrl = url;
+                            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                                formattedUrl = `https://${url}`;
+                            }
+                            link.href = formattedUrl;
+                            link.textContent = '访问链接';
+                            link.style.display = 'block';
+                            link.setAttribute('target', '_blank');
+                        }
+                    } else {
+                        link.style.display = 'none';
+                    }
+                    
+                    // 实时更新本地存储
+                    updateLocalStorageSocialData(platform, url);
+                });
+                
+                // 实时失去焦点时更新本地存储
+                input.addEventListener('blur', function() {
+                    updateLocalStorageSocialData(platform, this.value.trim());
+                });
+                
+                // 图标点击交互 - 点击图标激活输入框
+                socialIcon.style.cursor = 'pointer';
+                socialIcon.addEventListener('click', function() {
+                    input.focus();
+                    // 添加视觉反馈
+                    socialIcon.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        socialIcon.style.transform = 'scale(1)';
+                    }, 200);
+                });
+                
+                // 输入框获得焦点时的视觉反馈
+                input.addEventListener('focus', function() {
+                    socialItem.style.background = 'rgba(201, 169, 110, 0.08)';
+                    socialIcon.style.background = 'rgba(201, 169, 110, 0.2)';
+                });
+                
+                // 输入框失去焦点时的视觉反馈
+                input.addEventListener('blur', function() {
+                    socialItem.style.background = 'var(--graphite)';
+                    socialIcon.style.background = 'rgba(201, 169, 110, 0.1)';
+                });
+            });
+        }
+        
+        // 实时更新社交媒体数据到本地存储
+        function updateLocalStorageSocialData(platform, value) {
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                const updatedUser = { ...currentUser, [platform]: value };
+                
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                EventBus.emit('socialDataUpdated', { platform, value });
+            } catch (error) {
+                console.error('更新社交媒体数据失败:', error);
+            }
+        }
+
+        // 二维码生成功能
+        function generateQRCode(text) {
+            const canvas = document.getElementById('qrCodeCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 清空画布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 使用Google Charts API生成二维码
+            const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=104x104&data=${encodeURIComponent(text)}`;
+            
+            const img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = qrCodeUrl;
+        }
+
+        function updateQRCode() {
+            const username = document.getElementById('username').value || 'user';
+            const email = document.getElementById('email').value || 'user@example.com';
+            const bio = document.getElementById('bio').value || '';
+            
+            // 创建个人资料信息
+            const profileInfo = `姓名: ${username}\n邮箱: ${email}\n简介: ${bio}`;
+            
+            generateQRCode(profileInfo);
+        }
+
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'landing.html';
+        });
+
+        // 设置二维码事件监听
+        document.getElementById('regenerateQrBtn').addEventListener('click', updateQRCode);
+        
+        // 当表单数据变化时更新二维码
+        const formInputs = document.querySelectorAll('#profileForm input, #profileForm textarea');
+        formInputs.forEach(input => {
+            input.addEventListener('input', updateQRCode);
+        });
+
+        // 加载主题设置
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+        }
+
+        // 设置主题
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // 监听主题变化
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'theme') {
+                loadTheme();
+            }
+        });
+
+        loadTheme();
+        loadUserInfo();
+        setupSocialLinkHandlers();
+        updateQRCode(); // 初始生成二维码
+    })();
+    </script>
+</body>
+</html>
