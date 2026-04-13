@@ -8,6 +8,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="js/global-ai-config.js"></script>
+    <!-- PDF.js 用于PDF文件解析 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
+    <!-- Three.js库用于3D文件查看 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
     <style>
         :root {
             --obsidian: #0a0a0a;
@@ -287,9 +296,9 @@
 
         .ai-generate-container {
             display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 2rem;
-            max-width: 1600px;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            max-width: 100%;
             margin: 0 auto;
             align-items: start;
         }
@@ -298,41 +307,19 @@
             background: linear-gradient(135deg, var(--charcoal) 0%, var(--obsidian) 100%);
             border: 1px solid rgba(201,169,110,0.15);
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1.5rem;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--champagne) var(--graphite);
+            gap: 1rem;
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             backdrop-filter: blur(10px);
         }
-        
-        .input-section::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .input-section::-webkit-scrollbar-track {
-            background: rgba(201,169,110,0.05);
-            border-radius: 3px;
-        }
-        
-        .input-section::-webkit-scrollbar-thumb {
-            background: var(--champagne);
-            border-radius: 3px;
-        }
-        
-        .input-section::-webkit-scrollbar-thumb:hover {
-            background: var(--champagne-light);
-        }
-        
+
         .input-group {
             background: rgba(10,10,10,0.5);
             border: 1px solid rgba(201,169,110,0.1);
             border-radius: 8px;
-            padding: 1.5rem;
+            padding: 1rem 1.25rem;
             transition: all 0.3s ease;
         }
         
@@ -406,6 +393,59 @@
         
         .form-input::placeholder {
             color: rgba(201,169,110,0.3);
+        }
+
+        /* 优化select元素样式 */
+        .form-input.select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 16px;
+            padding-right: 2.5rem;
+        }
+
+        .form-input.select:focus {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+
+        /* 优化checkbox样式 */
+        input[type="checkbox"] {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: rgba(20,20,20,0.8);
+            border: 2px solid rgba(201,169,110,0.1);
+            border-radius: 4px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        input[type="checkbox"]:hover {
+            border-color: var(--champagne);
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--champagne);
+            border-color: var(--champagne);
+        }
+
+        input[type="checkbox"]:checked::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 2px;
+            width: 6px;
+            height: 10px;
+            border: solid var(--obsidian);
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+
+        input[type="checkbox"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(201,169,110,0.1);
         }
 
         .file-upload-container {
@@ -485,6 +525,409 @@
 
         .remove-file:hover {
             background: rgba(183,110,121,0.1);
+        }
+
+        .view-file {
+            color: var(--champagne);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+
+        .view-file:hover {
+            background: rgba(201,169,110,0.1);
+        }
+
+        .media-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .media-item {
+            position: relative;
+            aspect-ratio: 1;
+            background: var(--graphite);
+            border: 1px solid rgba(201,169,110,0.15);
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .media-item:hover {
+            border-color: var(--champagne);
+            transform: translateY(-2px);
+        }
+
+        .media-item img,
+        .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-item-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--mist);
+            font-size: 0.75rem;
+            text-align: center;
+            padding: 0.5rem;
+        }
+
+        .media-item-placeholder.file-3d {
+            background: linear-gradient(135deg, var(--graphite) 0%, #1a1a2e 100%);
+        }
+
+        .media-item-placeholder.file-3d svg {
+            color: var(--champagne);
+            opacity: 0.8;
+        }
+
+        .media-item-placeholder.file-3d span:first-of-type {
+            color: var(--champagne);
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .media-item-placeholder.file-3d span.file-name {
+            color: var(--smoke);
+            font-size: 0.65rem;
+            opacity: 0.8;
+        }
+
+        .media-item-placeholder svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .media-item-remove {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 24px;
+            height: 24px;
+            background: rgba(183,110,121,0.95);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 10;
+        }
+
+        .media-item:hover .media-item-remove {
+            opacity: 1;
+        }
+
+        .media-item-type {
+            position: absolute;
+            bottom: 6px;
+            left: 6px;
+            background: rgba(0,0,0,0.7);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            color: white;
+            z-index: 5;
+        }
+
+        .countdown-display {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            background: linear-gradient(135deg, rgba(201,169,110,0.1) 0%, rgba(201,169,110,0.05) 100%);
+            border: 1px solid rgba(201,169,110,0.2);
+            border-radius: 8px;
+            margin-top: 0.75rem;
+        }
+
+        .countdown-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--champagne);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--obsidian);
+            font-weight: bold;
+            font-size: 0.9rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .countdown-text {
+            flex: 1;
+        }
+
+        .countdown-title {
+            font-size: 0.8rem;
+            color: var(--smoke);
+            margin-bottom: 0.25rem;
+        }
+
+        .countdown-time {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--champagne);
+            font-family: var(--font-mono);
+        }
+
+        .countdown-subtitle {
+            font-size: 0.75rem;
+            color: var(--mist);
+        }
+
+        .preview-section-resizable {
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            left: -8px;
+            top: 0;
+            bottom: 0;
+            width: 16px;
+            cursor: col-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .resize-handle::before {
+            content: '';
+            width: 4px;
+            height: 60px;
+            background: rgba(201,169,110,0.3);
+            border-radius: 2px;
+            transition: background 0.3s ease;
+        }
+
+        .resize-handle:hover::before {
+            background: var(--champagne);
+        }
+
+        .preview-height-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid rgba(201,169,110,0.1);
+        }
+
+        .preview-height-btn {
+            padding: 0.35rem 0.75rem;
+            background: var(--graphite);
+            border: 1px solid rgba(201,169,110,0.2);
+            border-radius: 4px;
+            color: var(--smoke);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .preview-height-btn:hover {
+            border-color: var(--champagne);
+            color: var(--ivory);
+        }
+
+        .preview-height-btn.active {
+            background: var(--champagne);
+            color: var(--obsidian);
+            border-color: var(--champagne);
+        }
+
+        .token-btn {
+            padding: 0.5rem 1rem;
+            background: var(--graphite);
+            border: 1px solid rgba(201,169,110,0.2);
+            border-radius: 6px;
+            color: var(--smoke);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .token-btn:hover {
+            border-color: var(--champagne);
+            color: var(--ivory);
+            transform: translateY(-1px);
+        }
+
+        .token-btn.active {
+            background: var(--champagne);
+            color: var(--obsidian);
+            border-color: var(--champagne);
+        }
+
+        .generation-history-section {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(201,169,110,0.1);
+        }
+
+        .section-subtitle {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--ivory);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .history-list {
+            background: var(--graphite);
+            border: 1px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid rgba(201,169,110,0.1);
+            transition: background 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(201,169,110,0.05);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-title {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--ivory);
+            margin-bottom: 0.25rem;
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--mist);
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .history-btn {
+            padding: 0.25rem 0.5rem;
+            background: transparent;
+            border: 1px solid rgba(201,169,110,0.3);
+            border-radius: 4px;
+            color: var(--smoke);
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .history-btn:hover {
+            border-color: var(--champagne);
+            color: var(--ivory);
+        }
+
+        .no-history {
+            text-align: center;
+            color: var(--mist);
+            font-size: 0.85rem;
+            padding: 2rem 0;
+        }
+
+        .preview-resizable {
+            position: relative;
+        }
+
+        .resize-handle-right {
+            position: absolute;
+            right: -6px;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            cursor: ew-resize;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resize-handle-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -6px;
+            height: 12px;
+            cursor: ns-resize;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .resize-handle-corner {
+            position: absolute;
+            right: -6px;
+            bottom: -6px;
+            width: 18px;
+            height: 18px;
+            cursor: nwse-resize;
+            z-index: 101;
+        }
+
+        .resize-handle-right::before,
+        .resize-handle-bottom::before {
+            content: '';
+            background: rgba(201,169,110,0.4);
+            border-radius: 2px;
+            transition: background 0.3s ease;
+        }
+
+        .resize-handle-right::before {
+            width: 4px;
+            height: 40px;
+        }
+
+        .resize-handle-bottom::before {
+            width: 40px;
+            height: 4px;
+        }
+
+        .resize-handle-right:hover::before,
+        .resize-handle-bottom:hover::before {
+            background: var(--champagne);
         }
 
         .style-grid {
@@ -624,10 +1067,6 @@
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: var(--champagne) var(--graphite);
             box-shadow: 0 8px 32px rgba(0,0,0,0.3);
             backdrop-filter: blur(10px);
         }
@@ -744,6 +1183,111 @@
             font-family: var(--font-mono);
             flex-direction: column;
             gap: 12px;
+        }
+
+        .media-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .media-item {
+            position: relative;
+            background: rgba(20,20,20,0.8);
+            border: 2px solid rgba(201,169,110,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .media-item:hover {
+            border-color: var(--champagne);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(201,169,110,0.15);
+        }
+
+        .media-item img,
+        .media-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .media-item-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--ash);
+            font-size: 0.75rem;
+            gap: 0.5rem;
+        }
+
+        .media-item-placeholder svg {
+            width: 32px;
+            height: 32px;
+            opacity: 0.5;
+        }
+
+        .media-item-delete {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 24px;
+            height: 24px;
+            background: rgba(220, 38, 38, 0.9);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .media-item:hover .media-item-delete {
+            opacity: 1;
+        }
+
+        .media-item-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 0.5rem;
+            font-size: 0.65rem;
+            color: var(--ivory);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-upload-progress {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .upload-progress-bar {
+            height: 6px;
+            background: rgba(201,169,110,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .upload-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--champagne), var(--champagne-light));
+            width: 0%;
+            transition: width 0.3s ease;
         }
 
         /* 响应式设计 */
@@ -994,9 +1538,20 @@
             <div class="sidebar-header">
                 <a href="landing.html" class="sidebar-logo">Folio<span>Stack</span></a>
             </div>
-            <nav class="sidebar-nav">
+                                    <nav class="sidebar-nav">
                 <div class="nav-section">
-                    <p class="nav-section-title">概览</p>
+                    <a href="ai-settings.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2 2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        AI设置
+                    </a>
+                    <a href="ai-generate.html" class="nav-item active">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        AI设计
+                    </a>
+                    <a href="clone-website.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                        克隆网站
+                    </a>
                     <a href="dashboard.html" class="nav-item">
                         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                         工作台
@@ -1005,13 +1560,6 @@
                         <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                         作品管理
                     </a>
-                    <a href="analytics.html" class="nav-item">
-                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                        数据分析
-                    </a>
-                </div>
-                <div class="nav-section">
-                    <p class="nav-section-title">创作</p>
                     <a href="work-editor.html" class="nav-item">
                         <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         创建作品
@@ -1020,19 +1568,16 @@
                         <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         导入作品
                     </a>
-                    <a href="ai-generate.html" class="nav-item active">
-                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                        AI生成
+                    <a href="analytics.html" class="nav-item">
+                        <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        数据分析
                     </a>
-                </div>
-                <div class="nav-section">
-                    <p class="nav-section-title">设置</p>
                     <a href="profile.html" class="nav-item">
                         <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                         个人资料
                     </a>
                     <a href="settings.html" class="nav-item">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 0 0 1-2 2 2 2 0 0 1-2 2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
                         系统设置
                     </a>
                 </div>
@@ -1041,8 +1586,8 @@
                 <div class="user-card">
                     <div class="user-avatar" id="userAvatar">U</div>
                     <div class="user-info">
-                        <p class="user-name" id="userName">用户</p>
-                        <p class="user-email" id="userEmail">user@example.com</p>
+                        <p class="user-name" id="displayUserName">用户</p>
+                        <p class="user-email" id="displayUserEmail">user@example.com</p>
                     </div>
                     <button class="logout-btn" id="logoutBtn" title="退出登录">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
@@ -1063,7 +1608,7 @@
                         <h3 class="input-group-title">AI设置</h3>
                         <div class="form-group">
                             <label class="form-label">AI提供商</label>
-                            <select class="form-input" id="aiProvider">
+                            <select class="form-input select" id="aiProvider">
                                 <option value="openai">OpenAI (GPT-4)</option>
                                 <option value="anthropic">Anthropic (Claude)</option>
                                 <option value="google">Google (Gemini)</option>
@@ -1078,69 +1623,38 @@
                             <label class="form-label">API密钥</label>
                             <input type="password" class="form-input" id="apiKey" placeholder="输入您的API密钥（可选，使用内置AI）">
                         </div>
-                    </div>
-
-                    <!-- 基本信息 -->
-                    <div class="input-group">
-                        <h3 class="input-group-title">基本信息</h3>
                         <div class="form-group">
-                            <label class="form-label">姓名</label>
-                            <input type="text" class="form-input" id="userName" placeholder="请输入您的姓名">
+                            <label class="form-label">Base URL</label>
+                            <input type="url" class="form-input" id="baseUrl" placeholder="输入API基础URL（可选，使用默认值）">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">职业/职位</label>
-                            <input type="text" class="form-input" id="userTitle" placeholder="例如：UI设计师、前端开发者、产品经理">
+                            <label class="form-label">模型ID</label>
+                            <input type="text" class="form-input" id="modelId" placeholder="输入模型ID（可选，使用默认值）">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">个人简介</label>
-                            <textarea class="form-input" id="userBio" rows="3" placeholder="请简要介绍自己，包括专业背景、核心优势和职业目标"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- 联系方式 -->
-                    <div class="input-group">
-                        <h3 class="input-group-title">联系方式</h3>
-                        <div class="form-group">
-                            <label class="form-label">联系信息</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                <input type="email" class="form-input" id="userEmail" placeholder="邮箱地址">
-                                <input type="tel" class="form-input" id="userPhone" placeholder="手机号码">
+                            <label class="form-label">最大Token数</label>
+                            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
+                                <button type="button" class="token-btn active" data-tokens="10000">10,000</button>
+                                <button type="button" class="token-btn" data-tokens="20000">20,000</button>
+                                <button type="button" class="token-btn" data-tokens="30000">30,000</button>
+                                <button type="button" class="token-btn" data-tokens="custom">自定义</button>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">社交媒体</label>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                                <input type="url" class="form-input" id="userGithub" placeholder="GitHub链接">
-                                <input type="url" class="form-input" id="userLinkedIn" placeholder="LinkedIn链接">
-                            </div>
+                            <input type="number" class="form-input" id="customTokens" placeholder="输入自定义Token数量" min="1000" max="1000000" style="display: none;">
                         </div>
                     </div>
 
-                    <!-- 专业背景 -->
-                    <div class="input-group">
-                        <h3 class="input-group-title">专业背景</h3>
-                        <div class="form-group">
-                            <label class="form-label">教育背景</label>
-                            <textarea class="form-input" id="userEducation" rows="2" placeholder="请详细描述您的教育经历，包括学校名称、专业、学位、毕业时间等"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">工作经历</label>
-                            <textarea class="form-input" id="userExperience" rows="4" placeholder="请详细描述您的工作经历，包括公司名称、职位、工作时间、主要职责和成就等"></textarea>
-                        </div>
-                    </div>
-
-                    <!-- 技能与作品 -->
-                    <div class="input-group">
-                        <h3 class="input-group-title">技能与作品</h3>
-                        <div class="form-group">
-                            <label class="form-label">技能特长</label>
-                            <textarea class="form-input" id="userSkills" rows="3" placeholder="请列出您的专业技能，如：UI设计、前端开发、项目管理等，可用逗号分隔"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">作品集项目</label>
-                            <textarea class="form-input" id="userProjects" rows="4" placeholder="请描述您的代表作品，包括项目名称、项目描述、使用技术、项目成果等"></textarea>
-                        </div>
-                    </div>
+                    <!-- 隐藏的表单字段（用于兼容性） -->
+                    <input type="hidden" id="userName" value="">
+                    <input type="hidden" id="userTitle" value="">
+                    <input type="hidden" id="userBio" value="">
+                    <input type="hidden" id="userEmail" value="">
+                    <input type="hidden" id="userPhone" value="">
+                    <input type="hidden" id="userGithub" value="">
+                    <input type="hidden" id="userLinkedIn" value="">
+                    <input type="hidden" id="userEducation" value="">
+                    <input type="hidden" id="userExperience" value="">
+                    <input type="hidden" id="userSkills" value="">
+                    <input type="hidden" id="userProjects" value="">
 
                     <!-- 简历上传 -->
                     <div class="input-group">
@@ -1148,7 +1662,7 @@
                         <div class="form-group">
                             <label class="form-label">上传简历文件</label>
                             <div class="file-upload-container">
-                                <input type="file" id="resumeFile" class="file-input" accept=".pdf,.doc,.docx,.txt">
+                                <input type="file" id="resumeFile" class="file-input" accept=".pdf,.doc,.docx,.txt,.md">
                                 <label for="resumeFile" class="file-upload-button">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -1160,6 +1674,72 @@
                             </div>
                             <div id="fileInfo" class="file-info"></div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">上传设计文字稿</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="designTextFile" class="file-input" accept=".txt,.md,.doc,.docx">
+                                <label for="designTextFile" class="file-upload-button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                    点击上传设计文字稿（可选）
+                                </label>
+                            </div>
+                            <div id="designFileInfo" class="file-info"></div>
+                        </div>
+                    </div>
+
+                    <!-- 素材上传 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">素材上传 <span style="font-size: 0.8rem; color: var(--mist); font-weight: normal;">(最多10个，总大小100MB)</span></h3>
+                        <div class="form-group">
+                            <div class="file-upload-container">
+                                <input type="file" id="mediaFiles" class="file-input" accept="image/*,video/*,.obj,.fbx,.gltf,.glb,.3ds,.dae,.stl" multiple>
+                                <label for="mediaFiles" class="file-upload-button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                    点击上传图片/视频/3D素材
+                                </label>
+                            </div>
+                            <div id="mediaFileInfo" class="file-info"></div>
+                        </div>
+                        <div class="media-preview-grid" id="mediaPreviewGrid"></div>
+                    </div>
+
+                    <!-- 网站参考 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">网站参考</h3>
+                        <div class="form-group">
+                            <label class="form-label">网站参考图片</label>
+                            <div class="file-upload-container">
+                                <input type="file" id="referenceImages" class="file-input" accept="image/*" multiple>
+                                <label for="referenceImages" class="file-upload-button">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                                        <polyline points="21 15 16 10 5 21"/>
+                                    </svg>
+                                    上传参考图片（可选）
+                                </label>
+                            </div>
+                            <p class="form-hint">上传你喜欢的网站设计参考图片，AI会参考这些风格</p>
+                            <div id="referenceFileInfo" class="file-info"></div>
+                            <div class="media-preview-grid" id="referencePreviewGrid"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">设计指导描述</label>
+                            <textarea id="designGuidance" class="form-input" rows="4" placeholder="详细描述你想要的网站风格、布局、功能等..."></textarea>
+                            <p class="form-hint">越详细的描述，生成的网站越符合你的期望</p>
+                        </div>
                     </div>
 
                     <!-- 设计风格 -->
@@ -1168,6 +1748,28 @@
                         <div class="form-group">
                             <label class="form-label">选择网站风格</label>
                             <div class="style-grid" id="templateGrid"></div>
+                        </div>
+                    </div>
+
+                    <!-- 克隆网站 -->
+                    <div class="input-group">
+                        <h3 class="input-group-title">克隆网站</h3>
+                        <div class="form-group">
+                            <label class="form-label">网站URL</label>
+                            <input type="url" class="form-input" id="cloneUrl" placeholder="输入要克隆的网站URL（可选）">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">克隆选项</label>
+                            <div style="display: flex; gap: 12px;">
+                                <label style="display: flex; align-items: center; gap: 6px; color: var(--smoke); font-size: 0.9rem;">
+                                    <input type="checkbox" id="cloneDesign" checked>
+                                    克隆设计风格
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 6px; color: var(--smoke); font-size: 0.9rem;">
+                                    <input type="checkbox" id="cloneContent" checked>
+                                    克隆内容结构
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -1188,23 +1790,53 @@
                             <div class="progress-fill" id="progressFill"></div>
                         </div>
                         <div class="status-message" id="statusMessage">准备就绪</div>
+                        
+                        <div class="countdown-display" id="countdownDisplay" style="display: none;">
+                            <div class="countdown-icon" id="countdownIcon">AI</div>
+                            <div class="countdown-text">
+                                <div class="countdown-title">预计剩余时间</div>
+                                <div class="countdown-time" id="countdownTime">03:00</div>
+                                <div class="countdown-subtitle">正在生成您的专属网站...</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="preview-section">
                     <h2 class="section-title">实时预览</h2>
-                    <div class="preview-container" id="previewContainer">
+                    
+                    <div class="preview-height-controls">
+                        <span style="font-size: 0.8rem; color: var(--mist); margin-right: 0.5rem;">预览高度:</span>
+                        <button class="preview-height-btn active" data-height="400">小</button>
+                        <button class="preview-height-btn" data-height="600">中</button>
+                        <button class="preview-height-btn" data-height="800">大</button>
+                        <button class="preview-height-btn" data-height="full">全屏</button>
+                    </div>
+                    
+                    <div class="preview-container preview-resizable" id="previewContainer" style="height: 400px;">
                         <div class="preview-placeholder">
                             <svg viewBox="0 0 24 24">
                                 <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                             </svg>
                             <p>生成完成后将在这里显示网站预览</p>
                         </div>
+                        <div class="resize-handle-right" id="resizeRight"></div>
+                        <div class="resize-handle-bottom" id="resizeBottom"></div>
+                        <div class="resize-handle-corner" id="resizeCorner"></div>
                     </div>
 
                     <div class="preview-actions">
                         <button class="btn btn-secondary" id="showPreviewBtn" disabled>在新窗口打开</button>
                         <button class="btn btn-secondary" id="refreshPreviewBtn" disabled>刷新预览</button>
+                        <button class="btn btn-primary" id="saveToSiteBtn" disabled>保存到网站</button>
+                        <button class="btn btn-secondary" id="downloadBtn" disabled>下载HTML</button>
+                    </div>
+
+                    <div class="generation-history-section">
+                        <h3 class="section-subtitle">生成历史</h3>
+                        <div class="history-list" id="historyList">
+                            <p class="no-history">暂无生成历史</p>
+                        </div>
                     </div>
                 </div>
 
@@ -1219,16 +1851,14 @@
             </div>
         </main>
 
-        <footer class="footer">
-            <div class="footer-content">
-                <p>&copy; 2024 FolioStack. 专业的设计师作品集网站生成平台。</p>
-            </div>
-        </footer>
-    </div>
-
     <div class="notification" id="notification"></div>
 
     <script>
+        let authToken = localStorage.getItem('token');
+        if (!authToken) {
+            window.location.href = 'landing.html';
+        }
+
         let selectedStyle = 'vogue';
 
         const styles = [
@@ -1341,8 +1971,8 @@
                     streaming: true
                 },
                 volcengine: {
-                    endpoint: 'https://maas-api.ml-platform-cn-beijing.volces.com/api/v3/chat/completions',
-                    model: 'Doubao-7B-Chat',
+                    endpoint: 'https://ark.cn-beijing.volces.com/api/coding/v1/messages',
+                    model: 'doubao-seed-2.0-code',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer {apiKey}'
@@ -1384,6 +2014,204 @@
             return configs[provider];
         }
 
+        const STYLE_SPECIFICATIONS = {
+            minimalist: {
+                name: '极简主义风',
+                visualFeatures: '大量留白(占比40%-60%)、单一主色调+黑白灰辅助色、无多余装饰元素、严格的网格系统排版、信息层级极度清晰、强调内容本身而非形式',
+                skills: '网格系统设计(12列/16列)、负空间精准运用、字体层级规划(H1-H6)、1-2种主色克制搭配、图片统一裁剪与对齐',
+                avoid: '装饰性元素、渐变、阴影',
+                colors: '#FFFFFF #000000 #333333 #666666 #999999 #E5E5E5',
+                fonts: 'Helvetica Neue, Inter, SF Pro Display',
+                colorPsychology: '白色传递纯净、简洁、专业；黑色传达权威、精致、高级；灰色带来平静、稳定、理性',
+                typography: '标题使用Helvetica Neue Bold 32-48px，正文使用Regular 16px，行高1.5-1.8保持呼吸感',
+                visualElements: '使用细线(1px)作为分隔，避免阴影和渐变，图标采用线性风格',
+                motionDesign: '简洁的淡入淡出动画(300ms ease)，轻微的位移效果，无花哨过渡'
+            },
+            vintage: {
+                name: '复古怀旧风',
+                visualFeatures: '做旧纸张纹理、磨损效果、复古配色(棕黄、墨绿、酒红、米白)、老式衬线字体、打字机字体、胶片颗粒质感、褪色效果、复古元素：邮票、邮戳、旧报纸、打字机、老照片',
+                skills: '纹理叠加与做旧效果、复古字体组合搭配、胶片调色(柯达/富士复古滤镜)、复古元素提取与重组、纸张质感模拟(牛皮纸、宣纸)',
+                avoid: '现代无衬线字体、高饱和度色彩',
+                colors: '#8B7355 #2F4F4F #722F37 #F5F0E1 #D4A574 #6B4423',
+                fonts: 'Playfair Display, Merriweather, Courier Prime',
+                colorPsychology: '棕色传递温暖、复古、手工艺感；酒红带来优雅、经典、有机感；墨绿象征自然、复古、宁静',
+                typography: '标题使用Playfair Display 36-48px带装饰性，正文使用Merriweather 16-18px，行高1.6-1.8',
+                visualElements: '纸张纹理(噪点/折痕/泛黄)、胶片颗粒(强度15-25%)、复古边框装饰、印章和标签元素',
+                motionDesign: '缓慢优雅的淡入(500ms)、轻微的上下浮动、无突然变化、模拟纸张飘动'
+            },
+            futuristic: {
+                name: '未来科技风',
+                visualFeatures: '霓虹光效、发光线条、金属质感、玻璃拟态、几何线条、网格背景、全息投影效果、深色背景(黑/深灰)、科技感无衬线字体、3D元素穿插',
+                skills: '渐变与霓虹光效制作、3D元素渲染与整合、赛博朋克调色(蓝紫/青橙)、玻璃拟态效果、动态效果设计',
+                avoid: '暖色调、手写字体、自然元素',
+                colors: '#000000 #0D0D1A #00FFFF #FF00FF #0066FF #1A1A2E',
+                fonts: 'Orbitron, Rajdhani, Space Grotesk',
+                colorPsychology: '青色传达科技、创新、未来感；品红带来活力、前沿、创意；深蓝黑传递神秘、高端、专业',
+                typography: '标题使用Orbitron Bold 36-56px，正文使用Rajdhani Regular 16px，数字和代码使用Space Mono',
+                visualElements: '霓虹发光线条(2-4px模糊)、玻璃拟态卡片(backdrop-blur 20px)、网格背景(透明度10-20%)、全息渐变',
+                motionDesign: '流畅的粒子动画、发光脉冲效果(1-2s循环)、3D透视变换、扫描线和故障效果'
+            },
+            corporate: {
+                name: '商务专业风',
+                visualFeatures: '规整对称排版、中性配色(蓝、灰、白、黑)、清晰的目录和章节结构、专业图表和数据可视化、正式无衬线字体、品牌一致性贯穿',
+                skills: '信息图表设计、商业排版规范、数据可视化(柱状图/饼图/流程图)、品牌色彩系统应用、文档结构逻辑规划',
+                avoid: '夸张色彩、不规则布局、装饰性元素',
+                colors: '#1A365D #2C5282 #4A5568 #FFFFFF #E2E8F0 #718096',
+                fonts: 'Roboto, Open Sans, Lato',
+                colorPsychology: '深蓝传递信任、稳定、专业；灰色带来可靠、中立、成熟；白色强调清晰、简洁、开放',
+                typography: '标题使用Roboto Bold 28-40px，正文使用Open Sans Regular 15-16px，行高1.5-1.6',
+                visualElements: '清晰的边框(1px实线)、专业图表(柱状图/折线图)、图标使用线性或填充风格、信息卡片布局',
+                motionDesign: '专业的淡入动画(200-300ms)、平滑的过渡效果、无花哨特效、hover状态轻微上浮'
+            },
+            artistic: {
+                name: '艺术实验风',
+                visualFeatures: '打破常规网格排版、不规则布局、文字错位、混合媒介(绘画/摄影/拼贴)、抽象视觉元素、强烈的个人表达、无固定版式规则',
+                skills: '实验性排版(文字图形化)、混合媒介整合、抽象视觉语言转换、概念表达可视化、手工质感模拟',
+                avoid: '规整对齐、单一媒介、传统版式',
+                colors: '#FF3366 #FFCC00 #00CCFF #FF6600 #9933FF #00FF99',
+                fonts: 'Abril Fatface, Space Mono, Archivo Black',
+                colorPsychology: '高饱和色彩传递活力、创意、反叛；对比色搭配制造视觉冲击；不和谐色彩表达反传统',
+                typography: '标题使用Abril Fatface Large 48-72px带旋转或倾斜，正文使用Space Mono 14-16px，混合大小写',
+                visualElements: '混合媒介(绘画/拼贴/摄影)、文字作为图形元素、抽象形状(几何/有机)、手绘线条',
+                motionDesign: '大胆的变换动画、元素重叠和层次、随机性运动、滚动触发的戏剧性效果'
+            },
+            fashion: {
+                name: '时尚潮流风',
+                visualFeatures: '大胆撞色搭配、时尚摄影大片展示、杂志式跨页布局、动态文字排版、流行元素融入、留白与密集对比',
+                skills: '时尚摄影修图(磨皮/调色/光影)、杂志排版技巧(跨页/出血/分栏)、流行趋势色彩应用、模特与服装展示构图、文字与图片穿插设计',
+                avoid: '单调配色、小图排版、保守布局',
+                colors: '#FF1493 #000000 #FFD700 #FF4500 #8B008B #FFFFFF',
+                fonts: 'Vogue, Didot, Playfair Display',
+                colorPsychology: '黑色传达永恒、神秘、精致；金色传递奢华、时尚、高端；粉色带来性感、柔美、现代',
+                typography: '标题使用Didot/Bodoni 48-72px细衬线，正文使用Playfair 15-17px，混合衬线和无衬线',
+                visualElements: '高质量时尚摄影、大量留白、出血设计(图片超出版面)、装饰性边框和线条',
+                motionDesign: '优雅的滑动展示(600ms)、杂志翻页效果、文字淡入淡出、hover放大图片'
+            },
+            handdrawn: {
+                name: '手绘插画风',
+                visualFeatures: '手绘线条质感、温暖治愈色调、卡通/写实插画元素、手写字体、童趣/治愈氛围、水彩/马克笔/铅笔质感',
+                skills: '数字绘画质感模拟、手绘字体设计、角色与场景插画生成、水彩/马克笔/铅笔效果、手绘边框与装饰',
+                avoid: '矢量硬边、金属质感、科技元素',
+                colors: '#FFB6C1 #87CEEB #98FB98 #FFDAB9 #DDA0DD #F0E68C',
+                fonts: 'Caveat, Patrick Hand, Indie Flower',
+                colorPsychology: '粉色传递温暖、可爱、治愈；蓝色带来平静、放松、信任；绿色象征自然、成长、健康',
+                typography: '标题使用Caveat Hand 36-48px，正文使用Patrick Hand 16-18px，手写风格统一',
+                visualElements: '手绘边框和装饰、水彩晕染效果、卡通插画、纸张纹理背景、手工缝制线条',
+                motionDesign: '轻盈的弹跳动画(400ms)、元素轻微摇晃、手绘路径动画、随机出现的装饰'
+            },
+            cyberpunk: {
+                name: '赛博朋克风',
+                visualFeatures: '霓虹蓝紫+霓虹粉配色、故障艺术效果(毛刺/撕裂/像素化)、未来城市夜景、高科技低生活元素、日文/英文混合排版、雨景/反光效果',
+                skills: '故障艺术效果制作、霓虹光效绘制、赛博朋克场景合成、像素艺术元素、雨景与玻璃反光效果',
+                avoid: '自然元素、暖色调、传统建筑',
+                colors: '#FF00FF #00FFFF #FF0066 #6600FF #003366 #0A0A0A',
+                fonts: 'Orbitron, Share Tech Mono, Zen Dots',
+                colorPsychology: '霓虹粉传递叛逆、激情、地下文化；青色带来冷酷、科技、未来感；对比制造视觉张力',
+                typography: '标题使用Orbitron Bold 40-56px带发光效果，正文使用Share Tech Mono 14-16px，日文用于装饰',
+                visualElements: '霓虹灯管效果、雨滴和水洼反光、像素化元素、CRT扫描线、全息UI界面',
+                motionDesign: '故障闪烁效果(随机)、霓虹灯脉冲(2-3s循环)、扫描线动画、数据流效果'
+            },
+            nordic: {
+                name: '北欧清新风',
+                visualFeatures: '浅色调(白、米、浅蓝、浅绿)、自然元素(植物、木材、石头)、简洁几何线条、柔和光影效果、温馨舒适氛围、功能主义设计',
+                skills: '柔和低饱和度调色、自然元素整合(植物/木材纹理)、简约几何图形设计、柔和光影效果处理、留白与呼吸感营造',
+                avoid: '高饱和度色彩、复杂装饰、深色背景',
+                colors: '#FFFFFF #F5F5DC #ADD8E6 #90EE90 #D3D3D3 #FAF0E6',
+                fonts: 'Montserrat, Proxima Nova, Avenir',
+                colorPsychology: '白色传递纯净、简洁、空间感；浅蓝带来平静、清新、放松；绿色象征自然、健康、平衡',
+                typography: '标题使用Montserrat Light 32-44px，正文使用Avenir 15-17px，字重对比明显',
+                visualElements: '植物插画或照片(龟背竹/尤加利/仙人掌)、木材纹理、天然材料质感、柔和阴影(blur 30px)',
+                motionDesign: '轻柔的淡入(400ms)、元素从上往下缓慢出现、无突然变化、自然流畅的过渡'
+            },
+            gothic: {
+                name: '暗黑哥特风',
+                visualFeatures: '黑灰主色调+暗红/深紫点缀、哥特式建筑元素(尖顶/花窗/十字架)、神秘阴森氛围、金属质感(银/铜)、华丽繁复的装饰、羽毛/玫瑰/骷髅元素',
+                skills: '暗色调调色(低曝光/高对比)、哥特式字体设计、神秘氛围营造(烟雾/阴影)、金属与石材质感模拟、哥特元素提取与重组',
+                avoid: '明亮色彩、可爱元素、简约线条',
+                colors: '#1A1A1A #4A0000 #2D004F #800080 #C0C0C0 #333333',
+                fonts: 'UnifrakturMaguntia, MedievalSharp, Cinzel',
+                colorPsychology: '暗红传递危险、激情、神秘；深紫带来魔力、尊贵、诡异；黑色强调死亡、永恒、虚无',
+                typography: '标题使用UnifrakturMaguntia 40-60px装饰性字体，正文使用Cinzel 14-16px古典衬线',
+                visualElements: '哥特式尖顶轮廓、花窗图案、金属质感和铆钉、羽毛和玫瑰、骷髅和蝴蝶标本',
+                motionDesign: '缓慢的淡入(800ms)、烟雾飘动效果、阴影变化、烛光闪烁、元素若隐若现'
+            },
+            wabisabi: {
+                name: '日式侘寂风',
+                visualFeatures: '自然材质(亚麻/陶土/木材/石头)、残缺之美(磨损/裂痕/不规则)、低饱和度大地色系、大量留白、禅意氛围、手工质感',
+                skills: '侘寂风格调色(低饱和/暖灰调)、自然纹理运用(亚麻/陶土/木纹)、禅意不对称排版、手工质感模拟(毛笔/宣纸)、留白与意境营造',
+                avoid: '高饱和度、规整几何、现代科技元素',
+                colors: '#D4C5A9 #8B7D6B #A0937D #6B5B4E #E8DDD3 #C4B6A6',
+                fonts: 'Noto Serif JP, Hiragino Mincho, Yu Mincho',
+                colorPsychology: '米色传递温暖、质朴、谦逊；褐色带来自然、沉稳、成熟；灰绿象征宁静、侘寂、悟道',
+                typography: '标题使用Noto Serif JP Light 32-44px，正文使用Hiragino Mincho 16-18px，行距宽松1.8-2.0',
+                visualElements: '手工纸张纹理、陶土和木材、自然裂纹和瑕疵、毛笔笔触、禅意花园意象',
+                motionDesign: '极慢的过渡(1000ms以上)、无意识的静止感、元素缓慢显现、留白中的微妙变化'
+            },
+            memphis: {
+                name: '孟菲斯风格',
+                visualFeatures: '鲜艳撞色(黄/粉/蓝/绿)、几何图形(圆形/三角形/波浪线)、不规则图案、活泼跳跃的线条、80年代复古感、趣味装饰元素',
+                skills: '高饱和度撞色搭配、几何图形设计与组合、孟菲斯图案绘制、活泼不规则排版、趣味装饰元素生成',
+                avoid: '低饱和度、单一色调、严肃布局',
+                colors: '#FFD700 #FF69B4 #00BFFF #32CD32 #FF6347 #8A2BE2',
+                fonts: 'Bangers, Pacifico, Fredoka One',
+                colorPsychology: '黄色传递快乐、活力、乐观；粉色带来趣味、柔美、创意；蓝绿制造清新、80年代感',
+                typography: '标题使用Bangers 48-72px粗体，正文使用Fredoka One 16-18px，色彩斑斓的文字',
+                visualElements: '几何积木(圆形/方形/三角形)、波浪线、点点装饰、格子图案、卡通云朵和星星',
+                motionDesign: '弹跳动画(弹性缓动)、元素摇摆(2-3deg)、快速淡入(200ms)、hover时旋转和缩放'
+            },
+            collage: {
+                name: '拼贴艺术风',
+                visualFeatures: '不同材质拼贴(纸张/布料/照片)、碎片化元素重组、混合媒介、复古与现代结合、创意解构与重组、边缘撕裂效果',
+                skills: '拼贴构图与层次设计、元素提取与抠图、混合媒介整合、复古素材收集与应用、边缘撕裂与做旧效果',
+                avoid: '完整统一的图像、平滑过渡、单一材质',
+                colors: '#E8D5B7 #8B4513 #2F4F4F #D2691E #F0E68C #BC8F8F',
+                fonts: 'Bebas Neue, Oswald, Anton',
+                colorPsychology: '复古米色传递怀旧、手工艺感；深棕带来稳重、历史感；混合色表达多元、创意、解构',
+                typography: '标题使用Bebas Neue Bold 48-72px块状字体，正文使用Oswald 15-16px，大小写混用',
+                visualElements: '撕裂纸张边缘、拼图块效果、图钉和夹子、曲别针、复古标签、不同纸张叠加',
+                motionDesign: '元素随机出现动画、轻微的抖动效果、hover时元素轻微分离、层次切换动画'
+            },
+            monochrome: {
+                name: '极简黑白风',
+                visualFeatures: '仅使用黑白灰三色、强烈的明暗对比、光影效果突出、简洁有力的视觉语言、高级质感、形式大于色彩',
+                skills: '黑白调色(对比度/亮度/曲线)、光影表现与塑造、黑白灰层次控制、黑白排版设计、剪影与负形运用',
+                avoid: '任何彩色元素、渐变、复杂装饰',
+                colors: '#000000 #333333 #666666 #999999 #CCCCCC #FFFFFF',
+                fonts: 'Futura, Gill Sans, Trade Gothic',
+                colorPsychology: '纯黑传递权威、精致、永恒；纯白强调纯净、空间、简约；灰阶创造深度、层次、戏剧性',
+                typography: '标题使用Futura Bold 36-48px，正文使用Gill Sans 15-17px，极致的对比和层次',
+                visualElements: '强烈光影(高对比)、剪影效果、负空间运用、网格线条(1px)、几何形状(纯黑)',
+                motionDesign: '优雅的淡入淡出(600ms)、元素缓慢浮现、光影变化效果、极简的hover状态'
+            },
+            natural: {
+                name: '自然有机风',
+                visualFeatures: '大地色系(棕/绿/米/土黄)、植物与自然元素、有机曲线与不规则形状、水彩/水墨质感、环保理念、柔和色彩过渡',
+                skills: '大地色调色、植物插画与摄影整合、有机图形设计(曲线/不规则形状)、水彩/水墨质感模拟、柔和色彩过渡效果',
+                avoid: '硬边几何、金属质感、高饱和度色彩',
+                colors: '#8B7355 #556B2F #F5F0E1 #DAA520 #6B8E23 #BC8F8F',
+                fonts: 'Lora, Cormorant Garamond, EB Garamond',
+                colorPsychology: '棕色传递大地、稳定、可靠；绿色象征自然、成长、和谐；米色带来温暖、柔软、舒适',
+                typography: '标题使用Cormorant Garamond Regular 34-46px优雅衬线，正文使用Lora 15-17px，行高1.7-1.8',
+                visualElements: '植物插画(橡树/橄榄枝/蕨类)、水彩晕染效果、自然纹理(树皮/石头)、有机曲线形状',
+                motionDesign: '植物生长动画(从发芽到展开)、轻柔的飘动效果、水彩扩散动画、自然风的缓动曲线'
+            }
+        };
+
+        const TEMPLATE_STYLE_MAP = {
+            neon: 'cyberpunk',
+            manor: 'natural',
+            forest: 'natural',
+            prairie: 'natural',
+            lipstick: 'fashion',
+            modern: 'minimalist',
+            craftsman: 'vintage',
+            pioneer: 'artistic',
+            visionary: 'corporate',
+            vogue: 'fashion',
+            art: 'artistic',
+            light: 'monochrome'
+        };
+
         function generatePrompt(style) {
             const templates = [
                 { id: 'neon', name: '霓虹律动', style: 'futuristic' },
@@ -1402,8 +2230,9 @@
             
             const selectedTemplateInfo = templates.find(t => t.id === style);
             const styleName = selectedTemplateInfo ? selectedTemplateInfo.name : '默认风格';
+            const styleKey = TEMPLATE_STYLE_MAP[style] || 'minimalist';
+            const spec = STYLE_SPECIFICATIONS[styleKey] || STYLE_SPECIFICATIONS.minimalist;
             
-            // 获取所有输入字段的值
             const name = document.getElementById('userName').value.trim();
             const title = document.getElementById('userTitle').value.trim();
             const bio = document.getElementById('userBio').value.trim();
@@ -1416,8 +2245,46 @@
             const skills = document.getElementById('userSkills').value.trim();
             const projects = document.getElementById('userProjects').value.trim();
             
-            // 构建详细的个人信息
             let userInfo = '';
+            if (parsedResumeContent && parsedResumeContent.trim().length > 0) {
+                userInfo = `【简历原文内容】
+${parsedResumeContent}
+
+`;
+            }
+            
+            if (designTextContent && designTextContent.trim().length > 0) {
+                userInfo += `【设计文字稿内容】
+${designTextContent}
+
+`;
+            }
+            
+            if (mediaFiles.length > 0) {
+                userInfo += `【素材文件信息】
+用户上传了 ${mediaFiles.length} 个素材文件：
+`;
+                mediaFiles.forEach((file, index) => {
+                    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                    const is3DFile = ['.obj', '.fbx', '.gltf', '.glb', '.3ds', '.dae', '.stl'].includes(fileExt);
+                    if (is3DFile) {
+                        userInfo += `${index + 1}. ${file.name} (3D模型文件)
+`;
+                    } else if (file.type.startsWith('image/')) {
+                        userInfo += `${index + 1}. ${file.name} (图片文件)
+`;
+                    } else if (file.type.startsWith('video/')) {
+                        userInfo += `${index + 1}. ${file.name} (视频文件)
+`;
+                    } else {
+                        userInfo += `${index + 1}. ${file.name} (其他文件)
+`;
+                    }
+                });
+                userInfo += `
+`;
+            }
+            
             if (name) userInfo += `姓名：${name}\n`;
             if (title) userInfo += `职位：${title}\n`;
             if (bio) userInfo += `个人简介：${bio}\n`;
@@ -1425,39 +2292,176 @@
             if (phone) userInfo += `电话：${phone}\n`;
             if (github) userInfo += `GitHub：${github}\n`;
             if (linkedin) userInfo += `LinkedIn：${linkedin}\n`;
-            if (education) userInfo += `教育背景：${education}\n`;
-            if (experience) userInfo += `工作经历：${experience}\n`;
-            if (skills) userInfo += `技能特长：${skills}\n`;
-            if (projects) userInfo += `作品集项目：${projects}\n`;
+            if (education) userInfo += `教育背景：\n${education}\n`;
+            if (experience) userInfo += `工作经历：\n${experience}\n`;
+            if (skills) userInfo += `技能特长：\n${skills}\n`;
+            if (projects) userInfo += `作品集项目：\n${projects}\n`;
             
-            return `请根据以下详细的个人简历信息，创建一个专业的作品集网站HTML代码。网站必须是完整的、可直接运行的HTML文件，包含所有必要的CSS和JavaScript。
+            // 添加设计指导描述
+            const designGuidance = document.getElementById('designGuidance').value.trim();
+            if (designGuidance) {
+                userInfo += `设计指导：\n${designGuidance}\n`;
+            }
+            
+            if (!userInfo.trim()) {
+                userInfo = '（未提供个人信息，请使用示例数据填充）\n姓名：张设计\n职位：高级UI/UX设计师\n简介：拥有8年设计经验，专注于用户体验和视觉设计\n邮箱：zhangdesign@example.com\n技能：Figma, Sketch, Adobe XD, HTML/CSS, React';
+            }
+            
+            let mediaInfo = '';
+            if (mediaFiles.length > 0) {
+                mediaInfo = `【素材文件信息】\n用户上传了 ${mediaFiles.length} 个素材文件：\n`;
+                let has3DFiles = false;
+                mediaFiles.forEach((file, index) => {
+                    const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                    const is3DFile = ['.obj', '.fbx', '.gltf', '.glb', '.3ds', '.dae', '.stl'].includes(fileExt);
+                    let fileType;
+                    if (is3DFile) {
+                        fileType = '3D模型';
+                        has3DFiles = true;
+                    } else if (file.type.startsWith('image/')) {
+                        fileType = '图片';
+                    } else if (file.type.startsWith('video/')) {
+                        fileType = '视频';
+                    } else {
+                        fileType = '其他';
+                    }
+                    mediaInfo += `${index + 1}. ${fileType}：${file.name} (${formatFileSize(file.size)})\n`;
+                });
+                mediaInfo += '\n请在网站中合理利用这些素材，将图片/视频放置在合适的位置（如Hero区域、作品集项目、关于我页面等）。\n';
+                
+                // 添加3D文件处理指导
+                if (has3DFiles) {
+                    mediaInfo += "\n【3D文件处理指导】\n";
+                    mediaInfo += "1. 对于3D模型文件，请使用Three.js库进行加载和展示\n";
+                    mediaInfo += "2. 在作品集中为3D模型创建专门的展示区域，允许用户旋转、缩放查看\n";
+                    mediaInfo += "3. 为3D模型添加适当的光照和材质，提升视觉效果\n";
+                    mediaInfo += "4. 确保3D模型加载时显示加载动画，提升用户体验\n";
+                    mediaInfo += "5. 请在生成的网站中集成Three.js库，并使用相应的加载器加载3D模型文件\n";
+                }
+                
+                mediaInfo += '\n';
+            }
+            
+            // 添加参考图片信息
+            if (referenceFiles.length > 0 || uploadedReferenceUrls.length > 0) {
+                const totalReferenceFiles = referenceFiles.length + uploadedReferenceUrls.length;
+                mediaInfo += `【参考图片信息】\n用户上传了 ${totalReferenceFiles} 个参考图片：\n`;
+                
+                // 添加本地参考图片
+                referenceFiles.forEach((file, index) => {
+                    mediaInfo += `${index + 1}. 参考图片：${file.name} (${formatFileSize(file.size)})\n`;
+                });
+                
+                // 添加已上传的参考图片
+                uploadedReferenceUrls.forEach((file, index) => {
+                    mediaInfo += `${referenceFiles.length + index + 1}. 参考图片：${file.filename} (${formatFileSize(file.size)})\n`;
+                });
+                
+                mediaInfo += '\n请仔细参考这些图片的设计风格、布局、配色和视觉元素，确保生成的网站与参考图片的风格一致。\n';
+                mediaInfo += '\n';
+            }
+            
+            return `你是一位世界级的网页设计师和前端开发专家，擅长创建专业、美观、内容完整的个人作品集网站。请根据以下详细的个人简历信息、参考图片和风格规格，创建一个完整、内容丰富、视觉惊艳的作品集网站HTML代码。
 
-个人详细信息：
+【风格规格 - ${spec.name}】
+核心视觉特点：${spec.visualFeatures}
+应用技能：${spec.skills}
+推荐配色：${spec.colors}
+推荐字体：${spec.fonts}
+色彩心理学：${spec.colorPsychology}
+排版系统：${spec.typography}
+视觉元素：${spec.visualElements}
+动效设计：${spec.motionDesign}
+避免使用：${spec.avoid}
+
+${mediaInfo}【个人详细信息】
 ${userInfo}
 
-设计要求：
-1. 使用"${styleName}"风格
-2. 设计必须专业、美观，符合当代设计趋势
-3. 使用深色主题，金色点缀（#c9a96e）
-4. 响应式设计，适配各种屏幕尺寸
-5. 包含导航栏、个人简介、作品集展示、技能展示、联系方式等完整结构
-6. 添加适当的动画效果和交互功能
-7. 使用现代无衬线字体，排版清晰
-8. 确保代码结构清晰，有适当的注释
-9. 根据提供的详细信息创建内容丰富的个人网站
-10. 作品集部分要突出展示项目经验
-11. 技能部分要清晰展示专业技能
-12. 联系方式部分要包含所有提供的联系信息
+【设计要求（非常重要）】
+1. 严格遵循"${spec.name}"风格的视觉特点，这是最重要的要求
+2. 使用推荐配色方案中的颜色作为主色调，创建和谐的色彩搭配
+3. 遵循色彩心理学原理，选择能够传递正确情感讯息的配色
+4. 使用推荐字体（可用Google Fonts CDN加载），确保字体层次清晰
+5. 遵循排版系统规范，确保标题和正文的尺寸、行高比例协调
+6. 添加符合风格的视觉元素（如${spec.visualElements}）
+7. 添加符合风格的动效设计（如${spec.motionDesign}）
+8. 网站必须是完整的、可直接运行的HTML文件，包含所有必要的CSS和JavaScript
+9. 响应式设计，适配各种屏幕尺寸（手机、平板、桌面）
+10. 网站内容必须完整详细，不要精简，确保所有部分都有充实的内容
+11. 必须包含以下完整结构，且每个部分都要有详细内容：
+    - 导航栏（固定顶部，带滚动效果，包含logo、导航链接：首页、关于、作品集、技能、经历、联系）
+    - Hero区域（全屏展示，大标题+个人简介+CTA按钮+背景装饰，视觉效果惊艳）
+    - 关于我（详细个人介绍，包含照片占位符、个人故事、核心理念）
+    - 作品集展示（根据简历中的项目经验创建3-6个项目卡片，每个项目要有：标题、详细描述、技术栈标签、项目图片占位符、查看项目按钮）
+    - 技能展示（根据简历中的技能创建可视化展示，使用进度条、技能图表或标签云，分类展示技能）
+    - 工作经历时间线（详细列出每份工作经历，包含公司名称、职位、时间段、详细职责描述、成就亮点）
+    - 教育背景（详细列出教育经历）
+    - 联系方式（包含所有提供的联系信息，包含表单或链接方式）
+    - 页脚（版权信息、社交媒体链接）
+12. 添加丰富的动画效果（滚动触发动画、hover效果、过渡动画、视差效果），提升用户体验
+13. 根据简历中的实际内容创建网站，不要使用占位符文本，内容要具体详细
+14. 作品集部分要突出展示项目经验，每个项目要有详细的描述和视觉效果
+15. 技能部分要清晰展示专业技能，使用可视化方式
+16. 联系方式部分要包含所有提供的联系信息，设计得美观易用
+17. 页面底部要有完整的版权信息和页脚设计
+18. 添加暗色/亮色主题切换功能
+19. 确保代码结构清晰，性能优化，加载快速
+20. 网站内容要充实，不要过于简略，确保每个部分都有足够的内容展示
+21. 参考上传的参考图片，确保设计风格与参考图片一致
+22. 按照用户提供的设计指导描述进行设计，满足用户的具体要求
 
-请直接返回完整的HTML代码，不要包含任何解释性文字。代码应该可以直接保存为HTML文件并在浏览器中运行。`;
+【技术要求】
+- 使用现代HTML5、CSS3、JavaScript
+- 内联所有CSS和JavaScript，确保单文件可直接运行
+- 使用CSS变量管理颜色和字体
+- 使用Flexbox和Grid布局
+- 添加适当的动画和过渡效果
+- 确保代码可读性和可维护性
+
+请直接返回完整的HTML代码，不要包含任何解释性文字。代码应该可以直接保存为HTML文件并在浏览器中运行。网站内容要完整详细，参考 https://lorryjovens.netlify.app/ 的完整程度，确保视觉效果惊艳、专业。`;
         }
 
         function processAIResponse(response, style) {
-            const htmlMatch = response.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
-            if (htmlMatch) {
-                return { html: htmlMatch[0] };
+            console.log('=== processAIResponse 开始 ===');
+            console.log('原始响应长度:', response.length);
+            console.log('原始响应前500字符:', response.substring(0, 500));
+            console.log('原始响应最后500字符:', response.substring(response.length - 500));
+            
+            let html = response;
+            
+            // 移除开头的解释性文字，如"以下是。。。"
+            const leadingTextPattern = /^.*?(?=<!DOCTYPE|<html|<body)/i;
+            if (leadingTextPattern.test(html)) {
+                html = html.replace(leadingTextPattern, '');
+                console.log('✅ 移除了开头的解释性文字');
             }
-            return { html: response };
+            
+            const htmlMatch1 = html.match(/<!DOCTYPE html[\s\S]*?<\/html>/i);
+            if (htmlMatch1) {
+                console.log('✅ 找到完整DOCTYPE + html标签');
+                html = htmlMatch1[0];
+            } else {
+                console.log('❌ 未找到完整DOCTYPE + html');
+                
+                const htmlMatch2 = html.match(/<html[\s\S]*?<\/html>/i);
+                if (htmlMatch2) {
+                    console.log('✅ 找到仅html标签');
+                    html = htmlMatch2[0];
+                } else {
+                    console.log('❌ 未找到html标签');
+                    
+                    const bodyMatch = html.match(/<body[\s\S]*?<\/body>/i);
+                    if (bodyMatch) {
+                        console.log('✅ 找到body标签');
+                        html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>个人作品集</title></head>${bodyMatch[0]}</html>`;
+                    }
+                }
+            }
+            
+            console.log('最终HTML长度:', html.length);
+            console.log('=== processAIResponse 结束 ===');
+            
+            return { html: html };
         }
 
         function saveGeneratedSite(websiteData) {
@@ -1472,49 +2476,234 @@ ${userInfo}
             document.body.removeChild(a);
             
             URL.revokeObjectURL(url);
+            
+            // 保存到生成历史
+            saveToHistory(websiteData.html);
+        }
+
+        function saveToHistory(html) {
+            const history = JSON.parse(localStorage.getItem('generationHistory') || '[]');
+            
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                title: `网站 ${history.length + 1}`,
+                html: html
+            };
+            
+            // 最多保存10条历史
+            history.unshift(historyItem);
+            if (history.length > 10) {
+                history.pop();
+            }
+            
+            localStorage.setItem('generationHistory', JSON.stringify(history));
+            
+            // 更新历史列表显示
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('generationHistory') || '[]');
+            const historyList = document.getElementById('historyList');
+            
+            if (history.length === 0) {
+                historyList.innerHTML = '<p class="no-history">暂无生成历史</p>';
+                return;
+            }
+            
+            historyList.innerHTML = history.map(item => {
+                const date = new Date(item.timestamp);
+                const timeStr = date.toLocaleString('zh-CN', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="history-item">
+                        <div class="history-info">
+                            <div class="history-title">${item.title}</div>
+                            <div class="history-time">${timeStr}</div>
+                        </div>
+                        <div class="history-actions">
+                            <button class="history-btn" onclick="loadHistoryItem(${item.id})">预览</button>
+                            <button class="history-btn" onclick="downloadHistoryItem(${item.id})">下载</button>
+                            <button class="history-btn" onclick="deleteHistoryItem(${item.id})">删除</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function loadHistoryItem(id) {
+            const history = JSON.parse(localStorage.getItem('generationHistory') || '[]');
+            const item = history.find(h => h.id === id);
+            
+            if (item) {
+                const previewContainer = document.getElementById('previewContainer');
+                const previewIframe = document.getElementById('previewIframe');
+                
+                if (!previewIframe) {
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'previewIframe';
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    iframe.title = '实时预览';
+                    
+                    const placeholder = previewContainer.querySelector('.preview-placeholder');
+                    if (placeholder) {
+                        placeholder.remove();
+                    }
+                    
+                    previewContainer.appendChild(iframe);
+                }
+                
+                const iframe = document.getElementById('previewIframe');
+                iframe.srcdoc = item.html;
+                
+                // 启用预览按钮
+                document.getElementById('showPreviewBtn').disabled = false;
+                document.getElementById('refreshPreviewBtn').disabled = false;
+                document.getElementById('downloadBtn').disabled = false;
+                
+                // 保存当前HTML到全局变量，用于下载等操作
+                window.currentGeneratedHtml = item.html;
+            }
+        }
+
+        function downloadHistoryItem(id) {
+            const history = JSON.parse(localStorage.getItem('generationHistory') || '[]');
+            const item = history.find(h => h.id === id);
+            
+            if (item) {
+                const blob = new Blob([item.html], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `portfolio-history-${item.id}.html`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        function deleteHistoryItem(id) {
+            if (confirm('确定要删除这条历史记录吗？')) {
+                let history = JSON.parse(localStorage.getItem('generationHistory') || '[]');
+                history = history.filter(h => h.id !== id);
+                localStorage.setItem('generationHistory', JSON.stringify(history));
+                loadHistory();
+            }
+        }
+
+        // 初始化加载历史
+        loadHistory();
+
+        function saveToSite(websiteData) {
+            // 生成用户账号子路由
+            const userId = 'user123'; // 实际应用中应该从用户登录信息获取
+            const siteId = 'site_' + Date.now();
+            const subRoute = `${userId}/${siteId}`;
+            const siteUrl = `http://localhost:3002/sites/${subRoute}`;
+            
+            // 模拟保存到服务器
+            showNotification('正在保存到网站...', 'info');
+            
+            // 模拟保存成功
+            setTimeout(() => {
+                showNotification('网站保存成功！', 'success');
+                
+                // 显示子路由链接
+                const previewActions = document.querySelector('.preview-actions');
+                const linkContainer = document.createElement('div');
+                linkContainer.style.cssText = 'margin-top: 1rem; padding: 1rem; background: rgba(20,20,20,0.8); border: 1px solid rgba(201,169,110,0.2); border-radius: 6px;';
+                linkContainer.innerHTML = `
+                    <div style="font-weight: 600; color: var(--champagne); margin-bottom: 0.5rem;">📌 网站链接</div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <input type="text" value="${siteUrl}" readonly style="flex: 1; padding: 0.5rem; background: rgba(10,10,10,0.8); border: 1px solid rgba(201,169,110,0.1); border-radius: 4px; color: var(--ivory); font-size: 0.85rem;">
+                        <button onclick="copySiteLink('${siteUrl}')" style="padding: 0.5rem; background: var(--champagne); color: var(--obsidian); border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">复制</button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--mist);">
+                        您的网站已保存，可以通过上方链接访问。
+                    </div>
+                `;
+                
+                // 移除旧的链接容器
+                const oldLinkContainer = previewActions.querySelector('.site-link-container');
+                if (oldLinkContainer) {
+                    oldLinkContainer.remove();
+                }
+                
+                linkContainer.className = 'site-link-container';
+                previewActions.appendChild(linkContainer);
+            }, 1500);
+        }
+
+        function copySiteLink(url) {
+            navigator.clipboard.writeText(url).then(() => {
+                showNotification('链接已复制到剪贴板！', 'success');
+            }).catch(err => {
+                console.error('复制失败:', err);
+                showNotification('复制失败，请手动复制', 'error');
+            });
         }
 
         // 构建请求体
-        function buildRequestBody(config, prompt, stream) {
+        function buildRequestBody(config, prompt, stream, modelId) {
+            const systemPrompt = '你是一位专业的网页设计师';
             const messages = [
-                { role: 'system', content: '你是一位专业的网页设计师' },
-                { role: 'user', content: prompt }
+                { role: 'user', content: `${systemPrompt}\n\n${prompt}` }
             ];
+            
+            // 使用用户提供的模型ID（如果有）
+            const model = modelId || config.model;
             
             switch (config.requestFormat) {
                 case 'openai':
                     return {
-                        model: config.model,
+                        model: model,
                         messages: messages,
                         temperature: 0.7,
+                        max_tokens: selectedMaxTokens,
                         stream: stream
                     };
                 
                 case 'anthropic':
                     return {
-                        model: config.model,
+                        model: model,
                         messages: messages,
+                        max_tokens: selectedMaxTokens,
                         temperature: 0.7,
                         stream: stream
                     };
                 
                 case 'google':
                     return {
+                        model: model,
                         contents: messages.map(msg => ({
                             role: msg.role,
                             parts: [{ text: msg.content }]
                         })),
                         generationConfig: {
-                            temperature: 0.7
+                            temperature: 0.7,
+                            maxOutputTokens: selectedMaxTokens
                         }
                     };
                 
                 case 'minimax':
                     return {
-                        model: config.model,
+                        model: model,
                         messages: messages,
                         temperature: 0.7,
                         stream: stream,
+                        max_tokens: selectedMaxTokens,
                         reply_constraints: {
                             sender_type: 'BOT',
                             sender_name: 'AI'
@@ -1523,18 +2712,20 @@ ${userInfo}
                 
                 case 'aliyun':
                     return {
-                        model: config.model,
+                        model: model,
                         input: prompt,
                         parameters: {
-                            temperature: 0.7
+                            temperature: 0.7,
+                            max_tokens: selectedMaxTokens
                         }
                     };
                 
                 default:
                     return {
-                        model: config.model,
+                        model: model,
                         messages: messages,
                         temperature: 0.7,
+                        max_tokens: selectedMaxTokens,
                         stream: stream
                     };
             }
@@ -1592,65 +2783,246 @@ ${userInfo}
             }
         }
 
-        // 流式传输AI响应（真实API模式）
-        async function streamAIResponse(provider, apiKey, prompt, style) {
+        // 非流式AI响应（通过后端代理）
+        async function nonStreamAIResponse(provider, apiKey, baseUrl, modelId, prompt, style) {
             const config = getAIProviderConfig(provider);
             const headers = { ...config.headers };
             
-            // 替换API密钥
+            const endpoint = baseUrl || config.endpoint;
+            
+            if (!endpoint) {
+                throw new Error('API端点未配置');
+            }
+            
             Object.keys(headers).forEach(key => {
                 if (headers[key].includes('{apiKey}')) {
                     headers[key] = headers[key].replace('{apiKey}', apiKey);
                 }
             });
             
-            let accumulatedResponse = '';
-            let previewUpdated = false;
+            updateGenerationProgress(10, '正在构建请求...');
             
-            try {
-                const requestBody = buildRequestBody(config, prompt, true);
-                
-                const response = await fetch(config.endpoint, {
-                    method: 'POST',
+            const requestBody = buildRequestBody(config, prompt, false, modelId);
+            requestBody.stream = false;
+            
+            updateGenerationProgress(20, '正在发送请求...');
+            
+            const proxyResponse = await fetch('/api/ai/proxy', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    endpoint: endpoint,
                     headers: headers,
-                    body: JSON.stringify(requestBody)
-                });
+                    body: requestBody,
+                    stream: false
+                })
+            });
+            
+            if (!proxyResponse.ok) {
+                const errorText = await proxyResponse.text();
+                throw new Error(`代理请求失败: ${proxyResponse.status} ${proxyResponse.statusText}\n${errorText}`);
+            }
+            
+            updateGenerationProgress(50, '正在处理响应...');
+            
+            const data = await proxyResponse.json();
+            console.log('AI响应数据:', JSON.stringify(data));
+            
+            let accumulatedResponse = '';
+            
+            if (data.content && Array.isArray(data.content)) {
+                accumulatedResponse = data.content.map(c => c.text || '').join('');
+            } else if (data.text) {
+                accumulatedResponse = data.text;
+            } else if (data.message && data.message.content) {
+                accumulatedResponse = data.message.content;
+            }
+            
+            updateGenerationProgress(80, '正在处理生成内容...');
+            
+            const websiteData = processAIResponse(accumulatedResponse, style);
+            generatedWebsiteData = websiteData;
+            saveGeneratedSite(websiteData);
+            updatePreview(websiteData.html);
+            
+            updateGenerationProgress(100, '生成完成！');
+        }
+
+        // 流式传输AI响应（通过后端代理）
+        async function streamAIResponse(provider, apiKey, baseUrl, modelId, prompt, style) {
+            try {
+                const config = getAIProviderConfig(provider);
+                const headers = { ...config.headers };
                 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`API请求失败: ${response.status} ${response.statusText}\n${errorText}`);
+                // 使用自定义Base URL（如果提供）
+                const endpoint = baseUrl || config.endpoint;
+                
+                console.log('API调用信息:');
+                console.log('Provider:', provider);
+                console.log('Endpoint:', endpoint);
+                console.log('Model:', modelId || config.model);
+                
+                // 检查endpoint是否有效
+                if (!endpoint) {
+                    throw new Error('API端点未配置');
                 }
                 
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
+                // 替换API密钥
+                Object.keys(headers).forEach(key => {
+                    if (headers[key].includes('{apiKey}')) {
+                        headers[key] = headers[key].replace('{apiKey}', apiKey);
+                    }
+                });
                 
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
+                updateGenerationProgress(10, '正在构建请求...');
+                
+                let accumulatedResponse = '';
+                let previewUpdated = false;
+                
+                const requestBody = buildRequestBody(config, prompt, true, modelId);
+                console.log('Request Body:', JSON.stringify(requestBody));
+                
+                updateGenerationProgress(20, '正在发送请求...');
+                
+                // 通过后端代理调用API，启用流式传输
+                const proxyResponse = await fetch('/api/ai/proxy', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        endpoint: endpoint,
+                        headers: headers,
+                        body: requestBody,
+                        stream: true
+                    })
+                });
+                
+                console.log('Proxy Response Status:', proxyResponse.status);
+                
+                if (!proxyResponse.ok) {
+                    const errorText = await proxyResponse.text();
+                    console.error('Proxy Response Error:', errorText);
+                    throw new Error(`代理请求失败: ${proxyResponse.status} ${proxyResponse.statusText}\n${errorText}`);
+                }
+                
+                updateGenerationProgress(30, '正在接收数据...');
+                
+                // 处理流式响应
+                if (proxyResponse.headers.get('content-type')?.includes('text/event-stream')) {
+                    console.log('检测到SSE流式响应');
+                    const reader = proxyResponse.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
                     
-                    const chunk = decoder.decode(value);
-                    const lines = chunk.split('\n').filter(line => line.trim() !== '');
+                    updateGenerationProgress(40, '正在流式生成...');
                     
-                    for (const line of lines) {
-                        const content = parseStreamingResponse(line, config);
-                        if (content) {
-                            accumulatedResponse += content;
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // 处理缓冲区中的SSE数据
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || '';
+                        
+                        for (const line of lines) {
+                            const trimmedLine = line.trim();
                             
-                            // 定期更新预览
-                            if (!previewUpdated && accumulatedResponse.length > 500) {
-                                updateStreamingPreview(accumulatedResponse);
-                                previewUpdated = true;
+                            if (trimmedLine.startsWith('data:') && !trimmedLine.includes('[DONE]')) {
+                                try {
+                                    const dataStr = trimmedLine.substring(5).trim();
+                                    const data = JSON.parse(dataStr);
+                                    
+                                    // 尝试从不同格式中提取内容
+                                    let content = '';
+                                    if (data.delta && data.delta.text) {
+                                        content = data.delta.text;
+                                    } else if (data.content && data.content.length > 0) {
+                                        content = data.content[0].text || '';
+                                    } else if (data.message && data.message.content) {
+                                        content = data.message.content;
+                                    }
+                                    
+                                    if (content) {
+                                        accumulatedResponse += content;
+                                        
+                                        // 实时更新预览 - 更频繁的更新
+                                        if (accumulatedResponse.length > 100 || accumulatedResponse.includes('<!DOCTYPE')) {
+                                            updateStreamingPreview(accumulatedResponse);
+                                            previewUpdated = true;
+                                        }
+                                        
+                                        // 更新进度
+                                        const progress = Math.min(40 + (accumulatedResponse.length / 2000) * 50, 90);
+                                        updateGenerationProgress(progress, '正在生成网站...');
+                                    }
+                                } catch (e) {
+                                    // 忽略无法解析的行
+                                }
                             }
                         }
                     }
+                } else {
+                    console.log('检测到非流式响应，使用伪流式处理');
+                    updateGenerationProgress(40, '正在生成网站...');
+                    
+                    // 处理非流式响应，但模拟流式预览
+                    const data = await proxyResponse.json();
+                    console.log('非流式响应数据:', JSON.stringify(data));
+                    
+                    // 提取内容
+                    let responseContent = '';
+                    if (data.content && Array.isArray(data.content)) {
+                        responseContent = data.content.map(c => c.text || '').join('');
+                    } else if (data.text) {
+                        responseContent = data.text;
+                    } else if (data.message && data.message.content) {
+                        responseContent = data.message.content;
+                    } else if (data.content) {
+                        responseContent = data.content;
+                    }
+                    
+                    // 模拟流式处理 - 逐步显示内容
+                    accumulatedResponse = '';
+                    const totalLength = responseContent.length;
+                    const chunkSize = Math.max(100, Math.floor(totalLength / 50));
+                    
+                    for (let i = 0; i < totalLength; i += chunkSize) {
+                        const chunk = responseContent.substring(i, i + chunkSize);
+                        accumulatedResponse += chunk;
+                        
+                        // 更新预览
+                        if (accumulatedResponse.length > 100 || accumulatedResponse.includes('<!DOCTYPE')) {
+                            updateStreamingPreview(accumulatedResponse);
+                            previewUpdated = true;
+                        }
+                        
+                        // 更新进度
+                        const progress = Math.min(40 + (i / totalLength) * 50, 90);
+                        updateGenerationProgress(progress, '正在生成网站...');
+                        
+                        // 模拟流式延迟
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                    }
                 }
+                
+                console.log('Full Response:', accumulatedResponse);
+                
+                updateGenerationProgress(95, '正在完成...');
                 
                 // 处理完整响应
                 const websiteData = processAIResponse(accumulatedResponse, style);
+                generatedWebsiteData = websiteData; // 存储生成的网站数据
                 saveGeneratedSite(websiteData);
                 updatePreview(websiteData.html);
                 
             } catch (error) {
+                console.error('流式传输错误:', error);
+                console.error('错误堆栈:', error.stack);
                 throw error;
             }
         }
@@ -1664,10 +3036,26 @@ ${userInfo}
             let displayContent = '';
             
             if (htmlMatch) {
-                // 如果找到HTML内容，直接使用
+                // 如果找到完整HTML内容，直接使用
                 displayContent = htmlMatch[0];
+            } else if (content.includes('<!DOCTYPE html')) {
+                // 如果找到HTML开始但不完整，尝试构建完整的HTML
+                let partialHtml = content;
+                // 确保基本结构完整
+                if (!partialHtml.includes('</head>')) {
+                    partialHtml = partialHtml.replace('</head>', '');
+                    partialHtml += '</head>';
+                }
+                if (!partialHtml.includes('</body>')) {
+                    partialHtml = partialHtml.replace('</body>', '');
+                    partialHtml += '</body>';
+                }
+                if (!partialHtml.includes('</html>')) {
+                    partialHtml += '</html>';
+                }
+                displayContent = partialHtml;
             } else {
-                // 如果没有找到完整HTML，创建美观的加载界面
+                // 如果没有找到HTML，创建美观的加载界面
                 displayContent = `<!DOCTYPE html>
 <html>
 <head>
@@ -1758,6 +3146,7 @@ ${userInfo}
             max-height: 200px;
             overflow-y: auto;
             white-space: pre-wrap;
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -1791,8 +3180,23 @@ ${userInfo}
 
         // 生成模拟网站（测试模式）
         function generateMockWebsite(prompt, style) {
-            const styleDef = styles.find(s => s.name === style);
-            const styleName = styleDef ? styleDef.label : '默认风格';
+            const templates = [
+                { id: 'neon', name: '霓虹律动', description: '赛博朋克风格，霓虹灯光效果，未来科技感', designFields: '游戏设计、概念设计、交互设计', style: 'futuristic' },
+                { id: 'manor', name: '庄园风华', description: '自然有机风格，田园风光，温暖色调', designFields: '景观设计、环保设计、食品设计', style: 'natural' },
+                { id: 'forest', name: '林深秘境', description: '自然风格，绿色主题，神秘氛围', designFields: '景观设计、环保设计、自然摄影', style: 'natural' },
+                { id: 'prairie', name: '暖土风华', description: '大地色系，草原风光，温暖舒适', designFields: '景观设计、环保设计、生活方式', style: 'natural' },
+                { id: 'lipstick', name: '唇色锋芒', description: '时尚潮流风格，大胆撞色，现代设计', designFields: '服装设计、时尚摄影、美妆设计', style: 'fashion' },
+                { id: 'modern', name: '摩登展厅', description: '极简主义风格，现代艺术，简洁布局', designFields: 'UI/UX设计、产品设计、艺术展示', style: 'minimalist' },
+                { id: 'craftsman', name: '素朴匠心', description: '复古怀旧风格，手工质感，温暖色调', designFields: '手工艺设计、陶瓷设计、传统工艺', style: 'vintage' },
+                { id: 'pioneer', name: '先锋色块', description: '艺术实验风格，大胆色彩，创新设计', designFields: '当代艺术、实验设计、视觉传达', style: 'artistic' },
+                { id: 'visionary', name: '锐创视界', description: '商务专业风格，现代简洁，专业形象', designFields: '商业咨询、工业设计、品牌设计', style: 'corporate' },
+                { id: 'vogue', name: '非凡镜界', description: '时尚杂志风格，高端大气，视觉冲击力', designFields: '时尚设计、摄影、品牌宣传', style: 'fashion' },
+                { id: 'art', name: '艺展画刊', description: '艺术展览风格，文化氛围，优雅设计', designFields: '艺术展览、文化活动、画廊设计', style: 'artistic' },
+                { id: 'light', name: '光影之镜', description: '光影艺术风格，黑白对比，高级质感', designFields: '摄影、建筑设计、视觉艺术', style: 'minimalist' }
+            ];
+            
+            const styleDef = templates.find(t => t.id === style);
+            const styleName = styleDef ? styleDef.name : '默认风格';
             
             const mockHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -2045,6 +3449,8 @@ ${userInfo}
             // 启用预览按钮
             showPreviewBtn.disabled = false;
             refreshPreviewBtn.disabled = false;
+            document.getElementById('saveToSiteBtn').disabled = false;
+            document.getElementById('downloadBtn').disabled = false;
             
             // 保存预览URL以便刷新
             previewContainer.currentPreviewUrl = url;
@@ -2090,28 +3496,1658 @@ ${userInfo}
             }
         }
 
-        // 文件上传处理
+        let parsedResumeContent = '';
+        let mediaFiles = [];
+        let referenceFiles = [];
+        let uploadedMediaUrls = [];
+        let uploadedReferenceUrls = []; // 存储已上传的媒体文件URL
+        let countdownInterval = null;
+        let remainingSeconds = 180;
+        let generatedWebsiteData = null; // 存储生成的网站数据
+
+        document.getElementById('mediaFiles').addEventListener('change', async function(e) {
+            await handleMediaFiles(e.target.files);
+        });
+
+        // 参考图片上传
+        document.getElementById('referenceImages').addEventListener('change', async function(e) {
+            await handleReferenceFiles(e.target.files);
+        });
+
+        async function uploadMediaFiles(files) {
+            if (files.length === 0) return;
+            
+            const formData = new FormData();
+            files.forEach(file => formData.append('files', file));
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/media/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    result.files.forEach(file => {
+                        uploadedMediaUrls.push({
+                            ...file,
+                            previewUrl: `http://localhost:3002${file.url}`
+                        });
+                    });
+                    showNotification(`成功上传 ${result.files.length} 个文件`, 'success');
+                }
+                return result;
+            } catch (error) {
+                console.error('上传媒体文件失败:', error);
+                showNotification('上传文件失败，请重试', 'error');
+            }
+        }
+
+        async function loadSavedMedia() {
+            try {
+                const response = await fetch('http://localhost:3002/api/media/list');
+                const result = await response.json();
+                if (result.files && result.files.length > 0) {
+                    uploadedMediaUrls = result.files.map(file => ({
+                        filename: file.filename,
+                        url: file.url,
+                        previewUrl: `http://localhost:3002${file.url}`,
+                        size: file.size,
+                        mtime: file.mtime,
+                        isSaved: true
+                    }));
+                    updateMediaPreview();
+                }
+            } catch (error) {
+                console.error('加载媒体列表失败:', error);
+            }
+        }
+
+        // 处理参考图片文件
+        async function handleReferenceFiles(files) {
+            const maxFiles = 5;
+            const maxTotalSize = 50 * 1024 * 1024;
+            const referenceFileInfo = document.getElementById('referenceFileInfo');
+            const previewGrid = document.getElementById('referencePreviewGrid');
+            
+            let totalSize = 0;
+            for (let file of referenceFiles) {
+                totalSize += file.size;
+            }
+            
+            const newFiles = Array.from(files);
+            let newTotalSize = totalSize;
+            
+            for (let file of newFiles) {
+                if (referenceFiles.length >= maxFiles) {
+                    showNotification('参考图片最多上传5个', 'error');
+                    return;
+                }
+                
+                if (!file.type.startsWith('image/')) {
+                    showNotification('请只上传图片文件', 'error');
+                    return;
+                }
+                
+                newTotalSize += file.size;
+                if (newTotalSize > maxTotalSize) {
+                    showNotification('参考图片总大小不能超过50MB', 'error');
+                    return;
+                }
+                
+                referenceFiles.push(file);
+            }
+            
+            // 上传文件
+            const uploadedFiles = await uploadReferenceFiles(newFiles);
+            if (uploadedFiles && uploadedFiles.success) {
+                updateReferencePreview();
+                referenceFileInfo.innerHTML = `
+                    <div style="margin-top: 8px; font-size: 0.9rem; color: var(--champagne);">
+                        <span class="file-name">已选择 ${referenceFiles.length} 个参考图片</span>
+                        <button onclick="clearReferenceFiles()" style="margin-left: 10px; padding: 2px 8px; background: var(--silver); border: none; border-radius: 4px; color: var(--ivory); font-size: 0.8rem; cursor: pointer;">
+                            清除
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // 上传参考图片
+        async function uploadReferenceFiles(files) {
+            if (files.length === 0) return;
+            
+            const formData = new FormData();
+            files.forEach(file => formData.append('files', file));
+            
+            try {
+                const response = await fetch('http://localhost:3002/api/media/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    result.files.forEach(file => {
+                        uploadedReferenceUrls.push({
+                            ...file,
+                            previewUrl: `http://localhost:3002${file.url}`
+                        });
+                    });
+                    showNotification(`成功上传 ${result.files.length} 个参考图片`, 'success');
+                }
+                return result;
+            } catch (error) {
+                console.error('上传参考图片失败:', error);
+                showNotification('上传参考图片失败，请重试', 'error');
+            }
+        }
+
+        // 更新参考图片预览
+        function updateReferencePreview() {
+            const previewGrid = document.getElementById('referencePreviewGrid');
+            if (!previewGrid) return;
+            
+            if (referenceFiles.length === 0 && uploadedReferenceUrls.length === 0) {
+                previewGrid.innerHTML = '<p class="no-media">暂无参考图片</p>';
+                return;
+            }
+            
+            const allFiles = [...referenceFiles, ...uploadedReferenceUrls.filter(f => !f.isSaved)];
+            
+            previewGrid.innerHTML = allFiles.map((file, index) => {
+                const previewUrl = file.previewUrl || URL.createObjectURL(file);
+                const filename = file.filename || file.name;
+                const filesize = file.size ? formatFileSize(file.size) : '';
+                
+                return `
+                    <div class="media-preview-item">
+                        <img src="${previewUrl}" alt="${filename}" style="max-width: 100%; max-height: 100px; object-fit: cover; border-radius: 4px;">
+                        <div class="media-preview-info">
+                            <span class="media-preview-name">${filename}</span>
+                            <span class="media-preview-size">${filesize}</span>
+                            <button onclick="removeReferenceFile(${index})" class="remove-media-btn">×</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 清除参考图片
+        function clearReferenceFiles() {
+            referenceFiles = [];
+            uploadedReferenceUrls = uploadedReferenceUrls.filter(f => f.isSaved);
+            document.getElementById('referenceFileInfo').innerHTML = '';
+            document.getElementById('referenceImages').value = '';
+            updateReferencePreview();
+        }
+
+        // 移除参考图片
+        function removeReferenceFile(index) {
+            if (index < referenceFiles.length) {
+                referenceFiles.splice(index, 1);
+            } else {
+                const uploadedIndex = index - referenceFiles.length;
+                if (uploadedIndex < uploadedReferenceUrls.length) {
+                    const fileToRemove = uploadedReferenceUrls[uploadedIndex];
+                    uploadedReferenceUrls.splice(uploadedIndex, 1);
+                    // 可以在这里添加删除服务器文件的逻辑
+                }
+            }
+            updateReferencePreview();
+            const referenceFileInfo = document.getElementById('referenceFileInfo');
+            if (referenceFiles.length === 0 && uploadedReferenceUrls.length === 0) {
+                referenceFileInfo.innerHTML = '';
+            } else {
+                referenceFileInfo.innerHTML = `
+                    <div style="margin-top: 8px; font-size: 0.9rem; color: var(--champagne);">
+                        <span class="file-name">已选择 ${referenceFiles.length + uploadedReferenceUrls.length} 个参考图片</span>
+                        <button onclick="clearReferenceFiles()" style="margin-left: 10px; padding: 2px 8px; background: var(--silver); border: none; border-radius: 4px; color: var(--ivory); font-size: 0.8rem; cursor: pointer;">
+                            清除
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        async function handleMediaFiles(files) {
+            const maxFiles = 10;
+            const maxTotalSize = 100 * 1024 * 1024;
+            const mediaFileInfo = document.getElementById('mediaFileInfo');
+            const previewGrid = document.getElementById('mediaPreviewGrid');
+            
+            let totalSize = 0;
+            for (let file of mediaFiles) {
+                totalSize += file.size;
+            }
+            
+            const newFiles = Array.from(files);
+            let newTotalSize = totalSize;
+            
+            for (let file of newFiles) {
+                if (mediaFiles.length >= maxFiles) {
+                    showNotification('最多只能上传10个文件', 'warning');
+                    break;
+                }
+                if (newTotalSize + file.size > maxTotalSize) {
+                    showNotification('总文件大小不能超过100MB', 'warning');
+                    break;
+                }
+                mediaFiles.push(file);
+                newTotalSize += file.size;
+            }
+            
+            if (newFiles.length > 0) {
+                await uploadMediaFiles(newFiles);
+            }
+            
+            updateMediaPreview();
+            
+            mediaFileInfo.classList.add('show');
+            mediaFileInfo.innerHTML = `
+                <span class="file-name">已选择 ${mediaFiles.length} 个文件</span>
+                <span class="file-size">${formatFileSize(newTotalSize)}</span>
+                <span class="remove-file" onclick="clearAllMedia()">清除全部</span>
+            `;
+        }
+
+        function updateMediaPreview() {
+            const previewGrid = document.getElementById('mediaPreviewGrid');
+            previewGrid.innerHTML = '';
+            
+            mediaFiles.forEach((file, index) => {
+                const item = document.createElement('div');
+                item.className = 'media-item';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'media-item-delete';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    removeMediaFile(index);
+                };
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'media-item-info';
+                infoDiv.textContent = file.name.length > 20 ? file.name.substring(0, 20) + '...' : file.name;
+                
+                const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                const is3DFile = ['.obj', '.fbx', '.gltf', '.glb', '.3ds', '.dae', '.stl'].includes(fileExt);
+                
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.alt = file.name;
+                    item.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = URL.createObjectURL(file);
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.loop = true;
+                    item.appendChild(video);
+                    video.addEventListener('mouseenter', () => video.play());
+                    video.addEventListener('mouseleave', () => video.pause());
+                } else if (is3DFile) {
+                    // 3D文件预览
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'media-item-placeholder file-3d';
+                    placeholder.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        <span>3D模型</span>
+                        <span class="file-name">${file.name.substring(0, 15)}...</span>
+                    `;
+                    item.appendChild(placeholder);
+                    
+                    // 添加点击查看功能
+                    item.onclick = () => view3DFile(file);
+                } else {
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'media-item-placeholder';
+                    placeholder.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <path d="M9 19V6l12-3v13"/>
+                        </svg>
+                        <span>${file.name.substring(0, 15)}...</span>
+                    `;
+                    item.appendChild(placeholder);
+                }
+                
+                item.appendChild(removeBtn);
+                item.appendChild(infoDiv);
+                previewGrid.appendChild(item);
+            });
+            
+            uploadedMediaUrls.filter(m => m.isSaved).forEach((media, index) => {
+                const item = document.createElement('div');
+                item.className = 'media-item';
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'media-item-delete';
+                removeBtn.innerHTML = '×';
+                removeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    deleteSavedMedia(media.filename, index);
+                };
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'media-item-info';
+                infoDiv.textContent = media.filename.length > 20 ? media.filename.substring(0, 20) + '...' : media.filename;
+                
+                const fileExt = media.filename.toLowerCase().substring(media.filename.lastIndexOf('.'));
+                const is3DFile = ['.obj', '.fbx', '.gltf', '.glb', '.3ds', '.dae', '.stl'].includes(fileExt);
+                const isVideo = /\.(mp4|webm|mov|avi)$/i.test(media.filename);
+                
+                if (is3DFile) {
+                    // 3D文件预览
+                    const placeholder = document.createElement('div');
+                    placeholder.className = 'media-item-placeholder file-3d';
+                    placeholder.innerHTML = `
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                        <span>3D模型</span>
+                        <span class="file-name">${media.filename.substring(0, 15)}...</span>
+                    `;
+                    item.appendChild(placeholder);
+                    
+                    // 添加点击查看功能
+                    item.onclick = () => viewSaved3DFile(media);
+                } else if (!isVideo) {
+                    const img = document.createElement('img');
+                    img.src = media.previewUrl;
+                    img.alt = media.filename;
+                    item.appendChild(img);
+                } else {
+                    const video = document.createElement('video');
+                    video.src = media.previewUrl;
+                    video.muted = true;
+                    video.playsInline = true;
+                    video.loop = true;
+                    item.appendChild(video);
+                    video.addEventListener('mouseenter', () => video.play());
+                    video.addEventListener('mouseleave', () => video.pause());
+                }
+                
+                item.appendChild(removeBtn);
+                item.appendChild(infoDiv);
+                previewGrid.appendChild(item);
+            });
+        }
+
+        async function deleteSavedMedia(filename, index) {
+            try {
+                const response = await fetch(`http://localhost:3002/api/media/${encodeURIComponent(filename)}`, {
+                    method: 'DELETE'
+                });
+                const result = await response.json();
+                if (result.success) {
+                    uploadedMediaUrls = uploadedMediaUrls.filter(m => m.filename !== filename);
+                    updateMediaPreview();
+                    showNotification('文件已删除', 'success');
+                }
+            } catch (error) {
+                console.error('删除文件失败:', error);
+                showNotification('删除文件失败', 'error');
+            }
+        }
+
+        function removeMediaFile(index) {
+            mediaFiles.splice(index, 1);
+            updateMediaPreview();
+            
+            let totalSize = 0;
+            for (let file of mediaFiles) {
+                totalSize += file.size;
+            }
+            
+            const mediaFileInfo = document.getElementById('mediaFileInfo');
+            if (mediaFiles.length > 0) {
+                mediaFileInfo.innerHTML = `
+                    <span class="file-name">已选择 ${mediaFiles.length} 个文件</span>
+                    <span class="file-size">${formatFileSize(totalSize)}</span>
+                    <span class="remove-file" onclick="clearAllMedia()">清除全部</span>
+                `;
+            } else {
+                mediaFileInfo.classList.remove('show');
+                mediaFileInfo.innerHTML = '';
+            }
+        }
+
+        function clearAllMedia() {
+            mediaFiles = [];
+            updateMediaPreview();
+            document.getElementById('mediaFiles').value = '';
+            document.getElementById('mediaFileInfo').classList.remove('show');
+            document.getElementById('mediaFileInfo').innerHTML = '';
+        }
+
+        function startCountdown(seconds = 180) {
+            remainingSeconds = seconds;
+            const countdownDisplay = document.getElementById('countdownDisplay');
+            const countdownTime = document.getElementById('countdownTime');
+            
+            countdownDisplay.style.display = 'flex';
+            updateCountdownDisplay();
+            
+            countdownInterval = setInterval(() => {
+                remainingSeconds--;
+                if (remainingSeconds <= 0) {
+                    stopCountdown();
+                } else {
+                    updateCountdownDisplay();
+                }
+            }, 1000);
+        }
+
+        function stopCountdown() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            document.getElementById('countdownDisplay').style.display = 'none';
+        }
+
+        function updateCountdownDisplay() {
+            const countdownTime = document.getElementById('countdownTime');
+            const minutes = Math.floor(remainingSeconds / 60);
+            const seconds = remainingSeconds % 60;
+            countdownTime.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        document.querySelectorAll('.preview-height-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.preview-height-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const height = this.dataset.height;
+                const previewContainer = document.getElementById('previewContainer');
+                previewContainer.style.height = height === 'full' ? '100vh' : `${height}px`;
+            });
+        });
+
+        let isResizing = false;
+        let resizeDirection = null;
+        let startX = 0;
+        let startY = 0;
+        let startWidth = 0;
+        let startHeight = 0;
+        let startLeft = 0;
+
+        const previewContainer = document.getElementById('previewContainer');
+        const resizeRight = document.getElementById('resizeRight');
+        const resizeBottom = document.getElementById('resizeBottom');
+        const resizeCorner = document.getElementById('resizeCorner');
+
+        // 预览框大小记忆功能
+        function loadPreviewSize() {
+            const savedWidth = localStorage.getItem('previewWidth');
+            const savedHeight = localStorage.getItem('previewHeight');
+            if (savedWidth) {
+                previewContainer.style.width = `${savedWidth}px`;
+            }
+            if (savedHeight) {
+                previewContainer.style.height = `${savedHeight}px`;
+            }
+        }
+
+        function savePreviewSize() {
+            localStorage.setItem('previewWidth', previewContainer.offsetWidth);
+            localStorage.setItem('previewHeight', previewContainer.offsetHeight);
+        }
+
+        function startResize(e, direction) {
+            isResizing = true;
+            resizeDirection = direction;
+            startX = e.clientX;
+            startY = e.clientY;
+            startWidth = previewContainer.offsetWidth;
+            startHeight = previewContainer.offsetHeight;
+            startLeft = previewContainer.offsetLeft;
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = direction === 'right' ? 'ew-resize' : 
+                                          direction === 'bottom' ? 'ns-resize' : 'nwse-resize';
+        }
+
+        function doResize(e) {
+            if (!isResizing) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            if (resizeDirection === 'right' || resizeDirection === 'corner') {
+                const newWidth = Math.max(300, startWidth + dx);
+                previewContainer.style.width = `${newWidth}px`;
+            }
+            if (resizeDirection === 'bottom' || resizeDirection === 'corner') {
+                const newHeight = Math.max(200, startHeight + dy);
+                previewContainer.style.height = `${newHeight}px`;
+            }
+        }
+
+        function stopResize() {
+            isResizing = false;
+            resizeDirection = null;
+            document.body.style.userSelect = '';
+            document.body.style.cursor = '';
+            savePreviewSize();
+        }
+
+        resizeRight.addEventListener('mousedown', (e) => startResize(e, 'right'));
+        resizeBottom.addEventListener('mousedown', (e) => startResize(e, 'bottom'));
+        resizeCorner.addEventListener('mousedown', (e) => startResize(e, 'corner'));
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+
+        let selectedMaxTokens = 10000;
+        document.querySelectorAll('.token-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.token-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const tokens = this.dataset.tokens;
+                const customTokensInput = document.getElementById('customTokens');
+                
+                if (tokens === 'custom') {
+                    customTokensInput.style.display = 'block';
+                    customTokensInput.focus();
+                    if (customTokensInput.value) {
+                        selectedMaxTokens = parseInt(customTokensInput.value);
+                    }
+                } else {
+                    customTokensInput.style.display = 'none';
+                    selectedMaxTokens = parseInt(tokens);
+                }
+            });
+        });
+
+        document.getElementById('customTokens').addEventListener('input', function(e) {
+            const value = parseInt(e.target.value);
+            if (value && value >= 1000 && value <= 1000000) {
+                selectedMaxTokens = value;
+            }
+        });
+
         document.getElementById('resumeFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
                 showFileInfo(file);
+                parseResumeFile(file);
             }
         });
 
-        // 显示文件信息
+        // 设计文字稿上传处理
+        let designTextContent = '';
+        document.getElementById('designTextFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                showDesignFileInfo(file);
+                parseDesignTextFile(file);
+            }
+        });
+
+        function showDesignFileInfo(file) {
+            const designFileInfo = document.getElementById('designFileInfo');
+            designFileInfo.classList.add('show');
+            
+            // 保存文件对象到全局变量，用于文件查看
+            window.designTextFile = file;
+            
+            // 支持查看的文件类型
+            const viewableTypes = ['.pdf', '.doc', '.docx', '.txt', '.md'];
+            const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            const isViewable = viewableTypes.includes(fileExt);
+            
+            designFileInfo.innerHTML = `
+                <span class="file-name">${file.name}</span>
+                <span class="file-size">${formatFileSize(file.size)}</span>
+                ${isViewable ? `<span class="view-file" onclick="viewDesignFile('${file.name}')">查看</span>` : ''}
+                <span class="remove-file" onclick="clearDesignTextFile()">清除</span>
+            `;
+        }
+
+        function viewSaved3DFile(media) {
+            // 创建3D文件查看器
+            const modal = document.createElement('div');
+            modal.className = 'file-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                width: 90%;
+                height: 90%;
+                background: #1a1a1a;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #333;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 10;
+            `;
+            closeBtn.onclick = () => {
+                if (scene) {
+                    scene.traverse((object) => {
+                        if (object.geometry) object.geometry.dispose();
+                        if (object.material) {
+                            if (Array.isArray(object.material)) {
+                                object.material.forEach(material => material.dispose());
+                            } else {
+                                object.material.dispose();
+                            }
+                        }
+                    });
+                    renderer.dispose();
+                    controls.dispose();
+                }
+                document.body.removeChild(modal);
+            };
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 10;
+            `;
+            infoDiv.textContent = media.filename;
+            
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = `
+                width: 100%;
+                height: 100%;
+            `;
+            
+            modalContent.appendChild(closeBtn);
+            modalContent.appendChild(infoDiv);
+            modalContent.appendChild(canvas);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 初始化Three.js场景
+            let scene, camera, renderer, controls;
+            
+            function init() {
+                // 创建场景
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x1a1a1a);
+                
+                // 创建相机
+                camera = new THREE.PerspectiveCamera(75, modalContent.clientWidth / modalContent.clientHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // 创建渲染器
+                renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+                renderer.setSize(modalContent.clientWidth, modalContent.clientHeight);
+                
+                // 添加轨道控制器
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                
+                // 添加光源
+                const ambientLight = new THREE.AmbientLight(0x404040, 2);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // 加载3D模型
+                const fileExt = media.filename.toLowerCase().substring(media.filename.lastIndexOf('.'));
+                const fileUrl = `http://localhost:3002${media.url}`;
+                
+                if (fileExt === '.obj') {
+                    const loader = new THREE.OBJLoader();
+                    loader.load(fileUrl, function (object) {
+                        object.scale.set(1, 1, 1);
+                        scene.add(object);
+                        centerModel(object);
+                    }, undefined, function (error) {
+                        console.error('加载OBJ模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else if (fileExt === '.gltf' || fileExt === '.glb') {
+                    const loader = new THREE.GLTFLoader();
+                    loader.load(fileUrl, function (gltf) {
+                        scene.add(gltf.scene);
+                        centerModel(gltf.scene);
+                    }, undefined, function (error) {
+                        console.error('加载GLTF模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else if (fileExt === '.stl') {
+                    const loader = new THREE.STLLoader();
+                    loader.load(fileUrl, function (geometry) {
+                        const material = new THREE.MeshStandardMaterial({ color: 0x7b68ee });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        scene.add(mesh);
+                        centerModel(mesh);
+                    }, undefined, function (error) {
+                        console.error('加载STL模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else {
+                    showError('暂不支持该3D文件格式');
+                }
+                
+                // 动画循环
+                function animate() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+            
+            function centerModel(model) {
+                // 计算模型边界
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                
+                // 平移模型到原点
+                model.position.sub(center);
+                
+                // 计算模型大小
+                const size = box.getSize(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                
+                // 缩放模型以适应视口
+                const scale = 4 / maxSize;
+                model.scale.set(scale, scale, scale);
+            }
+            
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 0, 0, 0.8);
+                    color: white;
+                    padding: 16px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    z-index: 10;
+                `;
+                errorDiv.textContent = message;
+                modalContent.appendChild(errorDiv);
+            }
+            
+            // 响应窗口大小变化
+            function onWindowResize() {
+                if (camera && renderer) {
+                    camera.aspect = modalContent.clientWidth / modalContent.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(modalContent.clientWidth, modalContent.clientHeight);
+                }
+            }
+            
+            window.addEventListener('resize', onWindowResize);
+            
+            // 初始化
+            init();
+        }
+
+        function view3DFile(file) {
+            // 创建3D文件查看器
+            const modal = document.createElement('div');
+            modal.className = 'file-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                width: 90%;
+                height: 90%;
+                background: #1a1a1a;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #333;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 10;
+            `;
+            closeBtn.onclick = () => {
+                if (scene) {
+                    scene.traverse((object) => {
+                        if (object.geometry) object.geometry.dispose();
+                        if (object.material) {
+                            if (Array.isArray(object.material)) {
+                                object.material.forEach(material => material.dispose());
+                            } else {
+                                object.material.dispose();
+                            }
+                        }
+                    });
+                    renderer.dispose();
+                    controls.dispose();
+                }
+                document.body.removeChild(modal);
+            };
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.style.cssText = `
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background: rgba(0, 0, 0, 0.7);
+                color: white;
+                padding: 8px 12px;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 10;
+            `;
+            infoDiv.textContent = file.name;
+            
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = `
+                width: 100%;
+                height: 100%;
+            `;
+            
+            modalContent.appendChild(closeBtn);
+            modalContent.appendChild(infoDiv);
+            modalContent.appendChild(canvas);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // 初始化Three.js场景
+            let scene, camera, renderer, controls;
+            
+            function init() {
+                // 创建场景
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x1a1a1a);
+                
+                // 创建相机
+                camera = new THREE.PerspectiveCamera(75, modalContent.clientWidth / modalContent.clientHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                // 创建渲染器
+                renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+                renderer.setSize(modalContent.clientWidth, modalContent.clientHeight);
+                
+                // 添加轨道控制器
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                
+                // 添加光源
+                const ambientLight = new THREE.AmbientLight(0x404040, 2);
+                scene.add(ambientLight);
+                
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 2);
+                directionalLight.position.set(1, 1, 1);
+                scene.add(directionalLight);
+                
+                // 加载3D模型
+                const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+                const fileUrl = URL.createObjectURL(file);
+                
+                if (fileExt === '.obj') {
+                    const loader = new THREE.OBJLoader();
+                    loader.load(fileUrl, function (object) {
+                        object.scale.set(1, 1, 1);
+                        scene.add(object);
+                        centerModel(object);
+                    }, undefined, function (error) {
+                        console.error('加载OBJ模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else if (fileExt === '.gltf' || fileExt === '.glb') {
+                    const loader = new THREE.GLTFLoader();
+                    loader.load(fileUrl, function (gltf) {
+                        scene.add(gltf.scene);
+                        centerModel(gltf.scene);
+                    }, undefined, function (error) {
+                        console.error('加载GLTF模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else if (fileExt === '.stl') {
+                    const loader = new THREE.STLLoader();
+                    loader.load(fileUrl, function (geometry) {
+                        const material = new THREE.MeshStandardMaterial({ color: 0x7b68ee });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        scene.add(mesh);
+                        centerModel(mesh);
+                    }, undefined, function (error) {
+                        console.error('加载STL模型失败:', error);
+                        showError('加载3D模型失败');
+                    });
+                } else {
+                    showError('暂不支持该3D文件格式');
+                }
+                
+                // 动画循环
+                function animate() {
+                    requestAnimationFrame(animate);
+                    controls.update();
+                    renderer.render(scene, camera);
+                }
+                animate();
+            }
+            
+            function centerModel(model) {
+                // 计算模型边界
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                
+                // 平移模型到原点
+                model.position.sub(center);
+                
+                // 计算模型大小
+                const size = box.getSize(new THREE.Vector3());
+                const maxSize = Math.max(size.x, size.y, size.z);
+                
+                // 缩放模型以适应视口
+                const scale = 4 / maxSize;
+                model.scale.set(scale, scale, scale);
+            }
+            
+            function showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(255, 0, 0, 0.8);
+                    color: white;
+                    padding: 16px;
+                    border-radius: 8px;
+                    font-size: 16px;
+                    z-index: 10;
+                `;
+                errorDiv.textContent = message;
+                modalContent.appendChild(errorDiv);
+            }
+            
+            // 响应窗口大小变化
+            function onWindowResize() {
+                if (camera && renderer) {
+                    camera.aspect = modalContent.clientWidth / modalContent.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(modalContent.clientWidth, modalContent.clientHeight);
+                }
+            }
+            
+            window.addEventListener('resize', onWindowResize);
+            
+            // 初始化
+            init();
+        }
+
+        function viewDesignFile(fileName) {
+            // 创建文件查看器
+            const modal = document.createElement('div');
+            modal.className = 'file-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                width: 90%;
+                height: 90%;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #333;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 10;
+            `;
+            closeBtn.onclick = () => document.body.removeChild(modal);
+            
+            const fileExt = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+            
+            if (fileExt === '.pdf') {
+                // PDF文件使用iframe查看
+                const iframe = document.createElement('iframe');
+                iframe.src = URL.createObjectURL(window.designTextFile);
+                iframe.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+                modalContent.appendChild(iframe);
+            } else if (['.txt', '.md'].includes(fileExt)) {
+                // 文本文件直接显示内容
+                const pre = document.createElement('pre');
+                pre.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    margin: 0;
+                    padding: 20px;
+                    overflow: auto;
+                    font-family: monospace;
+                    font-size: 14px;
+                    line-height: 1.5;
+                `;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pre.textContent = e.target.result;
+                };
+                reader.readAsText(window.designTextFile);
+                
+                modalContent.appendChild(pre);
+            } else if (['.doc', '.docx'].includes(fileExt)) {
+                // Word文件使用Microsoft Office Online查看
+                const iframe = document.createElement('iframe');
+                const fileUrl = URL.createObjectURL(window.designTextFile);
+                iframe.src = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+                iframe.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+                modalContent.appendChild(iframe);
+            } else {
+                // 其他文件类型
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 16px;
+                    color: #333;
+                `;
+                content.textContent = '该文件类型暂不支持在线查看';
+                modalContent.appendChild(content);
+            }
+            
+            modalContent.appendChild(closeBtn);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+
+        async function parseDesignTextFile(file) {
+            const designFileInfo = document.getElementById('designFileInfo');
+            const parseStatus = document.createElement('div');
+            parseStatus.className = 'parse-status';
+            parseStatus.style.cssText = 'color: var(--champagne); font-size: 0.85rem; margin-top: 8px;';
+            parseStatus.textContent = '⏳ 正在解析设计文字稿...';
+            designFileInfo.appendChild(parseStatus);
+
+            try {
+                if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                    designTextContent = await file.text();
+                } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+                    designTextContent = await parseDocxFile(file);
+                } else {
+                    designTextContent = await file.text();
+                }
+
+                if (designTextContent && designTextContent.trim().length > 0) {
+                    parseStatus.textContent = `✅ 设计文字稿解析成功！提取到 ${designTextContent.length} 个字符`;
+                    parseStatus.style.color = '#4ade80';
+                    // 分析设计文字稿并推荐模板
+                    analyzeDesignTextAndRecommendTemplate(designTextContent);
+                } else {
+                    parseStatus.textContent = '⚠️ 设计文字稿内容为空，请检查文件';
+                    parseStatus.style.color = '#fbbf24';
+                }
+            } catch (error) {
+                console.error('设计文字稿解析错误:', error);
+                parseStatus.textContent = '❌ 设计文字稿解析失败: ' + error.message;
+                parseStatus.style.color = '#f87171';
+            }
+        }
+
+        function clearDesignTextFile() {
+            designTextContent = '';
+            document.getElementById('designTextFile').value = '';
+            document.getElementById('designFileInfo').classList.remove('show');
+            document.getElementById('designFileInfo').innerHTML = '';
+        }
+
+        function analyzeDesignTextAndRecommendTemplate(content) {
+            const designFileInfo = document.getElementById('designFileInfo');
+            const recommendation = document.createElement('div');
+            recommendation.className = 'template-recommendation';
+            recommendation.style.cssText = 'margin-top: 12px; padding: 12px; background: rgba(201,169,110,0.1); border-radius: 6px; border-left: 3px solid var(--champagne);';
+            
+            let templateRecommendations = [];
+            
+            // 分析内容特征
+            const contentLower = content.toLowerCase();
+            
+            if (contentLower.includes('设计') && (contentLower.includes('作品') || contentLower.includes('项目'))) {
+                templateRecommendations.push('portfolio');
+            }
+            
+            if (contentLower.includes('简历') || contentLower.includes('个人简介') || contentLower.includes('工作经验')) {
+                templateRecommendations.push('resume');
+            }
+            
+            if (contentLower.includes('公司') || contentLower.includes('企业') || contentLower.includes('业务')) {
+                templateRecommendations.push('business');
+            }
+            
+            if (contentLower.includes('博客') || contentLower.includes('文章') || contentLower.includes('写作')) {
+                templateRecommendations.push('blog');
+            }
+            
+            if (contentLower.includes('产品') || contentLower.includes('服务') || contentLower.includes('应用')) {
+                templateRecommendations.push('product');
+            }
+            
+            if (templateRecommendations.length === 0) {
+                templateRecommendations = ['portfolio', 'business'];
+            }
+            
+            const templateNames = {
+                portfolio: '作品集',
+                resume: '个人简历',
+                business: '企业官网',
+                blog: '个人博客',
+                product: '产品展示'
+            };
+            
+            const recommendationsText = templateRecommendations.map(t => templateNames[t] || t).join('、');
+            
+            recommendation.innerHTML = `
+                <div style="font-weight: 600; color: var(--champagne); margin-bottom: 8px;">📋 推荐模板</div>
+                <div style="color: var(--smoke); font-size: 0.9rem;">根据您的设计文字稿内容，推荐使用以下模板：</div>
+                <div style="color: var(--ivory); font-size: 1rem; margin-top: 8px;">${recommendationsText}</div>
+                <div style="margin-top: 10px; font-size: 0.8rem; color: var(--mist);">
+                    系统已根据内容特征自动分析，您可以在下方设计风格中选择喜欢的模板。
+                </div>
+            `;
+            
+            designFileInfo.appendChild(recommendation);
+        }
+
+        async function parseResumeFile(file) {
+            const fileInfoDiv = document.getElementById('fileInfo');
+            const parseStatus = document.createElement('div');
+            parseStatus.className = 'parse-status';
+            parseStatus.style.cssText = 'color: var(--champagne); font-size: 0.85rem; margin-top: 8px;';
+            parseStatus.textContent = '⏳ 正在解析简历内容...';
+            fileInfoDiv.appendChild(parseStatus);
+
+            try {
+                if (file.type === 'text/plain' || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+                    parsedResumeContent = await file.text();
+                } else if (file.name.endsWith('.pdf')) {
+                    parsedResumeContent = await parsePDFFile(file);
+                } else if (file.name.endsWith('.docx') || file.name.endsWith('.doc')) {
+                    parsedResumeContent = await parseDocxFile(file);
+                } else {
+                    parsedResumeContent = await file.text();
+                }
+
+                if (parsedResumeContent && parsedResumeContent.trim().length > 0) {
+                    parseStatus.textContent = `✅ 简历解析成功！提取到 ${parsedResumeContent.length} 个字符`;
+                    parseStatus.style.color = '#4ade80';
+                    fillHiddenFieldsFromResume(parsedResumeContent);
+                } else {
+                    parseStatus.textContent = '⚠️ 简历内容为空，请检查文件';
+                    parseStatus.style.color = '#fbbf24';
+                }
+            } catch (error) {
+                console.error('简历解析错误:', error);
+                parseStatus.textContent = '❌ 简历解析失败: ' + error.message;
+                parseStatus.style.color = '#f87171';
+            }
+        }
+
+        async function parsePDFFile(file) {
+            try {
+                console.log('开始解析PDF文件:', file.name, file.size);
+                // 检查是否有PDF.js可用
+                console.log('PDF.js可用:', typeof pdfjsLib !== 'undefined');
+                
+                // 直接使用备用解析方法，避免PDF.js可能的问题
+                console.log('直接使用优化的备用解析方法');
+                return parsePDFWithFallback(file);
+                
+                if (typeof pdfjsLib !== 'undefined') {
+                    const arrayBuffer = await file.arrayBuffer();
+                    console.log('PDF文件大小:', arrayBuffer.byteLength);
+                    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                    console.log('PDF页数:', pdf.numPages);
+                    let text = '';
+                    
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        const page = await pdf.getPage(pageNum);
+                        const content = await page.getTextContent();
+                        console.log('第', pageNum, '页文本项数:', content.items.length);
+                        const pageText = content.items.map(item => item.str).join(' ');
+                        text += pageText + '\n';
+                    }
+                    
+                    console.log('原始提取文本长度:', text.length);
+                    const cleanedText = cleanExtractedText(text);
+                    console.log('清理后文本长度:', cleanedText.length);
+                    return cleanedText;
+                } else {
+                    // 备用解析方法
+                    console.log('使用备用解析方法');
+                    return parsePDFWithFallback(file);
+                }
+            } catch (error) {
+                console.warn('PDF.js解析失败，使用备用方法:', error);
+                return parsePDFWithFallback(file);
+            }
+        }
+
+        function cleanExtractedText(text) {
+            // 移除多余空白字符
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            // 移除控制字符
+            text = text.replace(/[\x00-\x1F\x7F]/g, '');
+            
+            // 保留中文、英文、数字和常见标点，移除其他所有字符
+            const cleanText = text.replace(/[^\u4e00-\u9fff\u3000-\u303f\w\s.,!?;:()\-@#$%&*+=/<>"'`~]/g, '');
+            
+            // 移除连续的标点符号
+            const cleanedText = cleanText.replace(/[.,!?;:()\-]{2,}/g, match => match[0]);
+            
+            // 移除过长的空白字符
+            const finalText = cleanedText.replace(/\s{3,}/g, '  ').trim();
+            
+            // 限制文本长度，防止提取过多内容
+            const maxLength = 50000; // 最多提取50000个字符
+            if (finalText.length > maxLength) {
+                console.log('文本过长，截断到', maxLength, '个字符');
+                return finalText.substring(0, maxLength);
+            }
+            
+            return finalText;
+        }
+
+        async function parsePDFWithFallback(file) {
+            console.log('使用备用解析方法');
+            const arrayBuffer = await file.arrayBuffer();
+            console.log('PDF文件大小:', arrayBuffer.byteLength);
+            const uint8Array = new Uint8Array(arrayBuffer);
+            
+            // 优化的PDF文本提取
+            let text = '';
+            let inTextBlock = false;
+            let textBuffer = '';
+            
+            for (let i = 0; i < uint8Array.length; i++) {
+                const byte = uint8Array[i];
+                
+                // 检查是否是可打印字符
+                if (byte >= 32 && byte <= 126) {
+                    textBuffer += String.fromCharCode(byte);
+                    inTextBlock = true;
+                } else if (byte === 10 || byte === 13) {
+                    // 换行符
+                    if (inTextBlock) {
+                        textBuffer += ' ';
+                    }
+                } else if (byte >= 0xC0 && byte <= 0xFF) {
+                    // 可能是多字节字符的开始
+                    if (i + 1 < uint8Array.length) {
+                        const nextByte = uint8Array[i + 1];
+                        if (nextByte >= 0x80 && nextByte <= 0xBF) {
+                            // 双字节UTF-8字符
+                            const charCode = ((byte & 0x1F) << 6) | (nextByte & 0x3F);
+                            textBuffer += String.fromCharCode(charCode);
+                            inTextBlock = true;
+                            i++;
+                        }
+                    }
+                } else {
+                    // 其他字符，结束当前文本块
+                    if (inTextBlock && textBuffer.length > 2) {
+                        // 只添加有意义的文本块（长度大于2）
+                        text += textBuffer + ' ';
+                        textBuffer = '';
+                        inTextBlock = false;
+                    } else {
+                        textBuffer = '';
+                        inTextBlock = false;
+                    }
+                }
+            }
+            
+            // 处理最后一个文本块
+            if (inTextBlock && textBuffer.length > 2) {
+                text += textBuffer;
+            }
+            
+            console.log('优化解析文本长度:', text.length);
+            const cleanedText = cleanExtractedText(text);
+            console.log('优化解析清理后文本长度:', cleanedText.length);
+            return cleanedText;
+        }
+
+        async function parseDocxFile(file) {
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const uint8Array = new Uint8Array(arrayBuffer);
+                let text = '';
+                
+                for (let i = 0; i < uint8Array.length - 3; i++) {
+                    if (uint8Array[i] === 0x3C && uint8Array[i+1] === 0x77 && uint8Array[i+2] === 0x3A) {
+                        let end = i + 3;
+                        while (end < uint8Array.length && uint8Array[end] !== 0x3E) end++;
+                        if (end < uint8Array.length) {
+                            const tag = String.fromCharCode(...uint8Array.slice(i, end + 1));
+                            if (tag.includes('w:t') || tag.includes('w:p')) {
+                                let contentStart = end + 1;
+                                let contentEnd = contentStart;
+                                while (contentEnd < uint8Array.length - 4) {
+                                    if (uint8Array[contentEnd] === 0x3C && uint8Array[contentEnd+1] === 0x2F) break;
+                                    contentEnd++;
+                                }
+                                const content = new TextDecoder('utf-8', {fatal: false}).decode(uint8Array.slice(contentStart, contentEnd));
+                                const cleanContent = content.replace(/[<>&]/g, '').trim();
+                                if (cleanContent.length > 0) {
+                                    text += cleanContent + ' ';
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (text.trim().length > 0) {
+                    return text.trim();
+                }
+                
+                const fullText = new TextDecoder('utf-8', {fatal: false}).decode(uint8Array);
+                const chineseMatches = fullText.match(/[\u4e00-\u9fff][\u4e00-\u9fff\w\s,.\-@:;()]{2,}/g);
+                if (chineseMatches) {
+                    return chineseMatches.join('\n');
+                }
+                return '';
+            } catch (e) {
+                console.error('DOCX解析错误:', e);
+                return '';
+            }
+        }
+
+        function fillHiddenFieldsFromResume(content) {
+            const lines = content.split('\n').filter(l => l.trim());
+            let name = '', title = '', email = '', phone = '', github = '', linkedin = '';
+            let educationLines = [], experienceLines = [], skillLines = [], projectLines = [];
+            let bio = '';
+            let currentSection = '';
+
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) continue;
+
+                if (/姓名|名字|name/i.test(trimmed) && !name) {
+                    name = trimmed.replace(/^(姓名|名字|name)[：:]\s*/i, '').trim();
+                    continue;
+                }
+                if (/职位|头衔|title|职位|岗位/i.test(trimmed) && !title) {
+                    title = trimmed.replace(/^(职位|头衔|title|岗位)[：:]\s*/i, '').trim();
+                    continue;
+                }
+                if (/邮箱|email|e-mail/i.test(trimmed) && !email) {
+                    const emailMatch = trimmed.match(/[\w.-]+@[\w.-]+\.\w+/);
+                    if (emailMatch) email = emailMatch[0];
+                    continue;
+                }
+                if (/电话|手机|phone|tel/i.test(trimmed) && !phone) {
+                    const phoneMatch = trimmed.match(/1[3-9]\d{9}|\+?\d[\d\s-]{8,}/);
+                    if (phoneMatch) phone = phoneMatch[0];
+                    continue;
+                }
+                if (/github/i.test(trimmed) && !github) {
+                    const ghMatch = trimmed.match(/github\.com\/[\w-]+/);
+                    if (ghMatch) github = 'https://' + ghMatch[0];
+                    continue;
+                }
+                if (/linkedin/i.test(trimmed) && !linkedin) {
+                    const liMatch = trimmed.match(/linkedin\.com\/in\/[\w-]+/);
+                    if (liMatch) linkedin = 'https://' + liMatch[0];
+                    continue;
+                }
+                if (/教育|学历|education/i.test(trimmed)) { currentSection = 'education'; continue; }
+                if (/工作|经验|experience|employment/i.test(trimmed)) { currentSection = 'experience'; continue; }
+                if (/技能|专长|skill/i.test(trimmed)) { currentSection = 'skills'; continue; }
+                if (/项目|作品|project/i.test(trimmed)) { currentSection = 'projects'; continue; }
+                if (/简介|介绍|about|summary|bio/i.test(trimmed)) { currentSection = 'bio'; continue; }
+
+                switch (currentSection) {
+                    case 'education': educationLines.push(trimmed); break;
+                    case 'experience': experienceLines.push(trimmed); break;
+                    case 'skills': skillLines.push(trimmed); break;
+                    case 'projects': projectLines.push(trimmed); break;
+                    case 'bio': bio += trimmed + ' '; break;
+                }
+            }
+
+            if (name) document.getElementById('userName').value = name;
+            if (title) document.getElementById('userTitle').value = title;
+            if (bio) document.getElementById('userBio').value = bio.trim();
+            if (email) document.getElementById('userEmail').value = email;
+            if (phone) document.getElementById('userPhone').value = phone;
+            if (github) document.getElementById('userGithub').value = github;
+            if (linkedin) document.getElementById('userLinkedIn').value = linkedin;
+            if (educationLines.length) document.getElementById('userEducation').value = educationLines.join('\n');
+            if (experienceLines.length) document.getElementById('userExperience').value = experienceLines.join('\n');
+            if (skillLines.length) document.getElementById('userSkills').value = skillLines.join('\n');
+            if (projectLines.length) document.getElementById('userProjects').value = projectLines.join('\n');
+        }
+
         function showFileInfo(file) {
             const fileInfoDiv = document.getElementById('fileInfo');
             const fileSize = formatFileSize(file.size);
             
+            // 保存文件对象到全局变量，用于文件查看
+            window.resumeFile = file;
+            
+            // 支持查看的文件类型
+            const viewableTypes = ['.pdf', '.doc', '.docx', '.txt', '.md'];
+            const fileExt = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+            const isViewable = viewableTypes.includes(fileExt);
+            
             fileInfoDiv.innerHTML = `
                 <span class="file-name">${file.name}</span>
                 <span class="file-size">${fileSize}</span>
+                ${isViewable ? `<span class="view-file" onclick="viewFile('${file.name}')">查看</span>` : ''}
                 <span class="remove-file" onclick="removeFile()">删除</span>
             `;
             fileInfoDiv.classList.add('show');
         }
 
-        // 移除文件
+        function viewFile(fileName) {
+            // 创建文件查看器
+            const modal = document.createElement('div');
+            modal.className = 'file-modal';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                width: 90%;
+                height: 90%;
+                background: white;
+                border-radius: 8px;
+                overflow: hidden;
+                position: relative;
+            `;
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.innerHTML = '×';
+            closeBtn.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #333;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 30px;
+                height: 30px;
+                font-size: 20px;
+                cursor: pointer;
+                z-index: 10;
+            `;
+            closeBtn.onclick = () => document.body.removeChild(modal);
+            
+            const fileExt = fileName.toLowerCase().substring(fileName.lastIndexOf('.'));
+            
+            if (fileExt === '.pdf') {
+                // PDF文件使用iframe查看
+                const iframe = document.createElement('iframe');
+                iframe.src = URL.createObjectURL(window.resumeFile);
+                iframe.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+                modalContent.appendChild(iframe);
+            } else if (['.txt', '.md'].includes(fileExt)) {
+                // 文本文件直接显示内容
+                const pre = document.createElement('pre');
+                pre.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    margin: 0;
+                    padding: 20px;
+                    overflow: auto;
+                    font-family: monospace;
+                    font-size: 14px;
+                    line-height: 1.5;
+                `;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    pre.textContent = e.target.result;
+                };
+                reader.readAsText(window.resumeFile);
+                
+                modalContent.appendChild(pre);
+            } else if (['.doc', '.docx'].includes(fileExt)) {
+                // Word文件使用Microsoft Office Online查看
+                const iframe = document.createElement('iframe');
+                const fileUrl = URL.createObjectURL(window.resumeFile);
+                iframe.src = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(fileUrl)}`;
+                iframe.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    border: none;
+                `;
+                modalContent.appendChild(iframe);
+            } else {
+                // 其他文件类型
+                const content = document.createElement('div');
+                content.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    font-size: 16px;
+                    color: #333;
+                `;
+                content.textContent = '该文件类型暂不支持在线查看';
+                modalContent.appendChild(content);
+            }
+            
+            modalContent.appendChild(closeBtn);
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+        }
+
         function removeFile() {
             const fileInput = document.getElementById('resumeFile');
             const fileInfoDiv = document.getElementById('fileInfo');
@@ -2119,9 +5155,21 @@ ${userInfo}
             fileInput.value = '';
             fileInfoDiv.classList.remove('show');
             fileInfoDiv.innerHTML = '';
+            parsedResumeContent = '';
+            
+            document.getElementById('userName').value = '';
+            document.getElementById('userTitle').value = '';
+            document.getElementById('userBio').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userPhone').value = '';
+            document.getElementById('userGithub').value = '';
+            document.getElementById('userLinkedIn').value = '';
+            document.getElementById('userEducation').value = '';
+            document.getElementById('userExperience').value = '';
+            document.getElementById('userSkills').value = '';
+            document.getElementById('userProjects').value = '';
         }
 
-        // 格式化文件大小
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -2132,47 +5180,90 @@ ${userInfo}
 
         // 生成按钮点击事件
         document.getElementById('generateBtn').addEventListener('click', async () => {
-            const provider = document.getElementById('aiProvider').value;
-            const apiKey = document.getElementById('apiKey').value;
-            const name = document.getElementById('userName').value.trim();
-            const title = document.getElementById('userTitle').value.trim();
-            const bio = document.getElementById('userBio').value.trim();
+            // 防御性检查
+            const aiProviderEl = document.getElementById('aiProvider');
+            const apiKeyEl = document.getElementById('apiKey');
+            const baseUrlEl = document.getElementById('baseUrl');
+            const modelIdEl = document.getElementById('modelId');
+            const userNameEl = document.getElementById('userName');
+            const userTitleEl = document.getElementById('userTitle');
+            const userBioEl = document.getElementById('userBio');
             
-            // 验证必填字段
-            if (!name) {
-                showNotification('请输入姓名', 'error');
+            // 检查所有元素是否存在
+            if (!aiProviderEl || !apiKeyEl || !baseUrlEl || !modelIdEl || !userNameEl || !userTitleEl || !userBioEl) {
+                showNotification('页面元素加载失败，请刷新页面重试', 'error');
+                console.error('缺少必要的页面元素');
+                console.error('aiProviderEl:', aiProviderEl);
+                console.error('apiKeyEl:', apiKeyEl);
+                console.error('baseUrlEl:', baseUrlEl);
+                console.error('modelIdEl:', modelIdEl);
+                console.error('userNameEl:', userNameEl);
+                console.error('userTitleEl:', userTitleEl);
+                console.error('userBioEl:', userBioEl);
                 return;
             }
             
-            if (!title) {
-                showNotification('请输入职业/职位', 'error');
-                return;
-            }
+            // 获取值
+            const provider = aiProviderEl.value;
+            const apiKey = apiKeyEl.value.trim();
+            const baseUrl = baseUrlEl.value.trim();
+            const modelId = modelIdEl.value.trim();
+            const name = userNameEl.value.trim();
+            const title = userTitleEl.value.trim();
+            const bio = userBioEl.value.trim();
             
-            if (!bio) {
-                showNotification('请输入个人简介', 'error');
-                return;
+            console.log('生成按钮点击，开始处理...');
+            console.log('Provider:', provider);
+            console.log('API Key:', apiKey ? '****' : '未提供');
+            console.log('Base URL:', baseUrl || '使用默认值');
+            console.log('Model ID:', modelId || '使用默认值');
+            console.log('Name:', name);
+            console.log('Title:', title);
+            console.log('Bio:', bio);
+            
+            // 简化验证 - 只检查是否有API密钥或是否使用测试模式
+            if (!apiKey) {
+                // 测试模式 - 不需要API密钥
+                console.log('使用测试模式生成网站');
             }
             
             updateGenerationProgress(0, '正在准备生成...');
             
             try {
+                console.log('正在生成提示...');
                 const prompt = generatePrompt(selectedStyle);
+                console.log('提示生成完成，长度:', prompt.length);
+                
+                startCountdown(180);
                 
                 if (apiKey) {
-                    // 真实API模式
-                    await streamAIResponse(provider, apiKey, prompt, selectedStyle);
+                    console.log('使用真实API模式');
+                    try {
+                        await streamAIResponse(provider, apiKey, baseUrl, modelId, prompt, selectedStyle);
+                    } catch (streamError) {
+                        console.warn('流式传输失败，尝试非流式模式:', streamError.message);
+                        try {
+                            await nonStreamAIResponse(provider, apiKey, baseUrl, modelId, prompt, selectedStyle);
+                        } catch (nonStreamError) {
+                            throw new Error(`AI请求失败: ${nonStreamError.message}`);
+                        }
+                    }
                 } else {
-                    // 测试模式
+                    console.log('使用测试模式');
                     const websiteData = generateMockWebsite(prompt, selectedStyle);
+                    generatedWebsiteData = websiteData; // 存储生成的网站数据
                     saveGeneratedSite(websiteData);
                     updatePreview(websiteData.html);
                 }
                 
+                stopCountdown();
                 updateGenerationProgress(100, '生成完成！');
                 showNotification('网站生成成功！', 'success');
+                console.log('网站生成成功');
                 
             } catch (error) {
+                console.error('生成失败:', error);
+                stopCountdown();
                 updateGenerationProgress(0, '生成失败');
                 showNotification(`生成失败: ${error.message}`, 'error');
             }
@@ -2181,6 +5272,45 @@ ${userInfo}
         // 预览按钮事件
         document.getElementById('showPreviewBtn').addEventListener('click', showFullPreview);
         document.getElementById('refreshPreviewBtn').addEventListener('click', refreshPreview);
+        document.getElementById('saveToSiteBtn').addEventListener('click', function() {
+            if (generatedWebsiteData) {
+                saveToSite(generatedWebsiteData);
+            }
+        });
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (window.currentGeneratedHtml) {
+                const websiteData = { html: window.currentGeneratedHtml };
+                saveGeneratedSite(websiteData);
+            } else if (generatedWebsiteData) {
+                saveGeneratedSite(generatedWebsiteData);
+            }
+        });
+
+        // 加载用户信息
+        function loadUserInfo() {
+            const stored = localStorage.getItem('user');
+            if (stored) {
+                try {
+                    const user = JSON.parse(stored);
+                    const displayName = user.username || user.email?.split('@')[0] || '创作者';
+                    const displayEmail = user.email || '';
+                    
+                    document.getElementById('displayUserName').textContent = displayName;
+                    document.getElementById('displayUserEmail').textContent = displayEmail;
+                    
+                    if (document.getElementById('userName')) {
+                        document.getElementById('userName').value = displayName;
+                    }
+                    
+                    const avatar = document.getElementById('userAvatar');
+                    if (avatar && user.avatar_url) {
+                        avatar.innerHTML = `<img src="${user.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse user data:', e);
+                }
+            }
+        }
 
         // 加载主题设置
         function loadTheme() {
@@ -2212,7 +5342,90 @@ ${userInfo}
         // 初始化页面
         document.addEventListener('DOMContentLoaded', () => {
             loadTheme();
+            loadUserInfo();
+            
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'landing.html';
+            });
+            
             renderStyleGrid();
+            loadSavedMedia();
+            loadPreviewSize();
+            
+            const aiProviderEl = document.getElementById('aiProvider');
+                const apiKeyEl = document.getElementById('apiKey');
+                const baseUrlEl = document.getElementById('baseUrl');
+                const modelIdEl = document.getElementById('modelId');
+                const maxTokensEl = document.getElementById('maxTokens');
+                
+                if (typeof globalAIConfig !== 'undefined') {
+                    const savedConfig = globalAIConfig.get();
+                    
+                    if (savedConfig.provider && aiProviderEl) {
+                        aiProviderEl.value = savedConfig.provider;
+                    }
+                    if (savedConfig.apiKey && apiKeyEl) {
+                        apiKeyEl.value = savedConfig.apiKey;
+                    }
+                    if (savedConfig.baseUrl && baseUrlEl) {
+                        baseUrlEl.value = savedConfig.baseUrl;
+                    }
+                    if (savedConfig.modelId && modelIdEl) {
+                        modelIdEl.value = savedConfig.modelId;
+                    }
+                    if (savedConfig.maxTokens && maxTokensEl) {
+                        maxTokensEl.value = savedConfig.maxTokens;
+                    }
+                    
+                    globalAIConfig.subscribe((newConfig) => {
+                        if (newConfig.provider && aiProviderEl) {
+                            aiProviderEl.value = newConfig.provider;
+                        }
+                        if (newConfig.apiKey && apiKeyEl) {
+                            apiKeyEl.value = newConfig.apiKey;
+                        }
+                        if (newConfig.baseUrl && baseUrlEl) {
+                            baseUrlEl.value = newConfig.baseUrl;
+                        }
+                        if (newConfig.modelId && modelIdEl) {
+                            modelIdEl.value = newConfig.modelId;
+                        }
+                        if (newConfig.maxTokens && maxTokensEl) {
+                            maxTokensEl.value = newConfig.maxTokens;
+                        }
+                    });
+                    
+                    const saveAIConfig = () => {
+                        const config = {
+                            provider: aiProviderEl ? aiProviderEl.value : '',
+                            apiKey: apiKeyEl ? apiKeyEl.value : '',
+                            baseUrl: baseUrlEl ? baseUrlEl.value : '',
+                            modelId: modelIdEl ? modelIdEl.value : '',
+                            maxTokens: maxTokensEl ? (parseInt(maxTokensEl.value) || 10000) : 10000
+                        };
+                        globalAIConfig.save(config);
+                    }
+                    
+                    if (aiProviderEl) aiProviderEl.addEventListener('change', saveAIConfig);
+                    if (apiKeyEl) apiKeyEl.addEventListener('input', saveAIConfig);
+                    if (baseUrlEl) baseUrlEl.addEventListener('input', saveAIConfig);
+                    if (modelIdEl) modelIdEl.addEventListener('input', saveAIConfig);
+                    if (maxTokensEl) maxTokensEl.addEventListener('input', saveAIConfig);
+                    
+                    document.querySelectorAll('.token-btn').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            setTimeout(saveAIConfig, 100);
+                        });
+                    });
+                    
+                } else {
+                    if (aiProviderEl) aiProviderEl.value = 'volcengine';
+                    if (apiKeyEl) apiKeyEl.value = 'b7055639-09d4-415e-8d11-0b528aec77af';
+                    if (baseUrlEl) baseUrlEl.value = 'https://ark.cn-beijing.volces.com/api/coding/v1/messages';
+                    if (modelIdEl) modelIdEl.value = 'doubao-seed-2.0-code';
+                }
         });
     </script>
 </body>

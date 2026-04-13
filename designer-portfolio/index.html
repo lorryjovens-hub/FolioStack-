@@ -894,7 +894,7 @@
         // 流量跟踪系统
         class AnalyticsTracker {
             constructor() {
-                this.baseUrl = 'http://localhost:3002/api';
+                this.baseUrl = '/api';
                 this.sessionId = this.generateSessionId();
                 this.pageStartTime = Date.now();
                 this.trackingEnabled = true;

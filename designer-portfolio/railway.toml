@@ -1,0 +1,11 @@
+[railway]
+  "version": 2
+  "buildCommand" = "cd server && npm install && npm run build"
+  "startCommand" = "cd server && npm start"
+
+[deploy]
+  region = "singapore"
+  runtime = "node"
+
+[environment]
+  NODE_ENV = "production"
