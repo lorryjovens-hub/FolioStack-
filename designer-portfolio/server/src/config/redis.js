@@ -5,17 +5,35 @@ const logger = require('./logger');
 let redisClient = null;
 
 function createRedisClient(options = {}) {
-  const redisConfig = {
-    host: config.redis.host,
-    port: config.redis.port,
-    password: config.redis.password || undefined,
-    db: config.redis.db,
-    retryDelayOnFailover: 100,
-    maxRetriesPerRequest: 3,
-    lazyConnect: true,
-    showFriendlyErrorStack: config.isDevelopment,
-    ...options,
-  };
+  // Railway 提供 REDIS_URL 环境变量
+  const redisUrl = process.env.REDIS_URL;
+  
+  let redisConfig;
+  
+  if (redisUrl) {
+    // 使用 Railway 提供的 REDIS_URL
+    redisConfig = {
+      url: redisUrl,
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+      showFriendlyErrorStack: config.isDevelopment,
+      ...options,
+    };
+  } else {
+    // 传统配置
+    redisConfig = {
+      host: config.redis.host,
+      port: config.redis.port,
+      password: config.redis.password || undefined,
+      db: config.redis.db,
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+      showFriendlyErrorStack: config.isDevelopment,
+      ...options,
+    };
+  }
 
   const client = new Redis(redisConfig);
 
