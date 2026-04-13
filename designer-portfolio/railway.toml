@@ -1,8 +1,12 @@
 [railway]
   version = 2
 
+[build]
+  command = "cd server && npm install"
+  rootDirectory = "server"
+
 [deploy]
-  startCommand = "cd server && npm start"
+  startCommand = "npm start"
   region = "singapore"
   runtime = "node"
 
