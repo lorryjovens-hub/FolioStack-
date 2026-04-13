@@ -162,7 +162,7 @@ async function startServer() {
         logger.info('HTTP server closed');
 
         try {
-          const { disconnectRedis } = require('../config/redis');
+          const { disconnectRedis } = require('./config/redis');
           await disconnectRedis();
           logger.info('Redis connection closed');
         } catch (err) {
@@ -170,7 +170,7 @@ async function startServer() {
         }
 
         try {
-          const { sequelize } = require('../config/database');
+          const { sequelize } = require('./config/database');
           await sequelize.close();
           logger.info('Database connection closed');
         } catch (err) {
