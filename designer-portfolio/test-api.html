@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试</title>
+</head>
+<body>
+    <h1>API测试</h1>
+    <div id="results"></div>
+    <script>
+        async function testAPI() {
+            const results = document.getElementById('results');
+            
+            // 测试健康检查
+            try {
+                const healthResponse = await fetch('http://localhost:3003/api/health');
+                const healthData = await healthResponse.json();
+                results.innerHTML += '<p>健康检查: ' + JSON.stringify(healthData) + '</p>';
+            } catch (err) {
+                results.innerHTML += '<p>健康检查失败: ' + err.message + '</p>';
+            }
+            
+            // 测试登录
+            try {
+                const loginResponse = await fetch('http://localhost:3003/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: '2574566046@qq.com',
+                        password: '2574566046'
+                    })
+                });
+                const loginData = await loginResponse.json();
+                results.innerHTML += '<p>登录: ' + JSON.stringify(loginData) + '</p>';
+                
+                if (loginData.token) {
+                    // 测试修改密码
+                    try {
+                        const changePasswordResponse = await fetch('http://localhost:3003/api/auth/change-password', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': 'Bearer ' + loginData.token
+                            },
+                            body: JSON.stringify({
+                                currentPassword: '2574566046',
+                                newPassword: '123456',
+                                confirmPassword: '123456'
+                            })
+                        });
+                        const changePasswordData = await changePasswordResponse.json();
+                        results.innerHTML += '<p>修改密码: ' + JSON.stringify(changePasswordData) + '</p>';
+                    } catch (err) {
+                        results.innerHTML += '<p>修改密码失败: ' + err.message + '</p>';
+                    }
+                    
+                    // 测试忘记密码
+                    try {
+                        const forgotPasswordResponse = await fetch('http://localhost:3003/api/auth/forgot-password', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: '2574566046@qq.com'
+                            })
+                        });
+                        const forgotPasswordData = await forgotPasswordResponse.json();
+                        results.innerHTML += '<p>忘记密码: ' + JSON.stringify(forgotPasswordData) + '</p>';
+                    } catch (err) {
+                        results.innerHTML += '<p>忘记密码失败: ' + err.message + '</p>';
+                    }
+                }
+            } catch (err) {
+                results.innerHTML += '<p>登录失败: ' + err.message + '</p>';
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>

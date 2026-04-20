@@ -1,415 +1,300 @@
--- 作品集网站数据库初始化脚本
--- PostgreSQL 版本
+-- FolioStack Database Initialization
+-- This script runs when PostgreSQL container starts for the first time
 
--- 创建扩展
+-- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- 1. 基础表（无外键依赖）
-CREATE TABLE IF NOT EXISTS roles (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    slug VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    is_default BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Create custom types
+CREATE TYPE user_status AS ENUM ('active', 'inactive', 'suspended', 'banned');
+CREATE TYPE audit_action AS ENUM (
+  'CREATE', 'READ', 'UPDATE', 'DELETE',
+  'LOGIN', 'LOGOUT',
+  'CHANGE_PASSWORD', 'BIND_PHONE', 'BIND_EMAIL',
+  'OAUTH_BIND', 'OAUTH_UNBIND',
+  'CREATE_ROLE', 'UPDATE_ROLE', 'DELETE_ROLE',
+  'ASSIGN_ROLES', 'INIT_PERMISSIONS',
+  'UPLOAD_FILE', 'DELETE_FILE',
+  'DEPLOY_PROJECT', 'UNDEPLOY_PROJECT'
 );
 
-CREATE TABLE IF NOT EXISTS permissions (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    slug VARCHAR(50) UNIQUE NOT NULL,
-    description TEXT,
-    category VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS categories (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    slug VARCHAR(100) UNIQUE NOT NULL,
-    description TEXT,
-    parent_id INTEGER REFERENCES categories(id),
-    icon VARCHAR(100),
-    color VARCHAR(20),
-    sort_order INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    work_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS tags (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(50) UNIQUE NOT NULL,
-    slug VARCHAR(50) UNIQUE NOT NULL,
-    color VARCHAR(20),
-    work_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS system_settings (
-    id SERIAL PRIMARY KEY,
-    key VARCHAR(100) UNIQUE NOT NULL,
-    value TEXT,
-    description TEXT,
-    type VARCHAR(20) DEFAULT 'string',
-    category VARCHAR(50),
-    is_public BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS media_settings (
-    id SERIAL PRIMARY KEY,
-    max_file_size BIGINT DEFAULT 10485760,
-    allowed_image_types JSONB NOT NULL DEFAULT '["image/jpeg", "image/png", "image/gif", "image/webp"]',
-    allowed_video_types JSONB NOT NULL DEFAULT '["video/mp4", "video/webm", "video/ogg"]',
-    allowed_document_types JSONB NOT NULL DEFAULT '["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]',
-    image_quality INTEGER DEFAULT 85,
-    thumbnail_sizes JSONB NOT NULL DEFAULT '{"small": {"width": 150, "height": 150}, "medium": {"width": 300, "height": 300}, "large": {"width": 600, "height": 600}}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS notifications (
-    id SERIAL PRIMARY KEY,
-    type VARCHAR(50) NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2. 用户相关表
+-- Users table
 CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role_id INTEGER REFERENCES roles(id),
-    status VARCHAR(20) DEFAULT 'active',
-    last_login_at TIMESTAMP,
-    last_login_ip VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  nickname VARCHAR(100),
+  bio TEXT,
+  avatar_url VARCHAR(500),
+  phone VARCHAR(20),
+  phone_verified BOOLEAN DEFAULT FALSE,
+  email_verified BOOLEAN DEFAULT FALSE,
+  role VARCHAR(50) DEFAULT 'user',
+  is_active BOOLEAN DEFAULT TRUE,
+  last_login_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- User profiles table
 CREATE TABLE IF NOT EXISTS user_profiles (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) UNIQUE,
-    display_name VARCHAR(100),
-    avatar_url VARCHAR(500),
-    bio TEXT,
-    website VARCHAR(500),
-    location VARCHAR(100),
-    phone VARCHAR(20),
-    social_links JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  nickname VARCHAR(100),
+  bio TEXT,
+  website VARCHAR(500),
+  location VARCHAR(200),
+  company VARCHAR(200),
+  position VARCHAR(200),
+  skills TEXT,
+  social_links JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS login_history (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    login_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(50) NOT NULL,
-    user_agent TEXT,
-    login_status VARCHAR(20) NOT NULL
+-- OAuth accounts table
+CREATE TABLE IF NOT EXISTS oauth_accounts (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  provider VARCHAR(50) NOT NULL,
+  provider_id VARCHAR(255) NOT NULL,
+  access_token TEXT,
+  refresh_token TEXT,
+  expires_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(provider, provider_id)
 );
 
--- 3. 角色权限关联表
+-- Refresh tokens table
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  token VARCHAR(500) UNIQUE NOT NULL,
+  expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Notification preferences table
+CREATE TABLE IF NOT EXISTS notification_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  email_notifications BOOLEAN DEFAULT TRUE,
+  push_notifications BOOLEAN DEFAULT TRUE,
+  sms_notifications BOOLEAN DEFAULT FALSE,
+  marketing_emails BOOLEAN DEFAULT FALSE,
+  security_alerts BOOLEAN DEFAULT TRUE,
+  system_updates BOOLEAN DEFAULT TRUE,
+  project_updates BOOLEAN DEFAULT TRUE,
+  comment_notifications BOOLEAN DEFAULT TRUE,
+  like_notifications BOOLEAN DEFAULT TRUE,
+  follow_notifications BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Notifications table
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type VARCHAR(50) NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  content TEXT,
+  is_read BOOLEAN DEFAULT FALSE,
+  data JSONB,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  read_at TIMESTAMP WITH TIME ZONE
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, is_read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at);
+
+-- Roles table
+CREATE TABLE IF NOT EXISTS roles (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL,
+  description TEXT,
+  is_system BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Permissions table
+CREATE TABLE IF NOT EXISTS permissions (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(100) UNIQUE NOT NULL,
+  display_name VARCHAR(100) NOT NULL,
+  module VARCHAR(50) NOT NULL,
+  action VARCHAR(50) NOT NULL,
+  resource VARCHAR(100),
+  description TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  UNIQUE(module, action)
+);
+
+-- Role permissions junction table
 CREATE TABLE IF NOT EXISTS role_permissions (
-    id SERIAL PRIMARY KEY,
-    role_id INTEGER REFERENCES roles(id),
-    permission_id INTEGER REFERENCES permissions(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
+  permission_id UUID REFERENCES permissions(id) ON DELETE CASCADE,
+  PRIMARY KEY (role_id, permission_id)
 );
 
--- 4. 作品相关表
+-- User roles junction table
+CREATE TABLE IF NOT EXISTS user_roles (
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  role_id UUID REFERENCES roles(id) ON DELETE CASCADE,
+  assigned_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  assigned_by UUID REFERENCES users(id),
+  PRIMARY KEY (user_id, role_id)
+);
+
+-- Audit logs table
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  action VARCHAR(50) NOT NULL,
+  module VARCHAR(50) NOT NULL,
+  resource_type VARCHAR(50),
+  resource_id UUID,
+  details JSONB,
+  ip_address INET,
+  user_agent TEXT,
+  status VARCHAR(20) DEFAULT 'success',
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON audit_logs(module);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created ON audit_logs(created_at);
+
+-- Works table (for portfolio items)
 CREATE TABLE IF NOT EXISTS works (
-    id SERIAL PRIMARY KEY,
-    uuid VARCHAR(36) UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
-    user_id INTEGER REFERENCES users(id),
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    status VARCHAR(20) DEFAULT 'draft',
-    visibility VARCHAR(20) DEFAULT 'public',
-    password VARCHAR(255),
-    cover_image_url VARCHAR(500),
-    view_count INTEGER DEFAULT 0,
-    like_count INTEGER DEFAULT 0,
-    comment_count INTEGER DEFAULT 0,
-    sort_order INTEGER DEFAULT 0,
-    is_featured BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    published_at TIMESTAMP
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  title VARCHAR(255) NOT NULL,
+  slug VARCHAR(255) UNIQUE,
+  description TEXT,
+  content TEXT,
+  cover_image VARCHAR(500),
+  images JSONB,
+  tags TEXT[],
+  category VARCHAR(100),
+  is_public BOOLEAN DEFAULT TRUE,
+  view_count INTEGER DEFAULT 0,
+  like_count INTEGER DEFAULT 0,
+  seo_title VARCHAR(255),
+  seo_description TEXT,
+  seo_keywords TEXT,
+  seo_og_image VARCHAR(500),
+  seo_custom_meta JSONB,
+  published_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS work_media (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    media_type VARCHAR(20) NOT NULL,
-    file_url VARCHAR(500) NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_size BIGINT NOT NULL,
-    mime_type VARCHAR(100) NOT NULL,
-    thumbnail_url VARCHAR(500),
-    sort_order INTEGER DEFAULT 0,
-    is_primary BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+CREATE INDEX IF NOT EXISTS idx_works_user ON works(user_id);
+CREATE INDEX IF NOT EXISTS idx_works_slug ON works(slug);
+CREATE INDEX IF NOT EXISTS idx_works_public ON works(is_public);
 
-CREATE TABLE IF NOT EXISTS work_versions (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    version_number INTEGER NOT NULL,
-    title VARCHAR(200) NOT NULL,
-    description TEXT,
-    changes TEXT,
-    created_by INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Insert default system roles
+INSERT INTO roles (name, display_name, description, is_system) VALUES
+  ('super_admin', '超级管理员', '拥有系统所有权限', TRUE),
+  ('admin', '管理员', '拥有大部分管理权限', TRUE),
+  ('editor', '编辑', '可以编辑和管理内容', TRUE),
+  ('user', '普通用户', '普通用户权限', TRUE)
+ON CONFLICT (name) DO NOTHING;
 
--- 5. 关联表
-CREATE TABLE IF NOT EXISTS work_categories (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    category_id INTEGER REFERENCES categories(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- Insert default permissions
+INSERT INTO permissions (name, display_name, module, action, description) VALUES
+  -- User permissions
+  ('user:create', '创建用户', 'USER', 'CREATE', '可以创建新用户'),
+  ('user:read', '查看用户', 'USER', 'READ', '可以查看用户信息'),
+  ('user:update', '更新用户', 'USER', 'UPDATE', '可以更新用户信息'),
+  ('user:delete', '删除用户', 'USER', 'DELETE', '可以删除用户'),
+  
+  -- Role permissions
+  ('role:create', '创建角色', 'ROLE', 'CREATE', '可以创建新角色'),
+  ('role:read', '查看角色', 'ROLE', 'READ', '可以查看角色信息'),
+  ('role:update', '更新角色', 'ROLE', 'UPDATE', '可以更新角色'),
+  ('role:delete', '删除角色', 'ROLE', 'DELETE', '可以删除角色'),
+  ('role:assign', '分配角色', 'ROLE', 'ASSIGN', '可以为用户分配角色'),
+  
+  -- Permission management
+  ('permission:manage', '管理权限', 'PERMISSION', 'MANAGE', '管理系统权限'),
+  
+  -- Work permissions
+  ('work:create', '创建作品', 'WORK', 'CREATE', '可以创建作品'),
+  ('work:read', '查看作品', 'WORK', 'READ', '可以查看作品'),
+  ('work:update', '更新作品', 'WORK', 'UPDATE', '可以更新作品'),
+  ('work:delete', '删除作品', 'WORK', 'DELETE', '可以删除作品'),
+  ('work:publish', '发布作品', 'WORK', 'PUBLISH', '可以发布/取消发布作品'),
+  
+  -- Audit permissions
+  ('audit:read', '查看审计日志', 'AUDIT', 'READ', '可以查看审计日志'),
+  
+  -- System permissions
+  ('system:config', '系统配置', 'SYSTEM', 'CONFIG', '可以修改系统配置'),
+  ('analytics:view', '查看分析数据', 'ANALYTICS', 'VIEW', '可以查看数据分析')
+ON CONFLICT (name) DO NOTHING;
 
-CREATE TABLE IF NOT EXISTS work_tags (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    tag_id INTEGER REFERENCES tags(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 6. 评论相关表
-CREATE TABLE IF NOT EXISTS comments (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    user_id INTEGER REFERENCES users(id),
-    parent_id INTEGER REFERENCES comments(id),
-    content TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'approved',
-    like_count INTEGER DEFAULT 0,
-    reply_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS comment_likes (
-    id SERIAL PRIMARY KEY,
-    comment_id INTEGER REFERENCES comments(id),
-    user_id INTEGER REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 7. 统计分析相关表
-CREATE TABLE IF NOT EXISTS access_logs (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    user_id INTEGER REFERENCES users(id),
-    session_id VARCHAR(100),
-    ip_address VARCHAR(50) NOT NULL,
-    user_agent TEXT,
-    referrer VARCHAR(500),
-    view_duration INTEGER,
-    access_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS analytics_daily (
-    id SERIAL PRIMARY KEY,
-    date DATE UNIQUE NOT NULL,
-    total_visits INTEGER DEFAULT 0,
-    unique_visitors INTEGER DEFAULT 0,
-    total_pageviews INTEGER DEFAULT 0,
-    average_duration INTEGER DEFAULT 0,
-    bounce_rate DECIMAL(5,2) DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS work_analytics (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    date DATE NOT NULL,
-    view_count INTEGER DEFAULT 0,
-    like_count INTEGER DEFAULT 0,
-    comment_count INTEGER DEFAULT 0,
-    share_count INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 8. 通知消息关联表
-CREATE TABLE IF NOT EXISTS user_notifications (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    notification_id INTEGER REFERENCES notifications(id),
-    title VARCHAR(200) NOT NULL,
-    content TEXT NOT NULL,
-    is_read BOOLEAN DEFAULT FALSE,
-    is_deleted BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP
-);
-
--- 9. 搜索相关表
-CREATE TABLE IF NOT EXISTS search_history (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    keyword VARCHAR(200) NOT NULL,
-    results_count INTEGER DEFAULT 0,
-    search_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ip_address VARCHAR(50) NOT NULL
-);
-
-CREATE TABLE IF NOT EXISTS search_suggestions (
-    id SERIAL PRIMARY KEY,
-    keyword VARCHAR(200) UNIQUE NOT NULL,
-    search_count INTEGER DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 10. 导出分享相关表
-CREATE TABLE IF NOT EXISTS exports (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    work_id INTEGER REFERENCES works(id),
-    export_type VARCHAR(50) NOT NULL,
-    template_id INTEGER,
-    file_url VARCHAR(500),
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-);
-
-CREATE TABLE IF NOT EXISTS shares (
-    id SERIAL PRIMARY KEY,
-    work_id INTEGER REFERENCES works(id),
-    user_id INTEGER REFERENCES users(id),
-    share_token VARCHAR(100) UNIQUE NOT NULL DEFAULT uuid_generate_v4(),
-    share_url VARCHAR(500) NOT NULL,
-    share_platform VARCHAR(50),
-    access_count INTEGER DEFAULT 0,
-    expires_at TIMESTAMP,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- 创建索引（所有表创建完成后）
--- 用户表索引
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
-CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
-CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
-CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at);
-
--- 作品表索引
-CREATE INDEX IF NOT EXISTS idx_works_user_id ON works(user_id);
-CREATE INDEX IF NOT EXISTS idx_works_status ON works(status);
-CREATE INDEX IF NOT EXISTS idx_works_visibility ON works(visibility);
-CREATE INDEX IF NOT EXISTS idx_works_created_at ON works(created_at);
-CREATE INDEX IF NOT EXISTS idx_works_published_at ON works(published_at);
-CREATE INDEX IF NOT EXISTS idx_works_sort_order ON works(sort_order);
-CREATE INDEX IF NOT EXISTS idx_works_is_featured ON works(is_featured);
-
--- 分类表索引
-CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
-CREATE INDEX IF NOT EXISTS idx_categories_parent_id ON categories(parent_id);
-CREATE INDEX IF NOT EXISTS idx_categories_is_active ON categories(is_active);
-
--- 评论表索引
-CREATE INDEX IF NOT EXISTS idx_comments_work_id ON comments(work_id);
-CREATE INDEX IF NOT EXISTS idx_comments_user_id ON comments(user_id);
-CREATE INDEX IF NOT EXISTS idx_comments_parent_id ON comments(parent_id);
-CREATE INDEX IF NOT EXISTS idx_comments_status ON comments(status);
-CREATE INDEX IF NOT EXISTS idx_comments_created_at ON comments(created_at);
-
--- 访问日志索引
-CREATE INDEX IF NOT EXISTS idx_access_logs_work_id ON access_logs(work_id);
-CREATE INDEX IF NOT EXISTS idx_access_logs_user_id ON access_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_access_logs_access_time ON access_logs(access_time);
-CREATE INDEX IF NOT EXISTS idx_access_logs_session_id ON access_logs(session_id);
-
--- 关联表索引
-CREATE INDEX IF NOT EXISTS idx_work_categories_work_id ON work_categories(work_id);
-CREATE INDEX IF NOT EXISTS idx_work_categories_category_id ON work_categories(category_id);
-CREATE INDEX IF NOT EXISTS idx_work_tags_work_id ON work_tags(work_id);
-CREATE INDEX IF NOT EXISTS idx_work_tags_tag_id ON work_tags(tag_id);
-CREATE INDEX IF NOT EXISTS idx_comment_likes_comment_id ON comment_likes(comment_id);
-CREATE INDEX IF NOT EXISTS idx_comment_likes_user_id ON comment_likes(user_id);
-
--- 统计表索引
-CREATE INDEX IF NOT EXISTS idx_analytics_daily_date ON analytics_daily(date);
-CREATE INDEX IF NOT EXISTS idx_work_analytics_work_id ON work_analytics(work_id);
-CREATE INDEX IF NOT EXISTS idx_work_analytics_date ON work_analytics(date);
-
--- 搜索表索引
-CREATE INDEX IF NOT EXISTS idx_search_history_user_id ON search_history(user_id);
-CREATE INDEX IF NOT EXISTS idx_search_history_search_time ON search_history(search_time);
-CREATE INDEX IF NOT EXISTS idx_search_suggestions_keyword ON search_suggestions(keyword);
-
--- 初始化基础数据
--- 插入角色数据
-INSERT INTO roles (name, slug, description, is_default) VALUES
-('超级管理员', 'superadmin', '拥有系统所有权限', FALSE),
-('管理员', 'admin', '拥有管理权限', FALSE),
-('编辑', 'editor', '拥有编辑权限', FALSE),
-('普通用户', 'user', '普通用户权限', TRUE)
-ON CONFLICT (slug) DO NOTHING;
-
--- 插入权限数据
-INSERT INTO permissions (name, slug, description, category) VALUES
-('用户管理', 'user_management', '管理用户', '用户管理'),
-('角色管理', 'role_management', '管理角色', '权限管理'),
-('权限管理', 'permission_management', '管理权限', '权限管理'),
-('作品管理', 'work_management', '管理作品', '作品管理'),
-('分类管理', 'category_management', '管理分类', '内容管理'),
-('标签管理', 'tag_management', '管理标签', '内容管理'),
-('评论管理', 'comment_management', '管理评论', '互动管理'),
-('系统设置', 'system_settings', '系统设置', '系统管理'),
-('数据统计', 'data_analytics', '数据统计', '数据分析'),
-('媒体管理', 'media_management', '媒体管理', '内容管理'),
-('搜索管理', 'search_management', '搜索管理', '功能管理'),
-('导出管理', 'export_management', '导出管理', '功能管理')
-ON CONFLICT (slug) DO NOTHING;
-
--- 为角色分配权限
--- 超级管理员拥有所有权限
+-- Assign all permissions to super_admin role
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id 
-FROM roles r, permissions p
-WHERE r.slug = 'superadmin'
+SELECT r.id, p.id FROM roles r CROSS JOIN permissions p WHERE r.name = 'super_admin'
 ON CONFLICT DO NOTHING;
 
--- 管理员拥有大部分权限
+-- Assign basic admin permissions to admin role
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT r.id, p.id 
-FROM roles r, permissions p
-WHERE r.slug = 'admin' AND p.slug NOT IN ('permission_management', 'role_management')
+FROM roles r 
+CROSS JOIN permissions p 
+WHERE r.name = 'admin' 
+AND p.name IN (
+  'user:create', 'user:read', 'user:update',
+  'role:read', 'role:assign',
+  'work:create', 'work:read', 'work:update', 'work:delete', 'work:publish',
+  'audit:read', 'analytics:view'
+)
 ON CONFLICT DO NOTHING;
 
--- 编辑拥有内容管理权限
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT r.id, p.id 
-FROM roles r, permissions p
-WHERE r.slug = 'editor' AND p.slug IN ('work_management', 'category_management', 'tag_management', 'media_management')
-ON CONFLICT DO NOTHING;
+-- Create updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
 
--- 初始化系统设置
-INSERT INTO system_settings (key, value, description, type, category, is_public) VALUES
-('site_name', 'FolioStack', '网站名称', 'string', '基本设置', TRUE),
-('site_description', '专业作品集管理平台', '网站描述', 'string', '基本设置', TRUE),
-('site_keywords', '作品集,设计,创意,展示', '网站关键词', 'string', '基本设置', TRUE),
-('admin_email', 'admin@foliostack.com', '管理员邮箱', 'string', '系统设置', FALSE),
-('max_work_count', '1000', '最大作品数量', 'number', '限制设置', FALSE),
-('enable_comments', 'true', '启用评论功能', 'boolean', '功能设置', FALSE),
-('enable_likes', 'true', '启用点赞功能', 'boolean', '功能设置', FALSE),
-('enable_search', 'true', '启用搜索功能', 'boolean', '功能设置', FALSE)
-ON CONFLICT (key) DO NOTHING;
+-- Apply triggers to tables with updated_at columns
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- 初始化媒体设置
-INSERT INTO media_settings DEFAULT VALUES;
+CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_oauth_accounts_updated_at BEFORE UPDATE ON oauth_accounts
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_notification_preferences_updated_at BEFORE UPDATE ON notification_preferences
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_works_updated_at BEFORE UPDATE ON works
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Output completion message
+DO $$
+BEGIN
+  RAISE NOTICE 'FolioStack database initialization completed successfully';
+  RAISE NOTICE '- Created tables: users, user_profiles, oauth_accounts, refresh_tokens';
+  RAISE NOTICE '- Created tables: notification_preferences, notifications';
+  RAISE NOTICE '- Created tables: roles, permissions, role_permissions, user_roles';
+  RAISE NOTICE '- Created table: audit_logs, works';
+  RAISE NOTICE '- Inserted default roles and permissions';
+END $$;

@@ -1,0 +1,688 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "FolioStack API",
+    "description": "API documentation for FolioStack - Portfolio Management Platform",
+    "version": "1.0.0",
+    "contact": {
+      "name": "API Support"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3002/api",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.foliostack.app/api",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management endpoints"
+    },
+    {
+      "name": "Works",
+      "description": "Work/Project management endpoints"
+    },
+    {
+      "name": "Deploy",
+      "description": "Deployment endpoints"
+    },
+    {
+      "name": "Analytics",
+      "description": "Analytics endpoints"
+    },
+    {
+      "name": "AI",
+      "description": "AI feature endpoints"
+    },
+    {
+      "name": "Upload",
+      "description": "File upload endpoints"
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password"],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 20,
+                    "pattern": "^[a-zA-Z0-9_-]+$"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 8,
+                    "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registration successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "user": { "$ref": "#/components/schemas/User" },
+                        "accessToken": { "type": "string" },
+                        "refreshToken": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation error" },
+          "409": { "description": "User already exists" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Login user",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "password"],
+                "properties": {
+                  "username": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful"
+          },
+          "401": { "description": "Invalid credentials" }
+        }
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Refresh access token",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["refreshToken"],
+                "properties": {
+                  "refreshToken": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token refreshed successfully"
+          },
+          "401": { "description": "Invalid refresh token" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Logout user",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logout successful" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/works": {
+      "get": {
+        "tags": ["Works"],
+        "summary": "Get all works",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["draft", "published", "archived"] } },
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Works retrieved successfully" }
+        }
+      },
+      "post": {
+        "tags": ["Works"],
+        "summary": "Create a new work",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "url": { "type": "string" },
+                  "tags": { "type": "array", "items": { "type": "string" } },
+                  "category": { "type": "string" },
+                  "status": { "type": "string", "enum": ["draft", "published"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Work created successfully" },
+          "400": { "description": "Validation error" },
+          "401": { "description": "Unauthorized" }
+        }
+      }
+    },
+    "/works/{id}": {
+      "get": {
+        "tags": ["Works"],
+        "summary": "Get work by ID",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Work retrieved successfully" },
+          "404": { "description": "Work not found" }
+        }
+      },
+      "patch": {
+        "tags": ["Works"],
+        "summary": "Update work",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "url": { "type": "string" },
+                  "tags": { "type": "array", "items": { "type": "string" } },
+                  "category": { "type": "string" },
+                  "status": { "type": "string", "enum": ["draft", "published", "archived"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Work updated successfully" },
+          "404": { "description": "Work not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Works"],
+        "summary": "Delete work",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Work deleted successfully" },
+          "404": { "description": "Work not found" }
+        }
+      }
+    },
+    "/works/import-url": {
+      "post": {
+        "tags": ["Works"],
+        "summary": "Import work from URL",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "format": "uri" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Work imported successfully" },
+          "400": { "description": "Invalid URL" },
+          "409": { "description": "URL already imported" }
+        }
+      }
+    },
+    "/works/import-github": {
+      "post": {
+        "tags": ["Works"],
+        "summary": "Import work from GitHub",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "GitHub repository imported successfully" },
+          "400": { "description": "Invalid GitHub URL" },
+          "404": { "description": "Repository not found" }
+        }
+      }
+    },
+    "/deploy": {
+      "get": {
+        "tags": ["Deploy"],
+        "summary": "Get all deployments",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Deployments retrieved successfully" }
+        }
+      },
+      "post": {
+        "tags": ["Deploy"],
+        "summary": "Create a new deployment",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["projectName"],
+                "properties": {
+                  "projectName": { "type": "string" },
+                  "customDomain": { "type": "string" },
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Deployment created successfully" },
+          "400": { "description": "Validation error" },
+          "409": { "description": "Deployment name already exists" }
+        }
+      }
+    },
+    "/deploy/{id}": {
+      "get": {
+        "tags": ["Deploy"],
+        "summary": "Get deployment by ID",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Deployment retrieved successfully" },
+          "404": { "description": "Deployment not found" }
+        }
+      },
+      "delete": {
+        "tags": ["Deploy"],
+        "summary": "Delete deployment",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Deployment deleted successfully" },
+          "404": { "description": "Deployment not found" }
+        }
+      }
+    },
+    "/analytics/stats/overview": {
+      "get": {
+        "tags": ["Analytics"],
+        "summary": "Get analytics overview",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "startDate", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "endDate", "in": "query", "schema": { "type": "string", "format": "date" } }
+        ],
+        "responses": {
+          "200": { "description": "Analytics retrieved successfully" }
+        }
+      }
+    },
+    "/analytics/track": {
+      "post": {
+        "tags": ["Analytics"],
+        "summary": "Track an event",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["eventType"],
+                "properties": {
+                  "eventType": { "type": "string", "enum": ["page_view", "work_view", "work_like", "work_share"] },
+                  "workId": { "type": "string" },
+                  "metadata": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Event tracked successfully" }
+        }
+      }
+    },
+    "/ai/settings": {
+      "get": {
+        "tags": ["AI"],
+        "summary": "Get AI settings",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "AI settings retrieved successfully" }
+        }
+      },
+      "patch": {
+        "tags": ["AI"],
+        "summary": "Update AI settings",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model": { "type": "string" },
+                  "temperature": { "type": "number" },
+                  "maxTokens": { "type": "integer" },
+                  "style": { "type": "string" },
+                  "apiKey": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "AI settings updated successfully" }
+        }
+      }
+    },
+    "/ai/generate": {
+      "post": {
+        "tags": ["AI"],
+        "summary": "Generate content with AI",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["prompt"],
+                "properties": {
+                  "prompt": { "type": "string" },
+                  "type": { "type": "string" },
+                  "context": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Content generated successfully" },
+          "400": { "description": "AI features not enabled or not configured" }
+        }
+      }
+    },
+    "/upload/file": {
+      "post": {
+        "tags": ["Upload"],
+        "summary": "Upload a file",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["file"],
+                "properties": {
+                  "file": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "File uploaded successfully" },
+          "400": { "description": "Invalid file type" }
+        }
+      }
+    },
+    "/upload/image": {
+      "post": {
+        "tags": ["Upload"],
+        "summary": "Upload an image",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": ["image"],
+                "properties": {
+                  "image": { "type": "string", "format": "binary" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Image uploaded successfully" },
+          "400": { "description": "Invalid file type" }
+        }
+      }
+    },
+    "/users/me/profile": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get current user profile",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Profile retrieved successfully" },
+          "401": { "description": "Unauthorized" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update current user profile",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string" },
+                  "bio": { "type": "string" },
+                  "settings": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated successfully" },
+          "409": { "description": "Username already taken" }
+        }
+      }
+    },
+    "/settings": {
+      "get": {
+        "tags": ["Users"],
+        "summary": "Get user settings",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Settings retrieved successfully" }
+        }
+      },
+      "patch": {
+        "tags": ["Users"],
+        "summary": "Update user settings",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "theme": { "type": "string", "enum": ["dark", "light"] },
+                  "language": { "type": "string" },
+                  "notifications": { "type": "object" },
+                  "privacy": { "type": "object" },
+                  "preferences": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Settings updated successfully" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "username": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "role": { "type": "string", "enum": ["user", "admin", "moderator"] },
+          "avatar": { "type": "string" },
+          "bio": { "type": "string" },
+          "isActive": { "type": "boolean" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Work": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "type": { "type": "string", "enum": ["link", "file", "github", "deployed"] },
+          "url": { "type": "string" },
+          "thumbnail": { "type": "string" },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "category": { "type": "string" },
+          "status": { "type": "string", "enum": ["draft", "published", "archived"] },
+          "featured": { "type": "boolean" },
+          "viewCount": { "type": "integer" },
+          "likeCount": { "type": "integer" },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Deployment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "userId": { "type": "string", "format": "uuid" },
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "customDomain": { "type": "string" },
+          "status": { "type": "string", "enum": ["pending", "building", "deployed", "failed", "archived"] },
+          "deployedUrl": { "type": "string" },
+          "views": { "type": "integer" },
+          "lastDeployedAt": { "type": "string", "format": "date-time" },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": { "type": "string" },
+              "message": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

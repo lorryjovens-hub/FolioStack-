@@ -1,0 +1,1 @@
+D:\user\Documents\我的个人简历figma版本\designer-portfolio\wasm\upload-wasm\target\wasm32-unknown-unknown\release\upload_wasm.wasm: D:\user\Documents\我的个人简历figma版本\designer-portfolio\wasm\upload-wasm\src\lib.rs

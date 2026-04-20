@@ -18,9 +18,13 @@ const workRoutes = require('./routes/works');
 const deployRoutes = require('./routes/deploy');
 const analyticsRoutes = require('./routes/analytics');
 const aiRoutes = require('./routes/ai');
+const { trpcExpress } = require('./trpc/middleware');
 const cloneRoutes = require('./routes/clone');
 const uploadRoutes = require('./routes/upload');
 const settingsRoutes = require('./routes/settings');
+const userCenterRoutes = require('./routes/user-center');
+const permissionManagementRoutes = require('./routes/permission-management');
+const seoRoutes = require('./routes/seo');
 
 const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
 const { rateLimiter } = require('./middleware/rateLimiter');
@@ -36,9 +40,9 @@ async function initializeApp() {
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
-        connectSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-        frameSrc: ["'none'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://cdnjs.cloudflare.com"],
+        connectSrc: ["'self'", "https://cdnjs.cloudflare.com", "http://localhost:3002", "https://ark.cn-beijing.volces.com"],
+        frameSrc: ["'self'", "https:", "http:"],
         objectSrc: ["'none'"],
       },
     },
@@ -109,6 +113,7 @@ async function initializeApp() {
   });
 
   app.use('/api/auth', rateLimiter, authRoutes);
+  app.use('/api/trpc', trpcExpress);
   app.use('/api/users', rateLimiter, userRoutes);
   app.use('/api/works', rateLimiter, workRoutes);
   app.use('/api/deploy', rateLimiter, deployRoutes);
@@ -117,6 +122,39 @@ async function initializeApp() {
   app.use('/api/clone', rateLimiter, cloneRoutes);
   app.use('/api/upload', rateLimiter, uploadRoutes);
   app.use('/api/settings', rateLimiter, settingsRoutes);
+  app.use('/api/user-center', userCenterRoutes);
+  app.use('/api/permissions', permissionManagementRoutes);
+  app.use('/api/seo', seoRoutes);
+
+  const publicDir = path.resolve(__dirname, '../../');
+  const htmlFiles = ['index.html', 'import.html', 'works.html', 'work-editor.html',
+    'settings.html', 'profile.html', 'landing.html', 'export.html', 'dashboard.html',
+    'analytics.html', 'ai-generate.html', 'test-api.html', 'reset-password.html',
+    'clone-website.html', 'ai-settings.html'];
+
+  htmlFiles.forEach(file => {
+    const filePath = path.join(publicDir, file);
+    if (fs.existsSync(filePath)) {
+      const route = '/' + file;
+      app.get(route, (req, res) => {
+        res.sendFile(filePath);
+      });
+    }
+  });
+
+  app.use(express.static(publicDir, {
+    index: false,
+    extensions: ['html', 'css', 'js', 'png', 'jpg', 'svg', 'ico', 'woff2'],
+  }));
+
+  app.get('/', (req, res) => {
+    const indexPath = path.join(publicDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).send('Index page not found');
+    }
+  });
 
   app.use(notFoundHandler);
   app.use(errorHandler);

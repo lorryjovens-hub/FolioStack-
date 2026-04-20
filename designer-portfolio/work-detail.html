@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品详情</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--obsidian);
+            color: var(--ivory);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .detail-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 48px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(201, 169, 110, 0.1);
+        }
+        
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--smoke);
+            text-decoration: none;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            transition: color 0.3s;
+        }
+        
+        .back-link:hover {
+            color: var(--champagne);
+        }
+        
+        .portfolio-link {
+            font-family: var(--font-display);
+            font-size: 20px;
+            color: var(--champagne);
+            text-decoration: none;
+        }
+        
+        /* Main Content */
+        .detail-main {
+            padding-top: 80px;
+        }
+        
+        /* Hero */
+        .detail-hero {
+            position: relative;
+            min-height: 60vh;
+            display: flex;
+            align-items: flex-end;
+            padding: 48px;
+            background: linear-gradient(180deg, rgba(10,10,10,0) 0%, var(--obsidian) 100%),
+                        linear-gradient(135deg, var(--charcoal) 0%, var(--graphite) 100%);
+        }
+        
+        .detail-hero-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+        
+        .detail-hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.6;
+        }
+        
+        .detail-hero-content {
+            max-width: 800px;
+        }
+        
+        .detail-category {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(201, 169, 110, 0.15);
+            border: 1px solid rgba(201, 169, 110, 0.3);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--champagne);
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+        }
+        
+        .detail-title {
+            font-family: var(--font-display);
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        
+        .detail-meta {
+            display: flex;
+            gap: 24px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--ash);
+        }
+        
+        .detail-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Content */
+        .detail-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 64px 48px;
+        }
+        
+        .detail-description {
+            font-size: 18px;
+            line-height: 1.8;
+            color: var(--smoke);
+            margin-bottom: 48px;
+        }
+        
+        .detail-body {
+            font-size: 16px;
+            line-height: 1.9;
+            color: var(--pearl);
+        }
+        
+        .detail-body p {
+            margin-bottom: 24px;
+        }
+        
+        .detail-body h2 {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--ivory);
+            margin: 48px 0 24px;
+        }
+        
+        .detail-body h3 {
+            font-family: var(--font-display);
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--ivory);
+            margin: 36px 0 18px;
+        }
+        
+        .detail-body img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 32px 0;
+        }
+        
+        .detail-body blockquote {
+            border-left: 3px solid var(--champagne);
+            padding-left: 24px;
+            margin: 32px 0;
+            font-style: italic;
+            color: var(--ash);
+        }
+        
+        /* Tags */
+        .detail-tags {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 48px;
+            padding-top: 48px;
+            border-top: 1px solid var(--silver);
+        }
+        
+        .detail-tag {
+            padding: 8px 16px;
+            background: var(--charcoal);
+            border: 1px solid var(--silver);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--smoke);
+            letter-spacing: 0.1em;
+        }
+        
+        /* Actions */
+        .detail-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 48px;
+        }
+        
+        .btn-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: var(--champagne);
+            color: var(--obsidian);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background: var(--champagne-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: transparent;
+            color: var(--ivory);
+            font-family: var(--font-mono);
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border: 1px solid var(--silver);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-secondary:hover {
+            border-color: var(--champagne);
+            color: var(--champagne);
+        }
+        
+        /* Comments */
+        .comments-section {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 64px 48px;
+            border-top: 1px solid var(--silver);
+        }
+        
+        .comments-title {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 32px;
+        }
+        
+        .comment-form {
+            background: var(--charcoal);
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 32px;
+        }
+        
+        .comment-form textarea {
+            width: 100%;
+            min-height: 100px;
+            background: var(--obsidian);
+            border: 1px solid var(--silver);
+            border-radius: 4px;
+            padding: 16px;
+            color: var(--ivory);
+            font-family: var(--font-body);
+            font-size: 14px;
+            resize: vertical;
+            margin-bottom: 16px;
+        }
+        
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: var(--champagne);
+        }
+        
+        .comment-form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .comment-form input {
+            flex: 1;
+            background: var(--obsidian);
+            border: 1px solid var(--silver);
+            border-radius: 4px;
+            padding: 12px 16px;
+            color: var(--ivory);
+            font-family: var(--font-body);
+            font-size: 14px;
+        }
+        
+        .comment-form input:focus {
+            outline: none;
+            border-color: var(--champagne);
+        }
+        
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        
+        .comment-item {
+            background: var(--charcoal);
+            padding: 24px;
+            border-radius: 8px;
+        }
+        
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .comment-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--champagne);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-display);
+            font-size: 16px;
+            color: var(--obsidian);
+        }
+        
+        .comment-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .comment-name {
+            font-weight: 500;
+            color: var(--ivory);
+        }
+        
+        .comment-date {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ash);
+        }
+        
+        .comment-text {
+            color: var(--smoke);
+            line-height: 1.7;
+        }
+        
+        /* Footer */
+        .detail-footer {
+            padding: 48px;
+            text-align: center;
+            border-top: 1px solid var(--silver);
+        }
+        
+        .detail-footer p {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--ash);
+        }
+        
+        /* Loading & Error */
+        .loading-container, .error-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+        
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 2px solid var(--silver);
+            border-top-color: var(--champagne);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .detail-header {
+                padding: 16px 24px;
+            }
+            
+            .detail-hero {
+                padding: 32px 24px;
+                min-height: 50vh;
+            }
+            
+            .detail-content, .comments-section {
+                padding: 48px 24px;
+            }
+            
+            .detail-meta {
+                flex-wrap: wrap;
+            }
+            
+            .detail-actions {
+                flex-direction: column;
+            }
+            
+            .comment-form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p style="color: var(--ash); font-family: var(--font-mono); font-size: 12px;">加载中...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        
+        let currentWork = null;
+        let currentUser = null;
+        
+        // 从URL获取参数
+        function getParamsFromURL() {
+            const path = window.location.pathname;
+            const match = path.match(/\/portfolio\/([^\/]+)\/work\/([^\/]+)/);
+            if (match) {
+                return { username: match[1], workId: match[2] };
+            }
+            return null;
+        }
+        
+        // 获取分类名
+        function getCategoryName(category) {
+            const map = {
+                design: '设计', development: '开发', video: '视频',
+                photography: '摄影', writing: '写作', other: '其他'
+            };
+            return map[category] || category || '作品';
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+        }
+        
+        // 渲染作品详情
+        function renderWorkDetail(data) {
+            const { user, work } = data;
+            currentWork = work;
+            currentUser = user;
+            
+            const app = document.getElementById('app');
+            
+            // 解析内容（支持Markdown简单格式）
+            const contentHtml = work.content ? parseMarkdown(work.content) : '';
+            
+            app.innerHTML = `
+                <header class="detail-header">
+                    <a href="/portfolio/${user.username}" class="back-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        返回作品集
+                    </a>
+                    <a href="/portfolio/${user.username}" class="portfolio-link">${user.displayName || user.username}</a>
+                </header>
+                
+                <main class="detail-main">
+                    <section class="detail-hero">
+                        ${work.cover_url ? `
+                            <div class="detail-hero-image">
+                                <img src="${work.cover_url}" alt="${work.title}">
+                            </div>
+                        ` : ''}
+                        <div class="detail-hero-content">
+                            ${work.category ? `<span class="detail-category">${getCategoryName(work.category)}</span>` : ''}
+                            <h1 class="detail-title">${work.title}</h1>
+                            <div class="detail-meta">
+                                <span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    ${work.view_count || 0} 次浏览
+                                </span>
+                                <span>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                    </svg>
+                                    ${work.likes || 0} 喜欢
+                                </span>
+                                ${work.created_at ? `
+                                    <span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                                        </svg>
+                                        ${formatDate(work.created_at)}
+                                    </span>
+                                ` : ''}
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <article class="detail-content">
+                        ${work.description ? `<p class="detail-description">${work.description}</p>` : ''}
+                        ${contentHtml ? `<div class="detail-body">${contentHtml}</div>` : ''}
+                        
+                        ${work.tags ? `
+                            <div class="detail-tags">
+                                ${work.tags.split(',').map(tag => `
+                                    <span class="detail-tag">${tag.trim()}</span>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="detail-actions">
+                            ${work.url ? `
+                                <a href="${work.url}" target="_blank" rel="noopener" class="btn-primary">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                                        <polyline points="15 3 21 3 21 9"></polyline>
+                                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                                    </svg>
+                                    访问项目
+                                </a>
+                            ` : ''}
+                            <button class="btn-secondary" onclick="shareWork()">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                                分享
+                            </button>
+                        </div>
+                    </article>
+                    
+                    <section class="comments-section">
+                        <h2 class="comments-title">评论</h2>
+                        
+                        <form class="comment-form" onsubmit="submitComment(event)">
+                            <div class="comment-form-row">
+                                <input type="text" id="visitorName" placeholder="您的名字" required>
+                                <input type="email" id="visitorEmail" placeholder="您的邮箱（可选）">
+                            </div>
+                            <textarea id="commentContent" placeholder="写下您的评论..." required></textarea>
+                            <button type="submit" class="btn-primary">发表评论</button>
+                        </form>
+                        
+                        <div class="comment-list" id="commentList">
+                            <p style="color: var(--ash); text-align: center; padding: 32px;">暂无评论，来发表第一条评论吧！</p>
+                        </div>
+                    </section>
+                </main>
+                
+                <footer class="detail-footer">
+                    <p>&copy; ${new Date().getFullYear()} ${user.displayName || user.username}. All rights reserved.</p>
+                </footer>
+            `;
+            
+            // 加载评论
+            loadComments();
+            
+            // 跟踪页面访问
+            trackPageView(work.uuid);
+        }
+        
+        // 简单Markdown解析
+        function parseMarkdown(text) {
+            return text
+                .replace(/^### (.*$)/gim, '<h3>$1</h3>')
+                .replace(/^## (.*$)/gim, '<h2>$1</h2>')
+                .replace(/^# (.*$)/gim, '<h1>$1</h1>')
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/\*(.*)\*/gim, '<em>$1</em>')
+                .replace(/!\[(.*?)\]\((.*?)\)/gim, '<img src="$2" alt="$1">')
+                .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank">$1</a>')
+                .replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>')
+                .replace(/\n/gim, '<br>');
+        }
+        
+        // 加载评论
+        async function loadComments() {
+            const params = getParamsFromURL();
+            if (!params) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/works/${params.workId}/comments`);
+                const result = await response.json();
+                
+                if (result.success && result.data && result.data.length > 0) {
+                    const commentList = document.getElementById('commentList');
+                    commentList.innerHTML = result.data.map(comment => `
+                        <div class="comment-item">
+                            <div class="comment-header">
+                                <div class="comment-author">
+                                    <div class="comment-avatar">
+                                        ${comment.avatar_url ? `<img src="${comment.avatar_url}" alt="">` : (comment.visitor_name || comment.display_name || '匿').charAt(0).toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div class="comment-name">${comment.visitor_name || comment.display_name || '匿名用户'}</div>
+                                        <div class="comment-date">${formatDate(comment.created_at)}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p class="comment-text">${comment.content}</p>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Load comments error:', err);
+            }
+        }
+        
+        // 提交评论
+        async function submitComment(event) {
+            event.preventDefault();
+            
+            const params = getParamsFromURL();
+            if (!params) return;
+            
+            const name = document.getElementById('visitorName').value;
+            const email = document.getElementById('visitorEmail').value;
+            const content = document.getElementById('commentContent').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/works/${params.workId}/comments`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        visitorName: name,
+                        visitorEmail: email,
+                        content: content
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('评论已提交，等待审核后显示');
+                    document.getElementById('visitorName').value = '';
+                    document.getElementById('visitorEmail').value = '';
+                    document.getElementById('commentContent').value = '';
+                } else {
+                    alert(result.error || '提交失败');
+                }
+            } catch (err) {
+                console.error('Submit comment error:', err);
+                alert('提交失败，请稍后重试');
+            }
+        }
+        
+        // 分享作品
+        function shareWork() {
+            if (navigator.share) {
+                navigator.share({
+                    title: currentWork?.title || '作品分享',
+                    url: window.location.href
+                });
+            } else {
+                // 复制链接到剪贴板
+                navigator.clipboard.writeText(window.location.href);
+                alert('链接已复制到剪贴板');
+            }
+        }
+        
+        // 跟踪页面访问
+        async function trackPageView(workId) {
+            try {
+                await fetch(`${API_BASE}/analytics/track`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId: getSessionId(),
+                        page: window.location.pathname,
+                        workId: workId,
+                        referrer: document.referrer,
+                        userAgent: navigator.userAgent,
+                        screenWidth: window.screen.width,
+                        screenHeight: window.screen.height
+                    })
+                });
+            } catch (e) {
+                console.log('Analytics tracking failed');
+            }
+        }
+        
+        // 获取会话ID
+        function getSessionId() {
+            let sessionId = sessionStorage.getItem('portfolio_session_id');
+            if (!sessionId) {
+                sessionId = 'sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('portfolio_session_id', sessionId);
+            }
+            return sessionId;
+        }
+        
+        // 渲染错误
+        function renderError(message) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="error-container">
+                    <div style="width: 80px; height: 80px; border: 2px solid var(--rose-gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36px; color: var(--rose-gold);">!</div>
+                    <h1 style="font-family: var(--font-display); font-size: 32px; color: var(--ivory);">出错了</h1>
+                    <p style="color: var(--ash); text-align: center; max-width: 400px;">${message}</p>
+                    <a href="/" style="color: var(--champagne); text-decoration: none; font-family: var(--font-mono); font-size: 12px;">返回首页</a>
+                </div>
+            `;
+        }
+        
+        // 加载数据
+        async function loadWorkDetail() {
+            const params = getParamsFromURL();
+            
+            if (!params) {
+                renderError('无效的链接');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/portfolio/${params.username}/work/${params.workId}`);
+                const result = await response.json();
+                
+                if (!response.ok || !result.success) {
+                    renderError(result.error || '加载作品失败');
+                    return;
+                }
+                
+                renderWorkDetail(result);
+            } catch (err) {
+                console.error('Load work detail error:', err);
+                renderError('网络错误，请稍后重试');
+            }
+        }
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', loadWorkDetail);
+    </script>
+</body>
+</html>

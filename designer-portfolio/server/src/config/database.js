@@ -1,5 +1,6 @@
 const { Sequelize } = require('sequelize');
 const config = require('./index');
+const path = require('path');
 
 // Railway 提供 DATABASE_URL 环境变量
 const databaseUrl = process.env.DATABASE_URL;
@@ -30,29 +31,17 @@ if (databaseUrl) {
     },
   });
 } else {
-  // 传统配置
-  sequelize = new Sequelize(config.db.name, config.db.user, config.db.password, {
-    host: config.db.host,
-    port: config.db.port,
-    dialect: 'postgres',
+  // 使用SQLite作为本地开发环境的数据库
+  const dbPath = path.resolve(__dirname, '../../foliostack.db');
+  sequelize = new Sequelize({
+    dialect: 'sqlite',
+    storage: dbPath,
     logging: config.isDevelopment ? (msg) => console.log(msg) : false,
-    pool: {
-      max: config.db.pool.max,
-      min: config.db.pool.min,
-      acquire: config.db.pool.acquire,
-      idle: config.db.pool.idle,
-    },
     define: {
       timestamps: true,
       underscored: true,
       createdAt: 'created_at',
       updatedAt: 'updated_at',
-    },
-    dialectOptions: {
-      ssl: config.isProduction ? {
-        require: true,
-        rejectUnauthorized: false,
-      } : false,
     },
   });
 }

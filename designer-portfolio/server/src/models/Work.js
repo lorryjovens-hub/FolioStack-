@@ -56,7 +56,7 @@ const Work = sequelize.define('Work', {
     allowNull: true,
   },
   tags: {
-    type: DataTypes.ARRAY(DataTypes.STRING),
+    type: DataTypes.JSON,
     defaultValue: [],
   },
   category: {

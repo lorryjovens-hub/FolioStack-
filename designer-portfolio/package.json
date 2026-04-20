@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
+    "@libsql/client": "^0.17.2",
     "adm-zip": "^0.5.17",
     "axios": "^1.6.5",
     "bcrypt": "^6.0.0",

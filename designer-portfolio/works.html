@@ -881,7 +881,7 @@
 
     <script>
     (function() {
-        const API_BASE = 'http://localhost:3002/api';
+        const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('token');
         let currentUser = null;
         let works = [];
@@ -1004,7 +1004,8 @@
             try {
                 const response = await fetchWithAuth('/works');
                 if (response && response.ok) {
-                    works = await response.json();
+                    const result = await response.json();
+                    works = result.data || result || [];
                     filteredWorks = [...works];
                     updateStats();
                     renderWorks();

@@ -1,5 +1,6 @@
 const logger = require('../config/logger');
 const { ApiError } = require('../utils/response');
+const config = require('../config');
 
 function notFoundHandler(req, res, next) {
   const error = new ApiError(404, `Route ${req.method} ${req.originalUrl} not found`);

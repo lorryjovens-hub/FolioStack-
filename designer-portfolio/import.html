@@ -309,6 +309,52 @@
         .auto-detect-info svg { width: 18px; height: 18px; stroke: var(--emerald); flex-shrink: 0; margin-top: 2px; }
         .auto-detect-info p { font-size: 12px; color: var(--ash); line-height: 1.6; }
 
+        .publish-section { margin-top: 40px; padding-top: 40px; border-top: 1px solid rgba(201, 169, 110, 0.08); }
+        .publish-section .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 16px; }
+        .publish-section .section-title { font-family: var(--font-display); font-size: 28px; font-weight: 400; color: var(--ivory); }
+        .publish-section .section-title em { font-style: italic; color: var(--champagne); }
+        .publish-batch-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .publish-batch-actions .btn { font-size: 10px; padding: 8px 16px; }
+        .publish-select-info { font-family: var(--font-mono); font-size: 11px; color: var(--ash); letter-spacing: 0.1em; }
+
+        .publish-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+        .publish-card { background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(20, 20, 20, 0.98)); border: 1px solid rgba(201, 169, 110, 0.08); border-radius: 4px; padding: 20px; transition: border-color 0.3s, box-shadow 0.3s; position: relative; }
+        .publish-card:hover { border-color: rgba(201, 169, 110, 0.2); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3); }
+        .publish-card.selected { border-color: var(--champagne); background: linear-gradient(135deg, rgba(201, 169, 110, 0.05), rgba(20, 20, 20, 0.98)); }
+        .publish-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+        .publish-card-checkbox { width: 20px; height: 20px; border: 1.5px solid var(--silver); border-radius: 3px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; flex-shrink: 0; }
+        .publish-card-checkbox:hover { border-color: var(--champagne); }
+        .publish-card.selected .publish-card-checkbox { background: var(--champagne); border-color: var(--champagne); }
+        .publish-card.selected .publish-card-checkbox::after { content: '✓'; color: var(--obsidian); font-size: 12px; font-weight: 700; }
+        .publish-card-title { font-family: var(--font-display); font-size: 18px; font-weight: 400; color: var(--ivory); margin-bottom: 4px; flex: 1; margin-right: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .publish-card-url { font-family: var(--font-mono); font-size: 10px; color: var(--ash); margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .publish-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+        .publish-card-category { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--champagne); padding: 3px 8px; background: rgba(201, 169, 110, 0.1); border-radius: 2px; }
+        .publish-card-tag { font-family: var(--font-mono); font-size: 9px; color: var(--mist); letter-spacing: 0.05em; }
+        .publish-card-footer { display: flex; align-items: center; justify-content: space-between; }
+        .publish-status { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; }
+        .publish-status.published { background: rgba(42, 107, 90, 0.15); color: var(--emerald); border: 1px solid rgba(42, 107, 90, 0.3); }
+        .publish-status.draft { background: rgba(201, 169, 110, 0.1); color: var(--champagne); border: 1px solid rgba(201, 169, 110, 0.2); }
+        .publish-status.featured { background: rgba(201, 169, 110, 0.15); color: var(--champagne-light); border: 1px solid rgba(201, 169, 110, 0.3); }
+        .publish-card-actions { display: flex; gap: 8px; }
+        .publish-action-btn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: var(--graphite); border: 1px solid var(--silver); border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+        .publish-action-btn:hover { border-color: var(--champagne); background: rgba(201, 169, 110, 0.1); }
+        .publish-action-btn svg { width: 14px; height: 14px; stroke: var(--ash); fill: none; }
+        .publish-action-btn:hover svg { stroke: var(--champagne); }
+        .publish-action-btn.active svg { stroke: var(--champagne); }
+        .publish-action-btn.feature-btn.active { border-color: var(--champagne); background: rgba(201, 169, 110, 0.15); }
+        .publish-empty { text-align: center; padding: 60px 24px; color: var(--ash); }
+        .publish-empty svg { width: 48px; height: 48px; stroke: var(--mist); margin-bottom: 16px; }
+        .publish-empty p { font-size: 14px; margin-bottom: 8px; }
+        .publish-empty .hint { font-size: 12px; color: var(--mist); }
+        .publish-loading { text-align: center; padding: 40px; }
+        .publish-loading .spinner { width: 32px; height: 32px; border: 2px solid var(--silver); border-top-color: var(--champagne); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .publish-stats { display: flex; gap: 24px; margin-bottom: 24px; }
+        .publish-stat { display: flex; flex-direction: column; align-items: center; padding: 16px 24px; background: var(--graphite); border-radius: 4px; min-width: 100px; }
+        .publish-stat-number { font-family: var(--display); font-size: 28px; font-weight: 300; color: var(--champagne); }
+        .publish-stat-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ash); margin-top: 4px; }
+
         @media (max-width: 1200px) {
             .import-container { grid-template-columns: 1fr; }
         }
@@ -321,6 +367,8 @@
             .import-container { padding: 24px; }
             .format-grid { grid-template-columns: 1fr; }
             .github-input-group { flex-direction: column; }
+            .publish-grid { grid-template-columns: 1fr; }
+            .publish-stats { flex-wrap: wrap; }
         }
     </style>
 </head>
@@ -328,7 +376,7 @@
     <div class="dashboard-layout">
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <a href="dashboard.html" class="sidebar-logo">Folio<span>Stack</span></a>
+                <a href="landing.html" class="sidebar-logo">Folio<span>Stack</span></a>
             </div>
             <nav class="sidebar-nav">
                 <div class="nav-section">
@@ -340,6 +388,7 @@
                     <a href="works.html" class="nav-item">
                         <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                         作品管理
+                        <span class="nav-badge" id="worksCount">0</span>
                     </a>
                     <a href="analytics.html" class="nav-item">
                         <svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
@@ -391,6 +440,10 @@
             <header class="page-header">
                 <h1 class="page-title">导入<em>作品</em></h1>
                 <div class="page-actions">
+                    <a href="index.html" class="btn btn-primary" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                        查看前台
+                    </a>
                     <a href="works.html" class="btn btn-secondary">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                         返回列表
@@ -496,144 +549,166 @@
                 <div class="auto-detect-info">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         <p>系统支持自动识别 Vercel、Netlify、GitHub Pages 等平台的部署链接，自动提取项目名称、描述和技术栈信息。</p>
+                </div>
+            </div>
+
+            <div class="import-panel" style="margin-top: 32px;">
+                <div class="panel-header">
+                    <div class="panel-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <h3 class="panel-title">部署<em>项目</em></h3>
+                </div>
+                <p class="panel-desc">上传你的网站项目（HTML、CSS、JS文件），系统将自动部署并生成访问链接，类似 Netlify/Vercel 的部署体验。</p>
+                <div class="deploy-zone" id="deployZone">
+                    <div class="deploy-zone-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="deploy-zone-text">拖拽项目文件到此处部署</div>
+                    <div class="deploy-zone-hint">支持 ZIP 压缩包或单个 HTML 文件</div>
+                    <button class="deploy-btn" id="browseDeployBtn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        选择项目文件
+                    </button>
+                </div>
+                <input type="file" id="deployFileInput" style="display: none;" accept=".zip,.html">
+                <div class="deploy-settings" style="margin: 20px 0;">
+                    <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 12px;">部署设置</h4>
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">项目名称</label>
+                            <input type="text" id="deployProjectName" placeholder="输入项目名称" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                        </div>
+                        <div class="setting-item">
+                            <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">自定义域名（可选）</label>
+                            <input type="text" id="deployCustomDomain" placeholder="your-project.yourdomain.com" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                        </div>
                     </div>
                 </div>
-
-                <div class="import-panel">
-                    <div class="panel-header">
-                        <div class="panel-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                        </div>
-                        <h3 class="panel-title">部署<em>项目</em></h3>
+                <div class="deploy-progress" id="deployProgress" style="display: none;">
+                    <div class="progress-header">
+                        <span class="progress-label">正在部署...</span>
+                        <span class="progress-percent" id="deployProgressPercent">0%</span>
                     </div>
-                    <p class="panel-desc">上传你的网站项目（HTML、CSS、JS文件），系统将自动部署并生成访问链接，类似 Netlify/Vercel 的部署体验。</p>
-
-                    <div class="deploy-zone" id="deployZone">
-                        <div class="deploy-zone-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="deployProgressFill" style="width: 0%"></div>
+                    </div>
+                    <div class="deploy-steps" style="margin-top: 12px;">
+                        <div class="deploy-step" id="deployStep1"><div class="step-icon">⏳</div><div class="step-text">上传文件</div></div>
+                        <div class="deploy-step" id="deployStep2"><div class="step-icon">⏳</div><div class="step-text">解析项目结构</div></div>
+                        <div class="deploy-step" id="deployStep3"><div class="step-icon">⏳</div><div class="step-text">构建静态资源</div></div>
+                        <div class="deploy-step" id="deployStep4"><div class="step-icon">⏳</div><div class="step-text">部署到服务器</div></div>
+                        <div class="deploy-step" id="deployStep5"><div class="step-icon">⏳</div><div class="step-text">生成访问链接</div></div>
+                    </div>
+                    <p class="progress-detail" id="deployProgressDetail"></p>
+                </div>
+                <div class="deploy-result" id="deployResult" style="display: none;">
+                    <div class="result-icon" id="deployResultIcon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="deployResultSvg"></svg>
+                    </div>
+                    <p class="result-message" id="deployResultMessage"></p>
+                    <div class="deploy-links" style="margin-top: 16px;">
+                        <div class="deploy-link">
+                            <label style="font-size: 12px; color: var(--ash); margin-bottom: 4px; display: block;">访问链接</label>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="deployAccessLink" readonly style="flex: 1; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
+                                <button class="btn btn-sm" id="copyLinkBtn" style="padding: 8px 12px;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    复制
+                                </button>
+                            </div>
                         </div>
-                        <div class="deploy-zone-text">拖拽项目文件到此处部署</div>
-                        <div class="deploy-zone-hint">支持 ZIP 压缩包或单个 HTML 文件</div>
-                        <button class="deploy-btn" id="browseDeployBtn">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                            选择项目文件
+                    </div>
+                    <div class="deploy-actions" style="margin-top: 16px; display: flex; gap: 12px;">
+                        <button class="btn btn-primary" id="viewDeployBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            查看部署
+                        </button>
+                        <button class="btn btn-secondary" id="newDeployBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            新部署
                         </button>
                     </div>
-                    <input type="file" id="deployFileInput" style="display: none;" accept=".zip,.html">
-
-                    <div class="deploy-settings" style="margin: 20px 0;">
-                        <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 12px;">部署设置</h4>
-                        <div class="settings-grid">
-                            <div class="setting-item">
-                                <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">项目名称</label>
-                                <input type="text" id="deployProjectName" placeholder="输入项目名称" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
-                            </div>
-                            <div class="setting-item">
-                                <label style="font-size: 13px; color: var(--champagne); margin-bottom: 4px; display: block;">自定义域名（可选）</label>
-                                <input type="text" id="deployCustomDomain" placeholder="your-project.yourdomain.com" style="width: 100%; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="deploy-progress" id="deployProgress" style="display: none;">
-                        <div class="progress-header">
-                            <span class="progress-label">正在部署...</span>
-                            <span class="progress-percent" id="deployProgressPercent">0%</span>
-                        </div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="deployProgressFill" style="width: 0%"></div>
-                        </div>
-                        <div class="deploy-steps" style="margin-top: 12px;">
-                            <div class="deploy-step" id="deployStep1">
-                                <div class="step-icon">⏳</div>
-                                <div class="step-text">上传文件</div>
-                            </div>
-                            <div class="deploy-step" id="deployStep2">
-                                <div class="step-icon">⏳</div>
-                                <div class="step-text">解析项目结构</div>
-                            </div>
-                            <div class="deploy-step" id="deployStep3">
-                                <div class="step-icon">⏳</div>
-                                <div class="step-text">构建静态资源</div>
-                            </div>
-                            <div class="deploy-step" id="deployStep4">
-                                <div class="step-icon">⏳</div>
-                                <div class="step-text">部署到服务器</div>
-                            </div>
-                            <div class="deploy-step" id="deployStep5">
-                                <div class="step-icon">⏳</div>
-                                <div class="step-text">生成访问链接</div>
-                            </div>
-                        </div>
-                        <p class="progress-detail" id="deployProgressDetail"></p>
-                    </div>
-
-                    <div class="deploy-result" id="deployResult" style="display: none;">
-                        <div class="result-icon" id="deployResultIcon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="deployResultSvg"></svg>
-                        </div>
-                        <p class="result-message" id="deployResultMessage"></p>
-                        <div class="deploy-links" style="margin-top: 16px;">
-                            <div class="deploy-link">
-                                <label style="font-size: 12px; color: var(--ash); margin-bottom: 4px; display: block;">访问链接</label>
-                                <div style="display: flex; gap: 8px;">
-                                    <input type="text" id="deployAccessLink" readonly style="flex: 1; padding: 8px 12px; background: var(--graphite); border: 1px solid var(--obsidian); border-radius: 6px; color: var(--champagne); font-size: 13px;">
-                                    <button class="btn btn-sm" id="copyLinkBtn" style="padding: 8px 12px;">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                                        复制
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="deploy-actions" style="margin-top: 16px; display: flex; gap: 12px;">
-                            <button class="btn btn-primary" id="viewDeployBtn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                查看部署
-                            </button>
-                            <button class="btn btn-secondary" id="newDeployBtn">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                新部署
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="deploy-features">
-                        <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 16px;">部署特性</h4>
-                        <div class="feature-grid">
-                            <div class="feature-item">
-                                <div class="feature-icon">⚡</div>
-                                <div class="feature-text"><strong>快速部署</strong>秒级部署速度</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon">🔒</div>
-                                <div class="feature-text"><strong>HTTPS 支持</strong>自动配置 SSL</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon">🌐</div>
-                                <div class="feature-text"><strong>全球CDN</strong>高速访问</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon">🔄</div>
-                                <div class="feature-text"><strong>自动构建</strong>支持现代框架</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon">📊</div>
-                                <div class="feature-text"><strong>访问统计</strong>实时流量监控</div>
-                            </div>
-                            <div class="feature-item">
-                                <div class="feature-icon">🎯</div>
-                                <div class="feature-text"><strong>自定义域名</strong>支持绑定域名</div>
-                            </div>
-                        </div>
+                </div>
+                <div class="deploy-features">
+                    <h4 style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ash); margin-bottom: 16px;">部署特性</h4>
+                    <div class="feature-grid">
+                        <div class="feature-item"><div class="feature-icon">⚡</div><div class="feature-text"><strong>快速部署</strong>秒级部署速度</div></div>
+                        <div class="feature-item"><div class="feature-icon">🔒</div><div class="feature-text"><strong>HTTPS 支持</strong>自动配置 SSL</div></div>
+                        <div class="feature-item"><div class="feature-icon">🌐</div><div class="feature-text"><strong>全球CDN</strong>高速访问</div></div>
+                        <div class="feature-item"><div class="feature-icon">🔄</div><div class="feature-text"><strong>自动构建</strong>支持现代框架</div></div>
+                        <div class="feature-item"><div class="feature-icon">📊</div><div class="feature-text"><strong>访问统计</strong>实时流量监控</div></div>
+                        <div class="feature-item"><div class="feature-icon">🎯</div><div class="feature-text"><strong>自定义域名</strong>支持绑定域名</div></div>
                     </div>
                 </div>
             </div>
+
+            <section class="publish-section" id="publishSection">
+                <div class="section-header">
+                    <h2 class="section-title">发布<em>管理</em></h2>
+                    <div class="publish-batch-actions">
+                        <span class="publish-select-info" id="publishSelectInfo">已选择 0 个作品</span>
+                        <button class="btn btn-primary" id="batchPublishBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            批量发布
+                        </button>
+                        <button class="btn btn-secondary" id="batchUnpublishBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                            批量取消
+                        </button>
+                        <button class="btn btn-secondary" id="selectAllBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                            全选
+                        </button>
+                        <button class="btn btn-secondary" id="refreshPublishBtn">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            刷新
+                        </button>
+                        <a href="index.html" class="btn btn-primary" target="_blank" id="viewFrontendBtn" style="background: var(--emerald);">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                            查看前台
+                        </a>
+                    </div>
+                </div>
+
+                <div class="publish-stats" id="publishStats">
+                    <div class="publish-stat">
+                        <span class="publish-stat-number" id="statTotal">0</span>
+                        <span class="publish-stat-label">全部作品</span>
+                    </div>
+                    <div class="publish-stat">
+                        <span class="publish-stat-number" id="statPublished">0</span>
+                        <span class="publish-stat-label">已发布</span>
+                    </div>
+                    <div class="publish-stat">
+                        <span class="publish-stat-number" id="statDraft">0</span>
+                        <span class="publish-stat-label">草稿</span>
+                    </div>
+                    <div class="publish-stat">
+                        <span class="publish-stat-number" id="statFeatured">0</span>
+                        <span class="publish-stat-label">精选</span>
+                    </div>
+                </div>
+
+                <div class="publish-loading" id="publishLoading">
+                    <div class="spinner"></div>
+                    <p style="color: var(--ash); font-size: 13px;">加载作品中...</p>
+                </div>
+
+                <div class="publish-grid" id="publishGrid" style="display: none;"></div>
+
+                <div class="publish-empty" id="publishEmpty" style="display: none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <p>暂无作品</p>
+                    <p class="hint">导入作品后即可在此管理发布状态</p>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
     (function() {
-        const API_BASE = 'http://localhost:3002/api';
+        const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('token');
 
         if (!authToken) {
@@ -1186,6 +1261,240 @@
             window.location.href = 'landing.html';
         });
 
+        let publishWorks = [];
+        let selectedPublishIds = new Set();
+
+        async function loadPublishWorks() {
+            const loading = document.getElementById('publishLoading');
+            const grid = document.getElementById('publishGrid');
+            const empty = document.getElementById('publishEmpty');
+
+            loading.style.display = 'block';
+            grid.style.display = 'none';
+            empty.style.display = 'none';
+
+            try {
+                const response = await fetchWithAuth('/works?limit=100');
+                if (response && response.ok) {
+                    const result = await response.json();
+                    publishWorks = result.data || result.works || [];
+                    if (Array.isArray(publishWorks)) {
+                        publishWorks = publishWorks;
+                    } else if (publishWorks && Array.isArray(publishWorks.works)) {
+                        publishWorks = publishWorks.works;
+                    }
+                    renderPublishGrid();
+                    updatePublishStats();
+                } else {
+                    loading.style.display = 'none';
+                    empty.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Failed to load works:', err);
+                loading.style.display = 'none';
+                empty.style.display = 'block';
+            }
+        }
+
+        function renderPublishGrid() {
+            const loading = document.getElementById('publishLoading');
+            const grid = document.getElementById('publishGrid');
+            const empty = document.getElementById('publishEmpty');
+
+            loading.style.display = 'none';
+
+            if (publishWorks.length === 0) {
+                grid.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+
+            empty.style.display = 'none';
+            grid.style.display = 'grid';
+            grid.innerHTML = '';
+
+            publishWorks.forEach(work => {
+                const card = document.createElement('div');
+                card.className = `publish-card${selectedPublishIds.has(work.id) ? ' selected' : ''}`;
+                card.dataset.id = work.id;
+
+                const statusClass = work.featured ? 'featured' : (work.status === 'published' ? 'published' : 'draft');
+                const statusText = work.featured ? '★ 精选' : (work.status === 'published' ? '已发布' : '草稿');
+                const tags = (work.tags || []).slice(0, 3).map(t => `<span class="publish-card-tag">#${t}</span>`).join('');
+
+                card.innerHTML = `
+                    <div class="publish-card-header">
+                        <div class="publish-card-title" title="${work.title || ''}">${work.title || '未命名'}</div>
+                        <div class="publish-card-checkbox" data-id="${work.id}"></div>
+                    </div>
+                    <div class="publish-card-url" title="${work.url || ''}">${work.url || '无链接'}</div>
+                    <div class="publish-card-meta">
+                        ${work.category ? `<span class="publish-card-category">${work.category}</span>` : ''}
+                        ${tags}
+                    </div>
+                    <div class="publish-card-footer">
+                        <span class="publish-status ${statusClass}">${statusText}</span>
+                        <div class="publish-card-actions">
+                            <button class="publish-action-btn ${work.status === 'published' ? 'active' : ''}" data-action="publish" data-id="${work.id}" title="${work.status === 'published' ? '取消发布' : '发布'}">
+                                <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+                            </button>
+                            <button class="publish-action-btn feature-btn ${work.featured ? 'active' : ''}" data-action="feature" data-id="${work.id}" title="${work.featured ? '取消精选' : '设为精选'}">
+                                <svg viewBox="0 0 24 24" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            grid.querySelectorAll('.publish-card-checkbox').forEach(cb => {
+                cb.addEventListener('click', (e) => {
+                    const id = parseInt(e.target.dataset.id);
+                    if (selectedPublishIds.has(id)) {
+                        selectedPublishIds.delete(id);
+                    } else {
+                        selectedPublishIds.add(id);
+                    }
+                    renderPublishGrid();
+                    updateSelectInfo();
+                });
+            });
+
+            grid.querySelectorAll('.publish-action-btn').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    const action = btn.dataset.action;
+                    const id = parseInt(btn.dataset.id);
+                    if (action === 'publish') {
+                        await togglePublish(id);
+                    } else if (action === 'feature') {
+                        await toggleFeature(id);
+                    }
+                });
+            });
+        }
+
+        function updatePublishStats() {
+            const total = publishWorks.length;
+            const published = publishWorks.filter(w => w.status === 'published').length;
+            const draft = publishWorks.filter(w => w.status !== 'published').length;
+            const featured = publishWorks.filter(w => w.featured).length;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statPublished').textContent = published;
+            document.getElementById('statDraft').textContent = draft;
+            document.getElementById('statFeatured').textContent = featured;
+        }
+
+        function updateSelectInfo() {
+            document.getElementById('publishSelectInfo').textContent = `已选择 ${selectedPublishIds.size} 个作品`;
+        }
+
+        async function togglePublish(id) {
+            const work = publishWorks.find(w => w.id === id);
+            if (!work) return;
+
+            const endpoint = work.status === 'published' ? `/works/${id}/unpublish` : `/works/${id}/publish`;
+            try {
+                const response = await fetchWithAuth(endpoint, { method: 'PATCH' });
+                if (response && response.ok) {
+                    showToast(work.status === 'published' ? '已取消发布' : '发布成功', 'success');
+                    await loadPublishWorks();
+                } else {
+                    const err = await response?.json();
+                    showToast(err?.error || '操作失败', 'error');
+                }
+            } catch (err) {
+                console.error('Toggle publish failed:', err);
+                showToast('操作失败，请重试', 'error');
+            }
+        }
+
+        async function toggleFeature(id) {
+            try {
+                const response = await fetchWithAuth(`/works/${id}/feature`, { method: 'PATCH' });
+                if (response && response.ok) {
+                    showToast('精选状态已更新', 'success');
+                    await loadPublishWorks();
+                } else {
+                    const err = await response?.json();
+                    showToast(err?.error || '操作失败', 'error');
+                }
+            } catch (err) {
+                console.error('Toggle feature failed:', err);
+                showToast('操作失败，请重试', 'error');
+            }
+        }
+
+        document.getElementById('batchPublishBtn').addEventListener('click', async () => {
+            if (selectedPublishIds.size === 0) {
+                showToast('请先选择要发布的作品', 'error');
+                return;
+            }
+            try {
+                const response = await fetchWithAuth('/works/batch/publish', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: Array.from(selectedPublishIds) })
+                });
+                if (response && response.ok) {
+                    const data = await response.json();
+                    showToast(`成功发布 ${data.data?.updatedCount || selectedPublishIds.size} 个作品`, 'success');
+                    selectedPublishIds.clear();
+                    await loadPublishWorks();
+                    updateSelectInfo();
+                } else {
+                    const err = await response?.json();
+                    showToast(err?.error || '批量发布失败', 'error');
+                }
+            } catch (err) {
+                console.error('Batch publish failed:', err);
+                showToast('批量发布失败，请重试', 'error');
+            }
+        });
+
+        document.getElementById('batchUnpublishBtn').addEventListener('click', async () => {
+            if (selectedPublishIds.size === 0) {
+                showToast('请先选择要取消发布的作品', 'error');
+                return;
+            }
+            let successCount = 0;
+            for (const id of selectedPublishIds) {
+                try {
+                    const response = await fetchWithAuth(`/works/${id}/unpublish`, { method: 'PATCH' });
+                    if (response && response.ok) successCount++;
+                } catch (err) {
+                    console.error('Unpublish failed for:', id, err);
+                }
+            }
+            showToast(`成功取消发布 ${successCount} 个作品`, 'success');
+            selectedPublishIds.clear();
+            await loadPublishWorks();
+            updateSelectInfo();
+        });
+
+        document.getElementById('selectAllBtn').addEventListener('click', () => {
+            if (selectedPublishIds.size === publishWorks.length) {
+                selectedPublishIds.clear();
+            } else {
+                publishWorks.forEach(w => selectedPublishIds.add(w.id));
+            }
+            renderPublishGrid();
+            updateSelectInfo();
+        });
+
+        document.getElementById('refreshPublishBtn').addEventListener('click', () => {
+            loadPublishWorks();
+        });
+
+        if (window.location.hash === '#publish') {
+            setTimeout(() => {
+                document.getElementById('publishSection').scrollIntoView({ behavior: 'smooth' });
+            }, 500);
+        }
+
+        loadPublishWorks();
+
         async function loadUserInfo() {
             const stored = localStorage.getItem('user');
             if (stored) {
@@ -1202,13 +1511,28 @@
                 const response = await fetchWithAuth('/auth/me');
                 if (response && response.ok) {
                     const result = await response.json();
-                    const user = result.user || result;
+                    const user = result.data?.user || result.user || result;
                     document.getElementById('userName').textContent = user.username || user.email?.split('@')[0] || '创作者';
                     document.getElementById('userEmail').textContent = user.email || '';
                 }
             } catch (err) {
                 console.error('Failed to load user info:', err);
             }
+        }
+
+        // 设置导航栏active状态
+        function setActiveNavItem() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                const href = item.getAttribute('href');
+                if (currentPath.includes(href)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
         }
 
         // 加载主题设置
@@ -1238,10 +1562,11 @@
             }
         });
 
-        // 页面加载时加载主题和用户信息
+        // 页面加载时加载主题、用户信息和设置导航栏
         loadTheme();
         loadUserInfo();
     })();
     </script>
+    <script src="js/components/nav-component.js"></script>
 </body>
 </html>

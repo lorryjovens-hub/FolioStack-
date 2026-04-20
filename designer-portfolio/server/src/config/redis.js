@@ -62,7 +62,20 @@ function createRedisClient(options = {}) {
 
 function getRedisClient() {
   if (!redisClient) {
-    redisClient = createRedisClient();
+    // 在开发环境中，返回一个模拟的Redis客户端，避免连接错误
+    if (config.isDevelopment) {
+      redisClient = {
+        connect: async () => Promise.resolve(),
+        quit: async () => Promise.resolve(),
+        ping: async () => Promise.resolve('PONG'),
+        setex: async () => Promise.resolve(),
+        get: async () => Promise.resolve(null),
+        del: async () => Promise.resolve(),
+        on: () => {},
+      };
+    } else {
+      redisClient = createRedisClient();
+    }
   }
   return redisClient;
 }

@@ -35,7 +35,7 @@ router.get('/',
         ],
         limit,
         offset,
-        order: [['createdAt', 'DESC']],
+        order: [['created_at', 'DESC']],
       });
 
       return paginatedResponse(res, works, page, limit, count, 'Works retrieved successfully');
@@ -439,6 +439,152 @@ router.post('/:id/share',
   }
 );
 
+router.get('/public/portfolio',
+  paginationValidation,
+  async (req, res, next) => {
+    try {
+      const page = req.query.page || 1;
+      const limit = req.query.limit || 50;
+      const offset = (page - 1) * limit;
+      const { category, tag } = req.query;
+
+      const where = { status: 'published' };
+      if (category) where.category = category;
+      if (tag) where.tags = { [Work.sequelize.Sequelize.Op.contains]: [tag] };
+
+      const { count, rows: works } = await Work.findAndCountAll({
+        where,
+        include: [
+          { model: User, as: 'user', attributes: ['id', 'username', 'avatar', 'bio'] },
+        ],
+        limit,
+        offset,
+        order: [['featured', 'DESC'], ['created_at', 'DESC']],
+      });
+
+      const userIds = [...new Set(works.map(w => w.userId))];
+      const users = await User.findAll({
+        where: { id: userIds },
+        attributes: ['id', 'username', 'avatar', 'bio'],
+      });
+
+      return paginatedResponse(res, { works, users }, page, limit, count, 'Portfolio retrieved successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.patch('/:id/publish',
+  authenticate,
+  idValidation,
+  async (req, res, next) => {
+    try {
+      const work = await Work.findByPk(req.params.id);
+
+      if (!work) {
+        throw ApiError.notFound('Work not found');
+      }
+
+      if (work.userId !== req.user.id && req.user.role !== 'admin') {
+        throw ApiError.forbidden('You do not have permission to publish this work');
+      }
+
+      work.status = 'published';
+      await work.save();
+
+      logger.info({ message: 'Work published', workId: work.id, userId: req.user.id });
+
+      return successResponse(res, { work }, 'Work published successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.patch('/:id/unpublish',
+  authenticate,
+  idValidation,
+  async (req, res, next) => {
+    try {
+      const work = await Work.findByPk(req.params.id);
+
+      if (!work) {
+        throw ApiError.notFound('Work not found');
+      }
+
+      if (work.userId !== req.user.id && req.user.role !== 'admin') {
+        throw ApiError.forbidden('You do not have permission to unpublish this work');
+      }
+
+      work.status = 'draft';
+      await work.save();
+
+      logger.info({ message: 'Work unpublished', workId: work.id, userId: req.user.id });
+
+      return successResponse(res, { work }, 'Work unpublished successfully');
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.patch('/:id/feature',
+  authenticate,
+  idValidation,
+  async (req, res, next) => {
+    try {
+      const work = await Work.findByPk(req.params.id);
+
+      if (!work) {
+        throw ApiError.notFound('Work not found');
+      }
+
+      if (work.userId !== req.user.id && req.user.role !== 'admin') {
+        throw ApiError.forbidden('You do not have permission to feature this work');
+      }
+
+      work.featured = !work.featured;
+      await work.save();
+
+      logger.info({ message: `Work ${work.featured ? 'featured' : 'unfeatured'}`, workId: work.id, userId: req.user.id });
+
+      return successResponse(res, { work }, `Work ${work.featured ? 'featured' : 'unfeatured'} successfully`);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.post('/batch/publish',
+  authenticate,
+  async (req, res, next) => {
+    try {
+      const { ids } = req.body;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        throw ApiError.badRequest('Please provide an array of work IDs');
+      }
+
+      const [updatedCount] = await Work.update(
+        { status: 'published' },
+        {
+          where: {
+            id: ids,
+            userId: req.user.id,
+          },
+        }
+      );
+
+      logger.info({ message: 'Works batch published', count: updatedCount, userId: req.user.id });
+
+      return successResponse(res, { updatedCount }, `${updatedCount} works published successfully`);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 router.get('/user/:userId',
   paginationValidation,
   async (req, res, next) => {
@@ -462,7 +608,7 @@ router.get('/user/:userId',
         ],
         limit,
         offset,
-        order: [['createdAt', 'DESC']],
+        order: [['created_at', 'DESC']],
       });
 
       return paginatedResponse(res, { user, works }, page, limit, count, 'User works retrieved successfully');

@@ -2,13 +2,15 @@
 node_modules/
 npm-debug.log
 package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Build outputs
 dist/
 build/
 out/
-uploads/
-extracted/
+.next/
+.nuxt/
 
 # Environment files
 .env
@@ -16,6 +18,7 @@ extracted/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.*.local
 
 # IDE files
 .vscode/
@@ -23,19 +26,28 @@ extracted/
 *.swp
 *.swo
 *~
+*.sublime-project
+*.sublime-workspace
 
 # OS generated files
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Temporary files
 *.tmp
 *.temp
 .cache/
+temp/
+tmp/
 
 # Logs
 logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids/
@@ -45,67 +57,46 @@ pids/
 
 # Coverage directory used by tools like istanbul
 coverage/
-
-# nyc test coverage
 .nyc_output
 
-# Dependency directories
-jspm_packages/
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+data/
+*.rdb
 
-# Optional npm cache directory
-.npm
+# Backup files
+*.backup
+*.bak
+*~
+*.old
 
-# Optional REPL history
-.node_repl_history
+# Large files and uploads
+uploads/
+extracted/
+cloned-sites/
+*.zip
+*.tar.gz
+*.rar
+*.7z
 
-# Output of 'npm pack'
-*.tgz
+# Test files
+test-results/
+playwright-report/
+cypress/videos/
+cypress/screenshots/
 
-# Yarn Integrity file
-.yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
+# Misc
+.eslintcache
+.stylelintcache
 .parcel-cache
 
-# Next.js build output
-.next
+# Local Netlify folder
+.netlify
 
-# Nuxt.js build / generate output
-.nuxt
-dist
+# Vercel
+.vercel
 
-# Gatsby files
-.cache/
-public
-
-# vuepress build output
-.vuepress/dist
-
-# vuepress v2.x temp and cache directory
-.temp/
-
-# Docusaurus cache and generated files
-.docusaurus
-
-# Serverless directories
-.serverless/
-
-# FuseBox cache
-.fusebox/
-
-# DynamoDB Local files
-.dynamodb/
-
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
-.yarn/cache
-.yarn/unplugged
-.yarn/build-state.yml
-.yarn/install-state.gz
-.pnp.*
+# Turbo
+.turbo

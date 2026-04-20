@@ -1,0 +1,1 @@
+From<web_sys::js_sys::Iterator::looks_like_iterator::MaybeIterator>

@@ -764,7 +764,23 @@
             if (e.target === registerModal) closeModal(registerModal);
         });
 
-        const API_BASE = 'http://localhost:3002';
+        const API_BASE = window.location.origin;
+        const TRPC_BASE = `${API_BASE}/api/trpc`;
+
+        async function trpcRequest(procedure, input) {
+            const response = await fetch(`${TRPC_BASE}/${procedure}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(input),
+            });
+            const result = await response.json();
+            if (!response.ok) {
+                const errMsg = result?.error?.message || result?.error?.data?.code || '请求失败';
+                throw new Error(errMsg);
+            }
+            return result.result?.data || result;
+        }
+
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const loginError = document.getElementById('loginError');
@@ -847,28 +863,33 @@
             };
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', result.token);
-                    localStorage.setItem('user', JSON.stringify(result.user));
-                    loginSuccess.textContent = '登录成功！正在跳转...';
-                    loginSuccess.classList.add('show');
-                    setTimeout(() => {
-                        closeModal(loginModal);
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                } else {
-                    loginError.textContent = result.error || '登录失败，请检查邮箱和密码';
-                    loginError.classList.add('show');
+                let token, user;
+                try {
+                    const result = await trpcRequest('auth.login', data);
+                    token = result.token;
+                    user = result.user;
+                } catch (trpcErr) {
+                    const response = await fetch(`${API_BASE}/api/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ login: data.username, password: data.password })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || '登录失败');
+                    token = result.data?.accessToken || result.accessToken || result.token;
+                    user = result.data?.user || result.user;
                 }
+
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                loginSuccess.textContent = '登录成功！正在跳转...';
+                loginSuccess.classList.add('show');
+                setTimeout(() => {
+                    closeModal(loginModal);
+                    window.location.href = 'dashboard.html';
+                }, 1000);
             } catch (err) {
-                loginError.textContent = '网络错误，请检查服务器是否运行';
+                loginError.textContent = err.message || '登录失败，请检查邮箱和密码';
                 loginError.classList.add('show');
             }
         });
@@ -884,32 +905,36 @@
                 username: formData.get('username'),
                 email: formData.get('email'),
                 password: formData.get('password'),
-                displayName: formData.get('username')
             };
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', result.token);
-                    localStorage.setItem('user', JSON.stringify(result.user));
-                    registerSuccess.textContent = '注册成功！正在跳转...';
-                    registerSuccess.classList.add('show');
-                    setTimeout(() => {
-                        closeModal(registerModal);
-                        window.location.href = 'dashboard.html';
-                    }, 1000);
-                } else {
-                    registerError.textContent = result.error || '注册失败，请稍后重试';
-                    registerError.classList.add('show');
+                let token, user;
+                try {
+                    const result = await trpcRequest('auth.register', data);
+                    token = result.token;
+                    user = result.user;
+                } catch (trpcErr) {
+                    const response = await fetch(`${API_BASE}/api/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.error || '注册失败');
+                    token = result.data?.accessToken || result.accessToken || result.token;
+                    user = result.data?.user || result.user;
                 }
+
+                localStorage.setItem('token', token);
+                localStorage.setItem('user', JSON.stringify(user));
+                registerSuccess.textContent = '注册成功！正在跳转...';
+                registerSuccess.classList.add('show');
+                setTimeout(() => {
+                    closeModal(registerModal);
+                    window.location.href = 'dashboard.html';
+                }, 1000);
             } catch (err) {
-                registerError.textContent = '网络错误，请检查服务器是否运行';
+                registerError.textContent = err.message || '注册失败，请稍后重试';
                 registerError.classList.add('show');
             }
         });

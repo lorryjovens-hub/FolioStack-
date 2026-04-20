@@ -266,7 +266,7 @@
             .card-visual { height: 240px; }
         }
 
-        .mgmt-trigger { position: fixed; bottom: 32px; left: 32px; z-index: 200; width: 52px; height: 52px; background: rgba(26,26,26,0.9); border: 1px solid rgba(201,169,110,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: none; transition: all 0.4s var(--ease-out-expo); backdrop-filter: blur(12px); }
+        .mgmt-trigger { position: fixed; bottom: 32px; left: 32px; z-index: 200; width: 52px; height: 52px; background: rgba(26,26,26,0.9); border: 1px solid rgba(201,169,110,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: none; transition: all 0.4s var(--ease-out-expo); backdrop-filter: blur(12px); text-decoration: none; color: inherit; }
         .mgmt-trigger:hover { border-color: var(--champagne); background: rgba(201,169,110,0.1); transform: scale(1.1); }
         .mgmt-trigger svg { width: 22px; height: 22px; stroke: var(--champagne); fill: none; }
         .mgmt-trigger .mgmt-badge { position: absolute; top: -4px; right: -4px; width: 18px; height: 18px; background: var(--champagne); border-radius: 50%; font-family: var(--font-mono); font-size: 9px; color: var(--obsidian); display: flex; align-items: center; justify-content: center; font-weight: 700; }
@@ -553,6 +553,7 @@
                 <li><a href="#works">Works</a></li>
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
+                <li><a href="import.html" target="_blank" style="color: var(--champagne); border: 1px solid var(--champagne); padding: 6px 16px; font-size: 10px; letter-spacing: 0.15em;">后台管理</a></li>
             </ul>
             <button class="nav-hamburger" id="hamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
@@ -564,6 +565,7 @@
             <a href="#works">Works</a>
             <a href="#about">About</a>
             <a href="#contact">Contact</a>
+            <a href="import.html" target="_blank" style="color: var(--champagne);">后台管理</a>
         </div>
 
         <section id="hero">
@@ -669,10 +671,10 @@
 
     <div class="toast-container" id="toastContainer"></div>
 
-    <button class="mgmt-trigger" id="mgmtTrigger" aria-label="Open Portfolio Manager">
+    <a class="mgmt-trigger" id="mgmtTrigger" href="import.html" target="_blank" aria-label="Open Backend Manager" title="后台管理">
         <svg viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
-        <span class="mgmt-badge" id="mgmtBadge">25</span>
-    </button>
+        <span class="mgmt-badge" id="mgmtBadge">→</span>
+    </a>
 
     <div class="mgmt-overlay" id="mgmtOverlay"></div>
 
@@ -891,6 +893,46 @@
     (function() {
         'use strict';
 
+        var API_BASE = window.location.origin + '/api';
+
+        async function fetchPublishedWorks() {
+            try {
+                var response = await fetch(API_BASE + '/works/public/portfolio?limit=100');
+                if (response && response.ok) {
+                    var result = await response.json();
+                    var works = [];
+                    if (result.data && Array.isArray(result.data.works)) {
+                        works = result.data.works;
+                    } else if (result.data && Array.isArray(result.data)) {
+                        works = result.data;
+                    } else if (Array.isArray(result.works)) {
+                        works = result.works;
+                    } else if (Array.isArray(result)) {
+                        works = result;
+                    }
+                    if (works.length > 0) {
+                        return works.map(function(w) {
+                            return {
+                                id: w.id,
+                                title: w.title || '未命名',
+                                url: w.url || '',
+                                category: w.category || 'Creative / Brand',
+                                tags: Array.isArray(w.tags) ? w.tags : [],
+                                desc: w.description || (w.metadata && w.metadata.description) || '',
+                                source: w.type || 'link',
+                                featured: w.featured || false,
+                                thumbnail: w.thumbnail || '',
+                                user: w.user ? { username: w.user.username, avatar: w.user.avatar, bio: w.user.bio } : null
+                            };
+                        });
+                    }
+                }
+            } catch(e) {
+                console.warn('API unavailable, using local data:', e.message);
+            }
+            return null;
+        }
+
         // 流量跟踪系统
         class AnalyticsTracker {
             constructor() {
@@ -999,6 +1041,8 @@
 
         var STORAGE_KEY = 'lorry_portfolio_data';
 
+        var API_DATA_KEY = 'lorry_api_portfolio_timestamp';
+
         function loadFromStorage() {
             try {
                 var saved = localStorage.getItem(STORAGE_KEY);
@@ -1017,7 +1061,7 @@
         }
 
         var state = {
-            works: loadFromStorage() || WORKS_DATA.slice(),
+            works: WORKS_DATA.slice(),
             activeFilter: 'All',
             searchQuery: '',
             mouseX: window.innerWidth / 2,
@@ -1027,7 +1071,8 @@
             pendingFiles: [],
             editingId: null,
             deleteTargetId: null,
-            deleteTargetIds: null
+            deleteTargetIds: null,
+            apiLoaded: false
         };
 
         function showToast(message, type) {
@@ -2530,7 +2575,11 @@ ${userInfo}
                 panel.classList.remove('active');
             }
 
-            trigger.addEventListener('click', openPanel);
+            if (trigger.tagName === 'A') {
+                // trigger is now a link to import.html, no click handler needed
+            } else {
+                trigger.addEventListener('click', openPanel);
+            }
             overlay.addEventListener('click', closePanel);
             closeBtn.addEventListener('click', closePanel);
 
@@ -2831,6 +2880,40 @@ ${userInfo}
             }
         });
 
+        async function loadPortfolioFromAPI() {
+            var apiWorks = await fetchPublishedWorks();
+            if (apiWorks && apiWorks.length > 0) {
+                state.works = apiWorks;
+                state.apiLoaded = true;
+                var saved = loadFromStorage();
+                if (saved && saved.length > 0) {
+                    saved.forEach(function(localWork) {
+                        var existsInApi = apiWorks.some(function(aw) { return aw.url === localWork.url || aw.title === localWork.title; });
+                        if (!existsInApi) {
+                            state.works.push(localWork);
+                        }
+                    });
+                }
+                saveToStorage();
+                updateCategories();
+                renderFilters();
+                renderWorks();
+            } else {
+                var saved = loadFromStorage();
+                if (saved && saved.length > 0) {
+                    state.works = saved;
+                }
+            }
+        }
+
+        function updateCategories() {
+            var cats = new Set();
+            state.works.forEach(function(w) {
+                if (w.category) cats.add(w.category);
+            });
+            CATEGORIES = ['All'].concat(Array.from(cats));
+        }
+
         function init() {
             loadTheme();
             initThreeScene();
@@ -2845,6 +2928,7 @@ ${userInfo}
             initMgmtPanel();
             initPreviewModal();
             updateMgmtBadge();
+            loadPortfolioFromAPI();
 
             document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
                 anchor.addEventListener('click', function(e) {

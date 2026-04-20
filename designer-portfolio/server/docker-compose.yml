@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 业务数据库
+  postgres:
+    image: postgres:15-alpine # 轻量稳定版，兼容生产
+    container_name: foliostack-postgres
+    environment:
+      POSTGRES_DB: foliostack # 对应你的DB_NAME=foliostack
+      POSTGRES_USER: postgres  # 对应你的DB_USER=postgres
+      POSTGRES_PASSWORD: your-db-password # 对应你的DB_PASSWORD
+    ports:
+      - "5432:5432" # 对应DB_PORT=5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # 数据持久化
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d foliostack"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Redis 缓存/会话
+  redis:
+    image: redis:7-alpine
+    container_name: foliostack-redis
+    ports:
+      - "6379:6379" # 对应REDIS_PORT=6379
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --requirepass your-redis-password # 对应REDIS_PASSWORD
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  postgres_data:
+  redis_data:

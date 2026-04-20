@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3002;
 const JWT_SECRET = 'portfolio-secret-key';
 
 app.use(cors({ 
@@ -132,10 +132,10 @@ app.get('/api/auth/me', authenticate, async (req, res) => {
 });
 
 // 获取作品列表
-app.get('/api/works', async (req, res) => {
+app.get('/api/works', authenticate, async (req, res) => {
   try {
-    const works = await all('SELECT * FROM works ORDER BY created_at DESC');
-    res.json(works);
+    const works = await all('SELECT * FROM works WHERE user_id = ? ORDER BY created_at DESC', [req.user.userId]);
+    res.json({ data: works });
   } catch (err) {
     console.error('获取作品错误:', err);
     res.status(500).json({ error: '获取作品失败' });
@@ -161,6 +161,135 @@ app.post('/api/works/import-url', authenticate, async (req, res) => {
   } catch (err) {
     console.error('导入作品错误:', err);
     res.status(500).json({ error: '导入作品失败' });
+  }
+});
+
+// 获取单个作品
+app.get('/api/works/:id', authenticate, async (req, res) => {
+  try {
+    const work = await get('SELECT * FROM works WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.userId]);
+    if (!work) {
+      return res.status(404).json({ error: '作品不存在' });
+    }
+    res.json({ data: work });
+  } catch (err) {
+    console.error('获取作品错误:', err);
+    res.status(500).json({ error: '获取作品失败' });
+  }
+});
+
+// 更新作品
+app.put('/api/works/:id', authenticate, async (req, res) => {
+  try {
+    const { title, description, category, tags, status } = req.body;
+    await run(
+      'UPDATE works SET title = ?, description = ?, category = ?, tags = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE uuid = ? AND user_id = ?',
+      [title, description, category, tags, status, req.params.id, req.user.userId]
+    );
+    res.json({ message: '作品更新成功' });
+  } catch (err) {
+    console.error('更新作品错误:', err);
+    res.status(500).json({ error: '更新作品失败' });
+  }
+});
+
+// 删除作品
+app.delete('/api/works/:id', authenticate, async (req, res) => {
+  try {
+    await run('DELETE FROM works WHERE uuid = ? AND user_id = ?', [req.params.id, req.user.userId]);
+    res.json({ message: '作品删除成功' });
+  } catch (err) {
+    console.error('删除作品错误:', err);
+    res.status(500).json({ error: '删除作品失败' });
+  }
+});
+
+// 增加作品浏览量
+app.post('/api/works/:id/view', async (req, res) => {
+  try {
+    await run('UPDATE works SET view_count = view_count + 1 WHERE uuid = ?', [req.params.id]);
+    res.json({ message: '浏览量已更新' });
+  } catch (err) {
+    console.error('更新浏览量错误:', err);
+    res.status(500).json({ error: '更新浏览量失败' });
+  }
+});
+
+// 前台分析数据跟踪
+app.post('/api/analytics/track', async (req, res) => {
+  try {
+    const { sessionId, page, referrer, timestamp, userAgent, screenWidth, screenHeight } = req.body;
+    // 这里可以将数据存入分析日志表
+    console.log('Analytics track:', { sessionId, page, timestamp });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Analytics track error:', err);
+    res.status(500).json({ error: 'Tracking failed' });
+  }
+});
+
+// 前台事件跟踪
+app.post('/api/analytics/track-event', async (req, res) => {
+  try {
+    const { sessionId, eventName, eventData, timestamp } = req.body;
+    console.log('Analytics event:', { sessionId, eventName, eventData, timestamp });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Analytics event error:', err);
+    res.status(500).json({ error: 'Event tracking failed' });
+  }
+});
+
+// 获取分析数据
+app.get('/api/analytics', authenticate, async (req, res) => {
+  try {
+    const works = await all('SELECT * FROM works WHERE user_id = ?', [req.user.userId]);
+    
+    // 生成最近7天的日期标签
+    const labels = [];
+    const data = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      labels.push(date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' }));
+      // 模拟数据 - 实际应该从访问日志表获取
+      data.push(Math.floor(Math.random() * 100) + 20);
+    }
+    
+    // 按分类统计
+    const categoryStats = {};
+    works.forEach(work => {
+      const cat = work.category || 'other';
+      categoryStats[cat] = (categoryStats[cat] || 0) + 1;
+    });
+    
+    // 获取热门作品
+    const topWorks = works
+      .sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
+      .slice(0, 5)
+      .map(w => ({
+        title: w.title,
+        visits: w.view_count || 0,
+        likes: w.likes || 0
+      }));
+    
+    res.json({
+      visits: { labels, data },
+      categories: {
+        labels: Object.keys(categoryStats).map(k => k === 'design' ? '设计' : k === 'development' ? '开发' : k === 'video' ? '视频' : k === 'photography' ? '摄影' : '其他'),
+        data: Object.values(categoryStats)
+      },
+      topWorks,
+      summary: {
+        totalWorks: works.length,
+        totalViews: works.reduce((sum, w) => sum + (w.view_count || 0), 0),
+        totalLikes: works.reduce((sum, w) => sum + (w.likes || 0), 0),
+        publishedWorks: works.filter(w => w.status === 'published').length
+      }
+    });
+  } catch (err) {
+    console.error('获取分析数据错误:', err);
+    res.status(500).json({ error: '获取分析数据失败' });
   }
 });
 

@@ -478,7 +478,7 @@
             });
         });
 
-        const API_BASE = 'http://localhost:3002/api';
+        const API_BASE = window.location.origin + '/api';
         let authToken = localStorage.getItem('token');
         let currentUser = null;
 
@@ -566,7 +566,8 @@
                 const response = await fetchWithAuth('/works');
                 if (!response || !response.ok) return [];
 
-                const works = await response.json();
+                const result = await response.json();
+                const works = result.data || result || [];
                 updateStats(works);
                 renderWorks(works);
                 return works;
@@ -612,7 +613,7 @@
                 return;
             }
 
-            grid.innerHTML = works.slice(0, 6).map(work => `
+            grid.innerHTML = works.map(work => `
                 <div class="work-card" data-id="${work.uuid || work.id}">
                     <div class="work-card-header">
                         ${(() => {

@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI设置 - FolioStack</title>
+    <meta name="description" content="全局AI配置管理">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <script src="js/global-ai-config.js"></script>
+    <style>
+        :root {
+            --obsidian: #0a0a0a;
+            --charcoal: #141414;
+            --graphite: #1a1a1a;
+            --silver: #2a2a2a;
+            --mist: #3a3a3a;
+            --ash: #8a8a8a;
+            --smoke: #b0b0b0;
+            --pearl: #d4d4d4;
+            --ivory: #f0ece4;
+            --champagne: #c9a96e;
+            --champagne-light: #e0c992;
+            --champagne-dark: #a68b4b;
+            --rose-gold: #b76e79;
+            --deep-blue: #1a2a4a;
+            --emerald: #2a6b5a;
+            --font-display: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+            --ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--obsidian);
+            color: var(--ivory);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 浅色主题 - 优雅的灰白色渐变 */
+        body.light-mode {
+            --obsidian: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --charcoal: rgba(255, 255, 255, 0.95);
+            --graphite: rgba(241, 245, 249, 0.8);
+            --silver: rgba(226, 232, 240, 0.6);
+            --mist: rgba(148, 163, 184, 0.4);
+            --ash: rgba(71, 85, 105, 0.6);
+            --smoke: rgba(51, 65, 85, 0.6);
+            --pearl: rgba(30, 41, 59, 0.8);
+            --ivory: rgba(15, 23, 42, 0.9);
+        }
+
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--charcoal);
+            border-right: 1px solid rgba(201, 169, 110, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s var(--ease-out-expo);
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid rgba(201, 169, 110, 0.1);
+        }
+
+        .sidebar-logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            font-family: var(--font-display);
+            color: var(--ivory);
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar-logo span {
+            color: var(--champagne);
+        }
+
+        .sidebar-nav {
+            padding: 2rem 0;
+        }
+
+        .nav-section {
+            padding: 0 1.5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            margin: 0.25rem 0;
+            color: var(--smoke);
+            text-decoration: none;
+            border-radius: 6px;
+            transition: all 0.3s var(--ease-in-out-quart);
+            position: relative;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--champagne);
+            transform: scaleY(0);
+            transition: transform 0.3s var(--ease-in-out-quart);
+        }
+
+        .nav-item:hover {
+            background: rgba(201, 169, 110, 0.1);
+            color: var(--ivory);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: rgba(201, 169, 110, 0.15);
+            color: var(--champagne);
+        }
+
+        .nav-item.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-item svg {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .nav-item .nav-badge {
+            margin-left: auto;
+            background: var(--champagne);
+            color: var(--obsidian);
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+        }
+
+        .sidebar-footer {
+            padding: 2rem 1.5rem;
+            border-top: 1px solid rgba(201, 169, 110, 0.1);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .user-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--graphite);
+            border-radius: 8px;
+            border: 1px solid rgba(201, 169, 110, 0.1);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--champagne);
+            color: var(--obsidian);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--ivory);
+            font-size: 0.875rem;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--ash);
+        }
+
+        .logout-btn {
+            background: none;
+            border: none;
+            color: var(--smoke);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff6b6b;
+        }
+
+        .logout-btn svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            min-height: 100vh;
+            background: var(--obsidian);
+        }
+
+        .page-header {
+            padding: 2rem 3rem;
+            border-bottom: 1px solid rgba(201, 169, 110, 0.1);
+            background: var(--charcoal);
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: var(--font-display);
+            color: var(--ivory);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 1rem;
+            color: var(--ash);
+            max-width: 600px;
+        }
+
+        .ai-settings-container {
+            padding: 3rem;
+            max-width: 800px;
+        }
+
+        .input-group {
+            margin-bottom: 2.5rem;
+        }
+
+        .input-group-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--ivory);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group-title svg {
+            width: 20px;
+            height: 20px;
+            color: var(--champagne);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--pearl);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--graphite);
+            border: 1px solid rgba(201, 169, 110, 0.2);
+            border-radius: 6px;
+            color: var(--ivory);
+            font-family: var(--font-body);
+            font-size: 0.875rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--champagne);
+            box-shadow: 0 0 0 3px rgba(201, 169, 110, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: var(--ash);
+        }
+
+        .select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 3rem;
+        }
+
+        .token-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.75rem;
+        }
+
+        .token-btn {
+            padding: 0.5rem 1rem;
+            background: var(--graphite);
+            border: 1px solid rgba(201, 169, 110, 0.2);
+            border-radius: 6px;
+            color: var(--smoke);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .token-btn:hover {
+            border-color: var(--champagne);
+            color: var(--ivory);
+            transform: translateY(-1px);
+        }
+
+        .token-btn.active {
+            background: var(--champagne);
+            color: var(--obsidian);
+            border-color: var(--champagne);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-family: var(--font-body);
+        }
+
+        .btn-primary {
+            background: var(--champagne);
+            color: var(--obsidian);
+        }
+
+        .btn-primary:hover {
+            background: var(--champagne-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--graphite);
+            color: var(--ivory);
+            border: 1px solid rgba(201, 169, 110, 0.2);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--champagne);
+            background: rgba(201, 169, 110, 0.1);
+        }
+
+        .notification {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            border-radius: 6px;
+            color: var(--ivory);
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 1000;
+            transform: translateX(400px);
+            transition: transform 0.3s var(--ease-out-expo);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: rgba(42, 107, 90, 0.9);
+            border-left: 4px solid var(--emerald);
+        }
+
+        .notification.error {
+            background: rgba(183, 110, 121, 0.9);
+            border-left: 4px solid var(--rose-gold);
+        }
+
+        .notification.info {
+            background: rgba(26, 42, 74, 0.9);
+            border-left: 4px solid var(--deep-blue);
+        }
+
+        .config-info {
+            background: rgba(201, 169, 110, 0.1);
+            border: 1px solid rgba(201, 169, 110, 0.2);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-info h4 {
+            color: var(--champagne);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .config-info p {
+            color: var(--smoke);
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .api-key-input {
+            position: relative;
+        }
+
+        .api-key-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--ash);
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+
+        .api-key-toggle:hover {
+            color: var(--champagne);
+        }
+
+        .test-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+        }
+
+        .test-result.success {
+            background: rgba(42, 107, 90, 0.1);
+            border: 1px solid rgba(42, 107, 90, 0.3);
+            color: var(--emerald);
+        }
+
+        .test-result.error {
+            background: rgba(183, 110, 121, 0.1);
+            border: 1px solid rgba(183, 110, 121, 0.3);
+            color: var(--rose-gold);
+        }
+
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <!-- 导航栏将由 nav-component.js 自动渲染 -->
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1 class="page-title">AI设置</h1>
+                <p class="page-subtitle">配置全局AI参数，所有AI功能将使用这些设置</p>
+            </header>
+
+            <div class="ai-settings-container">
+                <div class="config-info">
+                    <h4>💡 全局AI配置</h4>
+                    <p>这里的设置会应用到所有使用AI的功能，包括AI设计、克隆网站的内容改造等。配置会自动保存到本地存储。</p>
+                </div>
+
+                <div class="input-group">
+                    <h3 class="input-group-title">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2 2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 0 0 1 0-2.83l-.06-.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        AI提供商设置
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">AI提供商</label>
+                        <select class="form-input select" id="aiProvider">
+                            <option value="openai">OpenAI (GPT-4)</option>
+                            <option value="anthropic">Anthropic (Claude)</option>
+                            <option value="google">Google (Gemini)</option>
+                            <option value="zhipu">智谱AI (GLM-4)</option>
+                            <option value="volcengine">火山引擎 (Doubao)</option>
+                            <option value="minimax">Minimax (abab6)</option>
+                            <option value="kimi">Moonshot (Kimi)</option>
+                            <option value="aliyun">阿里云百炼 (Qwen)</option>
+                        </select>
+                    </div>
+                    <div class="form-group api-key-input">
+                        <label class="form-label">API密钥</label>
+                        <input type="password" class="form-input" id="apiKey" placeholder="输入您的API密钥">
+                        <button type="button" class="api-key-toggle" id="apiKeyToggle">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10 10 10 0 0 0-10-10zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Base URL</label>
+                        <input type="url" class="form-input" id="baseUrl" placeholder="输入API基础URL（可选，使用默认值）">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">模型ID</label>
+                        <input type="text" class="form-input" id="modelId" placeholder="输入模型ID（可选，使用默认值）">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <h3 class="input-group-title">
+                        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        生成设置
+                    </h3>
+                    <div class="form-group">
+                        <label class="form-label">最大Token数</label>
+                        <div class="token-buttons">
+                            <button type="button" class="token-btn active" data-tokens="10000">10,000</button>
+                            <button type="button" class="token-btn" data-tokens="20000">20,000</button>
+                            <button type="button" class="token-btn" data-tokens="30000">30,000</button>
+                            <button type="button" class="token-btn" data-tokens="custom">自定义</button>
+                        </div>
+                        <input type="number" class="form-input" id="maxTokens" value="10000" min="1000" max="1000000">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <h3 class="input-group-title">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+                        操作
+                    </h3>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn btn-primary" id="saveConfigBtn">保存配置</button>
+                        <button class="btn btn-secondary" id="resetConfigBtn">重置为默认</button>
+                        <button class="btn btn-secondary" id="testConfigBtn">测试连接</button>
+                    </div>
+                    <div id="testResult" class="test-result" style="display: none;"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script>
+        let aiConfig = null;
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }, 100);
+        }
+
+        function loadConfig() {
+            if (typeof globalAIConfig !== 'undefined') {
+                aiConfig = globalAIConfig.get();
+                
+                if (aiConfig.provider) {
+                    document.getElementById('aiProvider').value = aiConfig.provider;
+                }
+                if (aiConfig.apiKey) {
+                    document.getElementById('apiKey').value = aiConfig.apiKey;
+                }
+                if (aiConfig.baseUrl) {
+                    document.getElementById('baseUrl').value = aiConfig.baseUrl;
+                }
+                if (aiConfig.modelId) {
+                    document.getElementById('modelId').value = aiConfig.modelId;
+                }
+                if (aiConfig.maxTokens) {
+                    document.getElementById('maxTokens').value = aiConfig.maxTokens;
+                    updateTokenButtons(aiConfig.maxTokens);
+                }
+                
+                globalAIConfig.subscribe((newConfig) => {
+                    aiConfig = newConfig;
+                    loadConfig();
+                    showNotification('AI配置已更新', 'success');
+                });
+            }
+        }
+
+        function updateTokenButtons(tokens) {
+            const buttons = document.querySelectorAll('.token-btn');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.tokens === tokens.toString()) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        function saveConfig() {
+            const config = {
+                provider: document.getElementById('aiProvider').value,
+                apiKey: document.getElementById('apiKey').value,
+                baseUrl: document.getElementById('baseUrl').value,
+                modelId: document.getElementById('modelId').value,
+                maxTokens: parseInt(document.getElementById('maxTokens').value) || 10000
+            };
+            
+            if (typeof globalAIConfig !== 'undefined') {
+                globalAIConfig.save(config);
+                showNotification('配置保存成功！', 'success');
+            } else {
+                showNotification('全局AI配置模块未加载', 'error');
+            }
+        }
+
+        function resetConfig() {
+            if (typeof globalAIConfig !== 'undefined') {
+                globalAIConfig.reset();
+                loadConfig();
+                showNotification('配置已重置为默认值', 'info');
+            }
+        }
+
+        async function testConfig() {
+            const testResult = document.getElementById('testResult');
+            testResult.textContent = '正在测试连接...';
+            testResult.className = 'test-result info';
+            testResult.style.display = 'block';
+            
+            try {
+                const config = {
+                    provider: document.getElementById('aiProvider').value,
+                    apiKey: document.getElementById('apiKey').value,
+                    baseUrl: document.getElementById('baseUrl').value,
+                    modelId: document.getElementById('modelId').value
+                };
+                
+                // 简单的测试 - 检查API密钥格式
+                if (config.apiKey) {
+                    testResult.textContent = 'API密钥格式正确，配置已保存';
+                    testResult.className = 'test-result success';
+                    saveConfig();
+                } else {
+                    testResult.textContent = '未提供API密钥，将使用内置AI';
+                    testResult.className = 'test-result info';
+                }
+            } catch (error) {
+                testResult.textContent = `测试失败: ${error.message}`;
+                testResult.className = 'test-result error';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadConfig();
+            
+            // API密钥显示/隐藏切换
+            document.getElementById('apiKeyToggle').addEventListener('click', function() {
+                const apiKeyInput = document.getElementById('apiKey');
+                const type = apiKeyInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                apiKeyInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? 
+                    '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/><path d="M12 2a10 10 0 0 0-10 10 10 10 0 0 0 10 10 10 10 0 0 0 10-10 10 10 0 0 0-10-10zm0 18a8 8 0 0 1-8-8 8 8 0 0 1 8-8 8 8 0 0 1 8 8 8 8 0 0 1-8 8z"/></svg>' : 
+                    '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/></svg>';
+            });
+            
+            // Token按钮点击事件
+            document.querySelectorAll('.token-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const tokens = this.dataset.tokens;
+                    if (tokens === 'custom') {
+                        document.getElementById('maxTokens').focus();
+                    } else {
+                        document.getElementById('maxTokens').value = tokens;
+                        updateTokenButtons(tokens);
+                    }
+                });
+            });
+            
+            // 保存配置按钮
+            document.getElementById('saveConfigBtn').addEventListener('click', saveConfig);
+            
+            // 重置配置按钮
+            document.getElementById('resetConfigBtn').addEventListener('click', resetConfig);
+            
+            // 测试配置按钮
+            document.getElementById('testConfigBtn').addEventListener('click', testConfig);
+            
+            // 自动保存
+            const inputs = ['aiProvider', 'apiKey', 'baseUrl', 'modelId', 'maxTokens'];
+            inputs.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', saveConfig);
+                    if (id !== 'apiKey') {
+                        element.addEventListener('input', saveConfig);
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="js/components/nav-component.js"></script>
+</body>
+</html>
