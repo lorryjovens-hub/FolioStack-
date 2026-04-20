@@ -1,14 +1,18 @@
 {
   "version": 2,
   "name": "foliostack-portfolio",
-  "buildCommand": null,
-  "outputDirectory": ".",
-  "framework": null,
-  "installCommand": null,
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://fearless-ferret-291.convex.cloud/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
@@ -32,9 +36,7 @@
   ],
   "env": {
     "CONVEX_URL": "https://fearless-ferret-291.convex.cloud",
-    "CONVEX_SITE_URL": "https://fearless-ferret-291.convex.site"
-  },
-  "github": {
-    "enabled": false
+    "CONVEX_SITE_URL": "https://fearless-ferret-291.convex.site",
+    "NODE_ENV": "production"
   }
 }
