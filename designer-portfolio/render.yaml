@@ -2,6 +2,7 @@ services:
   - type: web
     name: foliostack-portfolio
     env: static
+    rootDir: designer-portfolio
     buildCommand: ""
     staticPublishPath: .
     routes:
