@@ -33,5 +33,8 @@
   "env": {
     "CONVEX_URL": "https://fearless-ferret-291.convex.cloud",
     "CONVEX_SITE_URL": "https://fearless-ferret-291.convex.site"
+  },
+  "github": {
+    "enabled": false
   }
 }
