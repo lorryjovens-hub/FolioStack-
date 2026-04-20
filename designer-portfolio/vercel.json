@@ -5,11 +5,10 @@
   "outputDirectory": ".",
   "framework": null,
   "installCommand": null,
-  "regions": ["hkg1"],
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "server/api-server.js"
+      "destination": "https://fearless-ferret-291.convex.cloud/api/$1"
     }
   ],
   "headers": [
@@ -29,15 +28,10 @@
           "value": "1; mode=block"
         }
       ]
-    },
-    {
-      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot))",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
     }
-  ]
+  ],
+  "env": {
+    "CONVEX_URL": "https://fearless-ferret-291.convex.cloud",
+    "CONVEX_SITE_URL": "https://fearless-ferret-291.convex.site"
+  }
 }
